@@ -1,0 +1,8 @@
+# Stow local ignore file
+# Files matching these patterns will not be stowed
+
+# Documentation files
+^/README\.md$
+
+# Ignore this ignore file itself
+^/\.stow-local-ignore$
