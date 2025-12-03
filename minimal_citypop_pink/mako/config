@@ -1,0 +1,43 @@
+# Manual - https://man.archlinux.org/man/mako.5.en
+
+# Behaviors
+default-timeout=10000
+group-by=app-name
+
+# Layout
+width=350
+height=200
+padding=14
+margin=12
+border-size=3
+border-radius=14
+
+
+# Colors – City Pop Palette
+background-color=#1a1a1fdd
+text-color=#ffd6eb
+border-color=#ff8acb
+progress-color=#ff9bd6
+
+# Font
+font=Inter 13
+
+# Icons
+icon-path=/usr/share/icons
+max-icon-size=48
+
+# Urgency overrides
+[urgency=low]
+border-color=#ffb3dd
+text-color=#ffe8f4
+background-color=#1a1a1fcc
+
+[urgency=normal]
+border-color=#ff8acb
+background-color=#1a1a1fdd
+
+[urgency=critical]
+background-color=#ff145acc
+border-color=#ff3c85
+text-color=#ffffff
+default-timeout=0

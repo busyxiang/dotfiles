@@ -1,0 +1,112 @@
+gui:
+  # Citypop theme based on Hyprland color scheme
+  # Pastel/cyberpunk aesthetic with pinks, cyans, and purples
+  theme:
+    # Text colors
+    activeBorderColor:
+      - "#ff91c8" # Pastel pink
+      - "#82c8ff" # Pastel cyan
+      - bold
+    inactiveBorderColor:
+      - "#8b7ca8" # Muted purple
+    optionsTextColor:
+      - "#82c8ff" # Pastel cyan
+    selectedLineBgColor:
+      - "#c3a0ff" # Pastel purple
+    selectedRangeBgColor:
+      - "#c3a0ff" # Pastel purple
+    cherryPickedCommitBgColor:
+      - "#87ffe6" # Pastel teal
+    cherryPickedCommitFgColor:
+      - "#141420" # Dark background
+    unstagedChangesColor:
+      - "#ff91c8" # Pastel pink
+    defaultFgColor:
+      - "#e0c0ff" # Light lavender
+    searchingActiveBorderColor:
+      - "#87ffe6" # Pastel teal
+      - bold
+  # Author colors for commits
+  authorColors:
+    "*": "#c3a0ff" # Pastel purple for all authors
+  # Branch colors
+  branchColors:
+    main: "#ff91c8" # Pink for main
+    master: "#ff91c8" # Pink for master
+    develop: "#82c8ff" # Cyan for develop
+    staging: "#c3a0ff" # Purple for staging
+    production: "#87ffe6" # Teal for production
+# Git configuration
+git:
+  pagers:
+    - colorArg: always
+      pager: delta --dark --paging=never --syntax-theme=none --line-numbers
+# Keybindings and other settings
+keybinding:
+  universal:
+    quit: "q"
+    quit-alt1: "<c-c>"
+    return: "<esc>"
+    quitWithoutChangingDirectory: "Q"
+    togglePanel: "<tab>"
+    prevItem: "<up>"
+    nextItem: "<down>"
+    prevItem-alt: "k"
+    nextItem-alt: "j"
+    prevPage: ","
+    nextPage: "."
+    scrollLeft: "H"
+    scrollRight: "L"
+    gotoTop: "<"
+    gotoBottom: ">"
+    toggleRangeSelect: "v"
+    rangeSelectDown: "<s-down>"
+    rangeSelectUp: "<s-up>"
+    prevBlock: "<left>"
+    nextBlock: "<right>"
+    prevBlock-alt: "h"
+    nextBlock-alt: "l"
+    nextMatch: "n"
+    prevMatch: "N"
+    startSearch: "/"
+    optionMenu: "x"
+    optionMenu-alt1: "?"
+    select: "<space>"
+    goInto: "<enter>"
+    confirm: "<enter>"
+    confirm-alt1: "y"
+    remove: "d"
+    new: "n"
+    edit: "e"
+    openFile: "o"
+    scrollUpMain: "<pgup>"
+    scrollDownMain: "<pgdown>"
+    scrollUpMain-alt1: "K"
+    scrollDownMain-alt1: "J"
+    scrollUpMain-alt2: "<c-u>"
+    scrollDownMain-alt2: "<c-d>"
+    executeShellCommand: ":"
+    createRebaseOptionsMenu: "m"
+    pushFiles: "P"
+    pullFiles: "p"
+    refresh: "R"
+    createPatchOptionsMenu: "<c-p>"
+    nextTab: "]"
+    prevTab: "["
+    nextScreenMode: "+"
+    prevScreenMode: "_"
+    undo: "z"
+    redo: "<c-z>"
+    filteringMenu: "<c-s>"
+    diffingMenu: "W"
+    diffingMenu-alt: "<c-e>"
+    copyToClipboard: "<c-o>"
+    openRecentRepos: "<c-r>"
+    submitEditorText: "<enter>"
+    extrasMenu: "@"
+    toggleWhitespaceInDiffView: "<c-w>"
+    increaseContextInDiffView: "}"
+    decreaseContextInDiffView: "{"
+# UI preferences
+notARepository: "skip"
+promptToReturnFromSubprocess: false

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "display",
+    "de",
+    "wm",
+    "wmtheme",
+    "theme",
+    "icons",
+    "font",
+    "cursor",
+    "terminal",
+    "terminalfont",
+    "cpu",
+    "gpu",
+    "memory",
+    "swap",
+    "disk",
+    "wifi",
+    "localip",
+    "locale",
+    "break",
+    "colors",
+  ],
+  "logo": {
+    "type": "kitty-direct",
+    "source": "~/Downloads/citypop_anime_girl.png",
+    "width": 40,
+    "height": 25,
+    "padding": {
+      "top": 1,
+      "left": 2,
+    },
+    // Anime-vaporwave colors
+    "color": {
+      "1": "#ff9ae5", // neon pink
+      "2": "#b1caff", // sky blue
+      "3": "#ffd6a5", // peach
+      "4": "#c1ffea", // mint
+    },
+  },
+  "display": {
+    "separator": "  ", // small retro bullet
+    "color": {
+      "keys": "#ffb7e9",
+      "title": "#ffd7f5",
+    },
+  },
+}

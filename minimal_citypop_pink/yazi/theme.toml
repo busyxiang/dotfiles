@@ -1,0 +1,203 @@
+# Yazi Theme - Pastel Color Scheme
+# Matches hyprland pastel pink/blue/purple/teal theme
+
+# File Manager
+[mgr]
+cwd = { fg = "#82C8FF" }  # Pastel blue for current directory
+hovered = { fg = "#141420", bg = "#FF91C8" }  # Pink highlight for hovered item
+preview_hovered = { fg = "#141420", bg = "#C3A0FF" }  # Purple highlight in preview
+find_keyword = { fg = "#141420", bg = "#87FFE6", bold = true }  # Teal for search results
+find_position = { fg = "#E6E6FA", bg = "reset", italic = true }
+marker_selected = { fg = "#FF91C8", bg = "reset" }
+marker_copied = { fg = "#87FFE6", bg = "reset" }
+marker_cut = { fg = "#FFB4E6", bg = "reset" }
+marker_marked = { fg = "#82C8FF", bg = "reset" }
+count_copied = { fg = "#141420", bg = "#87FFE6" }
+count_cut = { fg = "#141420", bg = "#FFB4E6" }
+count_selected = { fg = "#141420", bg = "#82C8FF" }
+border_symbol = ""
+border_style = { fg = "#C3A0FF" }  # Purple borders
+
+# Tabs
+[tabs]
+active = { fg = "#141420", bg = "#FF91C8", bold = true }  # Pink active tab
+inactive = { fg = "#E0C0FF", bg = "reset" }
+sep_inner = { open = " [", close = "] " }
+sep_outer = { open = "", close = "" }
+
+# Mode Indicators
+[mode]
+normal_main = { fg = "#141420", bg = "#82C8FF", bold = true }  # Blue for normal mode
+normal_alt = { fg = "#E6E6FA", bg = "reset" }
+select_main = { fg = "#141420", bg = "#FF91C8", bold = true }  # Pink for select mode
+select_alt = { fg = "#E6E6FA", bg = "reset" }
+unset_main = { fg = "#141420", bg = "#C3A0FF", bold = true }  # Purple for unset mode
+unset_alt = { fg = "#E6E6FA", bg = "reset" }
+
+# Status Bar
+[status]
+overall = { fg = "#E0C0FF", bg = "#141420" }
+sep_left = { open = "", close = " " }
+sep_right = { open = " ", close = "" }
+perm_type = { fg = "#82C8FF" }
+perm_read = { fg = "#87FFE6" }
+perm_write = { fg = "#FF91C8" }
+perm_exec = { fg = "#FFB4E6" }
+perm_sep = { fg = "#C3A0FF" }
+progress_label = { fg = "#E6E6FA", bold = true }
+progress_normal = { fg = "#82C8FF", bg = "reset" }
+progress_error = { fg = "#FF6B9D", bg = "reset" }
+
+# Command Palette (Which)
+[which]
+cols = 3
+mask = { bg = "#141420" }
+cand = { fg = "#82C8FF" }
+rest = { fg = "#E0C0FF" }
+desc = { fg = "#C3A0FF" }
+separator = " � "
+separator_style = { fg = "#87FFE6" }
+
+# Confirmation Dialog
+[confirm]
+border = { fg = "#C3A0FF" }
+title = { fg = "#FF91C8", bold = true }
+content = { fg = "#E6E6FA" }
+list = { fg = "#E0C0FF" }
+btn_yes = { fg = "#141420", bg = "#87FFE6", bold = true }
+btn_no = { fg = "#141420", bg = "#FFB4E6", bold = true }
+btn_labels = ["Yes", "No"]
+
+# Spotlight/Table View
+[spot]
+border = { fg = "#C3A0FF" }
+title = { fg = "#FF91C8", bold = true }
+tbl_col = { fg = "#82C8FF", bold = true }
+tbl_cell = { fg = "#E6E6FA" }
+
+# Notifications
+[notify]
+title_info = { fg = "#82C8FF", bold = true }
+title_warn = { fg = "#FFB4E6", bold = true }
+title_error = { fg = "#FF6B9D", bold = true }
+
+# Item Selection (Pick)
+[pick]
+border = { fg = "#C3A0FF" }
+active = { fg = "#141420", bg = "#FF91C8" }
+inactive = { fg = "#E0C0FF" }
+
+# Text Input
+[input]
+border = { fg = "#C3A0FF" }
+title = { fg = "#82C8FF", bold = true }
+value = { fg = "#E6E6FA" }
+selected = { fg = "#141420", bg = "#87FFE6" }
+
+# Completion Menu
+[cmp]
+border = { fg = "#C3A0FF" }
+active = { fg = "#141420", bg = "#FF91C8" }
+inactive = { fg = "#E0C0FF" }
+icon_file = "=�"
+icon_folder = "=�"
+icon_command = "�"
+
+# Task Manager
+[tasks]
+border = { fg = "#C3A0FF" }
+title = { fg = "#82C8FF", bold = true }
+hovered = { fg = "#141420", bg = "#FF91C8" }
+
+# Help Panel
+[help]
+on = { fg = "#87FFE6", bold = true }
+run = { fg = "#FF91C8" }
+desc = { fg = "#E0C0FF" }
+hovered = { fg = "#141420", bg = "#C3A0FF" }
+footer = { fg = "#E6E6FA", bg = "#141420" }
+icon_info = "9"
+icon_warn = "�"
+icon_error = "L"
+
+# File Type Rules
+[filetype]
+rules = [
+  # Images
+  { mime = "image/*", fg = "#FF91C8" },
+
+  # Videos
+  { mime = "video/*", fg = "#C3A0FF" },
+
+  # Audio
+  { mime = "audio/*", fg = "#87FFE6" },
+
+  # Archives
+  { mime = "application/zip", fg = "#FFB4E6" },
+  { mime = "application/x-tar", fg = "#FFB4E6" },
+  { mime = "application/x-rar", fg = "#FFB4E6" },
+  { mime = "application/x-7z-compressed", fg = "#FFB4E6" },
+
+  # Documents
+  { mime = "application/pdf", fg = "#FF6B9D" },
+  { mime = "text/*", fg = "#E6E6FA" },
+
+  # Code
+  { name = "*.rs", fg = "#FFB4E6" },
+  { name = "*.py", fg = "#82C8FF" },
+  { name = "*.js", fg = "#87FFE6" },
+  { name = "*.ts", fg = "#82C8FF" },
+  { name = "*.go", fg = "#87FFE6" },
+  { name = "*.sh", fg = "#C3A0FF" },
+
+  # Special files
+  { name = "*", is = "exec", fg = "#87FFE6", bold = true },
+  { name = "*", is = "orphan", fg = "#FF6B9D" },
+  { name = "*", is = "link", fg = "#FF91C8", italic = true },
+
+  # Directories
+  { name = "*/", fg = "#82C8FF", bold = true },
+]
+
+# Icon Configuration
+[icon]
+prepend_dirs = [
+  { name = ".config", text = "", fg = "#C3A0FF" },
+  { name = ".git", text = "", fg = "#FF91C8" },
+  { name = "Downloads", text = "", fg = "#82C8FF" },
+  { name = "Documents", text = "", fg = "#87FFE6" },
+  { name = "Pictures", text = "", fg = "#FF91C8" },
+  { name = "Music", text = "", fg = "#FFB4E6" },
+  { name = "Videos", text = "", fg = "#C3A0FF" },
+]
+
+append_exts = [
+  { name = "rs", text = "", fg = "#FFB4E6" },
+  { name = "py", text = "", fg = "#82C8FF" },
+  { name = "js", text = "", fg = "#87FFE6" },
+  { name = "ts", text = "", fg = "#82C8FF" },
+  { name = "json", text = "", fg = "#87FFE6" },
+  { name = "toml", text = "", fg = "#C3A0FF" },
+  { name = "yaml", text = "", fg = "#FF91C8" },
+  { name = "yml", text = "", fg = "#FF91C8" },
+  { name = "md", text = "", fg = "#E6E6FA" },
+  { name = "txt", text = "", fg = "#E0C0FF" },
+  { name = "pdf", text = "", fg = "#FF6B9D" },
+  { name = "zip", text = "", fg = "#FFB4E6" },
+  { name = "tar", text = "", fg = "#FFB4E6" },
+  { name = "gz", text = "", fg = "#FFB4E6" },
+  { name = "mp3", text = "", fg = "#87FFE6" },
+  { name = "mp4", text = "", fg = "#C3A0FF" },
+  { name = "png", text = "", fg = "#FF91C8" },
+  { name = "jpg", text = "", fg = "#FF91C8" },
+  { name = "jpeg", text = "", fg = "#FF91C8" },
+  { name = "gif", text = "", fg = "#FFB4E6" },
+]
+
+prepend_conds = [
+  { if = "dir", text = "", fg = "#82C8FF" },
+  { if = "hidden & dir", text = "", fg = "#C3A0FF" },
+  { if = "hidden", text = "", fg = "#E0C0FF" },
+  { if = "link", text = "", fg = "#FF91C8" },
+  { if = "orphan", text = "", fg = "#FF6B9D" },
+]
