@@ -2,7 +2,7 @@
 
 A cohesive Hyprland dotfiles configuration with a pastel City Pop / Anime Vaporwave aesthetic featuring neon pinks, cyans, purples, and teals.
 
-![Theme Preview](./preview.png)
+![Theme Preview](../assets/preview_minimal_citypop_pink.png)
 
 ## Overview
 

@@ -4,5 +4,10 @@
 # Documentation files
 ^/README\.md$
 
+# Image assets (wallpapers, previews, etc.)
+^/.*\.png$
+^/.*\.jpg$
+^/.*\.jpeg$
+
 # Ignore this ignore file itself
 ^/\.stow-local-ignore$
