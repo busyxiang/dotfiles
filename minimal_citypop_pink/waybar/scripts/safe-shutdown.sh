@@ -14,7 +14,7 @@ for i in 5 4 3 2 1; do
 
     # If cancelled, stop the process
     if [[ ! -f "$LOCK" ]]; then
-        notify-send "Shutdown Cancelled" "User activity detected. Shutdown aborted." -t 1500
+        notify-send "Shutdown Cancelled" "User activity detected. Shutdown aborted." -t 3000
         exit 0
     fi
 
