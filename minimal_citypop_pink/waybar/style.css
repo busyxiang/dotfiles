@@ -26,11 +26,6 @@
     color: #2b1b2f;
 }
 
-#clock {
-    color: #ffb6c1;
-    font-weight: bold;
-}
-
 #clock,
 #network,
 #language,
@@ -59,35 +54,6 @@
     color: #ff1493;
 }
 
-#hardware #temperature,
-#hardware #memory {
-    margin-left: 8px;
-}
-
-#pulseaudio-slider {
-    padding: 0;
-    margin: 0;
-}
-#pulseaudio-slider slider {
-    min-height: 0px;
-    min-width: 0px;
-    opacity: 0;
-    background-image: none;
-    border: none;
-    box-shadow: none;
-}
-#pulseaudio-slider trough {
-    min-height: 10px;
-    min-width: 80px;
-    border-radius: 5px;
-    background: #2b1b2f;
-    border: 1px solid #e75480;
-}
-#pulseaudio-slider highlight {
-    min-width: 10px;
-    border-radius: 5px;
-    background: #ff69b4;
-}
-#pulseaudio-slider:hover highlight {
-    background: #ff1493;
+#custom-power {
+    margin-right: 8px;
 }

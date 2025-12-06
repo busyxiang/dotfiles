@@ -3,30 +3,19 @@
   "position": "top",
   "spacing": 8,
   "modules-left": ["hyprland/workspaces", "mpris"],
-  "modules-center": ["clock"],
+  "modules-center": [],
   "modules-right": [
     "network",
     "bluetooth",
-    "group/audio",
+    "pulseaudio",
     "hyprland/language",
     "keyboard-state",
-    "group/hardware",
+    "cpu",
+    "temperature",
+    "memory",
+    "clock",
     "custom/power",
   ],
-  "group/audio": {
-    "orientation": "inherit",
-    "drawer": {
-      "transition-duration": 500,
-    },
-    "modules": ["pulseaudio", "pulseaudio/slider"],
-  },
-  "group/hardware": {
-    "orientation": "inherit",
-    "drawer": {
-      "transition-duration": 500,
-    },
-    "modules": ["cpu", "temperature", "memory"],
-  },
 
   "hyprland/workspaces": {
     "format": "{icon} {windows}",
@@ -40,6 +29,7 @@
   },
   "hyprland/language": {
     "format": " {}",
+    "format-en": "EN",
   },
   "hyprland/window": {
     "separate-outputs": true,
@@ -69,17 +59,18 @@
   },
   "temperature": {
     "format": "{icon} {temperatureC}°C",
-    "interval": 1,
+    "interval": 2,
     "format-icons": ["", "", "", ""],
     "tooltip": false,
   },
   "cpu": {
     "format": " {}%",
-    "interval": 1,
+    "interval": 2,
   },
   "memory": {
-    "format": " {used:0.1f}GB/{total:0.1f}GB",
-    "interval": 1,
+    "format": " {percentage}%",
+    "tooltip-format": "{used:0.1f}GB/{total:0.1f}GB",
+    "interval": 2,
   },
   "bluetooth": {
     "on-click": "~/.config/waybar/scripts/bluetooth-toggle.sh",
@@ -98,11 +89,6 @@
       "default": ["", ""],
     },
     "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
-  },
-  "pulseaudio/slider": {
-    "min": 0,
-    "max": 100,
-    "orientation": "horizontal",
   },
   "network": {
     "interface": "wlp7s0",
