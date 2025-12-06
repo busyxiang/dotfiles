@@ -1,0 +1,13 @@
+# Stow local ignore file
+# Files matching these patterns will not be stowed
+
+# Documentation files
+^/README\.md$
+
+# Image assets (wallpapers, previews, etc.)
+^/.*\.png$
+^/.*\.jpg$
+^/.*\.jpeg$
+
+# Ignore this ignore file itself
+^/\.stow-local-ignore$
