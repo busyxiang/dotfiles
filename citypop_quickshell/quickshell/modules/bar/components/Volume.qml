@@ -16,7 +16,6 @@ Item {
     property color fillColor: "#ff69b4"
     property bool showIcon: false
     property color iconColor: "#ff69b4"
-    property int hoverBarHeight: 20  // Height when hovered
     property color hoverBackgroundColor: "#70ffffff"
     property color hoverFillColor: "#ff1493"
 
@@ -41,7 +40,7 @@ Item {
         }
     }
 
-    implicitWidth: 100
+    implicitWidth: layout.implicitWidth
     implicitHeight: barHeight
 
     // Bind the pipewire node so its volume will be tracked
@@ -50,6 +49,7 @@ Item {
     }
 
     RowLayout {
+        id: layout
         anchors.fill: parent
         spacing: 8
 
@@ -61,11 +61,16 @@ Item {
             source: root.showIcon ? Quickshell.iconPath(root.iconName) : ""
         }
 
+        Text {
+            color: Style.textColor
+            font.pixelSize: Style.fontSize
+            text: Math.round(root.volume * 100) + "%"
+        }
+
         // Main volume bar container
         Rectangle {
             id: volumeBar
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.preferredWidth: 100
 
             implicitHeight: root.barHeight
             radius: root.barRadius
@@ -111,14 +116,6 @@ Item {
             HoverHandler {
                 id: hoverHandler
                 cursorShape: Qt.PointingHandCursor
-
-                onHoveredChanged: {
-                    if (hovered) {
-                        volumeBar.implicitHeight = root.hoverBarHeight;
-                    } else {
-                        volumeBar.implicitHeight = root.barHeight;
-                    }
-                }
             }
 
             // Handles click and drag interactions for volume adjustment
