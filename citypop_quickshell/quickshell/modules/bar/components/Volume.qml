@@ -5,6 +5,7 @@ import Quickshell.Services.Pipewire
 import Quickshell.Widgets
 
 import "../../../Singleton"
+import "../../../common"
 
 Item {
     id: root
@@ -26,22 +27,22 @@ Item {
     // Dynamic icon based on volume and mute state
     readonly property string iconName: {
         if (muted) {
-            return "audio-volume-muted-symbolic";
+            return "volume_off";
         } else if (volume > 1.0) {
-            return "audio-volume-overamplified-symbolic";
+            return "volume_up";
         } else if (volume > 0.66) {
-            return "audio-volume-high-symbolic";
+            return "volume_up";
         } else if (volume > 0.33) {
-            return "audio-volume-medium-symbolic";
+            return "volume_down";
         } else if (volume > 0.0) {
-            return "audio-volume-low-symbolic";
+            return "volume_down";
         } else {
-            return "audio-volume-muted-symbolic";
+            return "volume_off";
         }
     }
 
     implicitWidth: layout.implicitWidth
-    implicitHeight: barHeight
+    implicitHeight: layout.implicitHeight
 
     // Bind the pipewire node so its volume will be tracked
     PwObjectTracker {
@@ -50,15 +51,14 @@ Item {
 
     RowLayout {
         id: layout
-        anchors.fill: parent
+        anchors.centerIn: parent
         spacing: 8
 
-        IconImage {
-            visible: root.showIcon
-            Layout.preferredHeight: root.barHeight
-            Layout.preferredWidth: root.barHeight
-
-            source: root.showIcon ? Quickshell.iconPath(root.iconName) : ""
+        MaterialIcon {
+            text: root.iconName
+            font.pixelSize: 24
+            color: Style.textColor
+            fill: 0
         }
 
         Text {
