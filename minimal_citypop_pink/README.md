@@ -15,6 +15,7 @@ This configuration provides a complete, modern Wayland desktop environment optim
 - **hyprlock** - Lock screen with anime wallpaper and gradient input field
 - **hypridle** - Idle management (auto-lock after 5 minutes)
 - **hyprpaper** - Wallpaper manager
+- **wlogout** - Logout menu with custom City Pop themed layout
 
 ### Core Applications
 - **[Kitty](https://sw.kovidgoyal.net/kitty/)** - Terminal emulator with custom City Pop color scheme
@@ -37,7 +38,7 @@ This configuration provides a complete, modern Wayland desktop environment optim
 **Core Dependencies:**
 ```bash
 # Window manager and compositor
-sudo pacman -S hyprland hyprlock hypridle hyprpaper
+sudo pacman -S hyprland hyprlock hypridle hyprpaper wlogout
 
 # Terminal and shell tools
 sudo pacman -S kitty waybar mako yazi btop fastfetch lazygit
@@ -110,6 +111,8 @@ minimal_city_pop/
 │   └── scripts/
 │       ├── bluetooth-toggle.sh        # Bluetooth control script
 │       └── safe-shutdown.sh           # Safe system shutdown script
+├── wlogout/
+│   └── style.css                      # Logout menu styling
 ├── yazi/
 │   └── theme.toml                     # File manager theme
 ├── citypop_wallpaper.jpg              # Desktop wallpaper
