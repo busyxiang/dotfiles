@@ -7,12 +7,12 @@
   "modules-right": [
     "network",
     "bluetooth",
-    "pulseaudio",
     "hyprland/language",
     "keyboard-state",
     "cpu",
     "temperature",
     "memory",
+    "pulseaudio",
     "clock",
     "custom/power",
   ],
@@ -76,6 +76,7 @@
     "on-click": "~/.config/waybar/scripts/bluetooth-toggle.sh",
   },
   "pulseaudio": {
+    "max-volume": 150,
     "tooltip": false,
     "format": "{icon} {volume}%",
     "format-bluetooth": "{volume}% {icon}",
@@ -120,6 +121,7 @@
   "custom/power": {
     "format": "",
     "tooltip": false,
-    "on-click": "~/.config/waybar/scripts/safe-shutdown.sh",
+    "on-click": "wlogout",
+    // "on-click": "~/.config/waybar/scripts/safe-shutdown.sh",
   },
 }
