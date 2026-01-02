@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Sync package databases
+sudo pacman -Sy --noconfirm >/dev/null 2>&1
+
 # Get updates
 repo_raw=$(pacman -Qu 2>/dev/null)
 aur_raw=$(yay -Qua 2>/dev/null)
