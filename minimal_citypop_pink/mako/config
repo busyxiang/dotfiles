@@ -2,7 +2,6 @@
 
 # Behaviors
 default-timeout=10000
-group-by=app-name
 
 # Layout
 width=350
