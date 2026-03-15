@@ -8,10 +8,10 @@ hovered = { fg = "#141420", bg = "#FF91C8" }  # Pink highlight for hovered item
 preview_hovered = { fg = "#141420", bg = "#C3A0FF" }  # Purple highlight in preview
 find_keyword = { fg = "#141420", bg = "#87FFE6", bold = true }  # Teal for search results
 find_position = { fg = "#E6E6FA", bg = "reset", italic = true }
-marker_selected = { fg = "#FF91C8", bg = "reset" }
-marker_copied = { fg = "#87FFE6", bg = "reset" }
-marker_cut = { fg = "#FFB4E6", bg = "reset" }
-marker_marked = { fg = "#82C8FF", bg = "reset" }
+marker_selected = { fg = "#FF91C8", bg = "#FF91C8" }
+marker_copied = { fg = "#87FFE6", bg = "#87FFE6" }
+marker_cut = { fg = "#FFB4E6", bg = "#FFB4E6" }
+marker_marked = { fg = "#82C8FF", bg = "#82C8FF" }
 count_copied = { fg = "#141420", bg = "#87FFE6" }
 count_cut = { fg = "#141420", bg = "#FFB4E6" }
 count_selected = { fg = "#141420", bg = "#82C8FF" }
