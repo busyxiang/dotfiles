@@ -1,4 +1,5 @@
 import QtQuick
+import "../Singleton"
 
 Text {
     property real fill: 0  // 0 = outlined, 1 = filled
@@ -9,7 +10,7 @@ Text {
 
     renderType: Text.NativeRendering
     textFormat: Text.PlainText
-    color: "white"
+    color: Style.textPrimary
     antialiasing: true
 
     Component.onCompleted: {

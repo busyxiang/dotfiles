@@ -10,41 +10,30 @@ import "../../../common"
 Item {
     id: root
 
-    // Configurable properties
-    property int barHeight: 10
+    property real sf: 1.0
+    property int barHeight: Math.round(10 * sf)
     property int barRadius: 20
-    property color backgroundColor: "#50ffffff"
-    property color fillColor: "#ff69b4"
+    property color backgroundColor: Style.bgTertiary
+    property color fillColor: Style.accentPink
     property bool showIcon: false
-    property color iconColor: "#ff69b4"
-    property color hoverBackgroundColor: "#70ffffff"
-    property color hoverFillColor: "#ff1493"
+    property color iconColor: Style.accentPink
+    property color hoverBackgroundColor: Qt.lighter(Style.bgTertiary, 1.3)
+    property color hoverFillColor: Style.accentMagenta
 
-    // Expose volume value
     readonly property real volume: Pipewire.defaultAudioSink?.audio.volume ?? 0
     readonly property bool muted: Pipewire.defaultAudioSink?.audio.muted ?? false
 
-    // Dynamic icon based on volume and mute state
     readonly property string iconName: {
-        if (muted) {
-            return "volume_off";
-        } else if (volume > 1.0) {
-            return "volume_up";
-        } else if (volume > 0.66) {
-            return "volume_up";
-        } else if (volume > 0.33) {
-            return "volume_down";
-        } else if (volume > 0.0) {
-            return "volume_down";
-        } else {
-            return "volume_off";
-        }
+        if (muted) return "volume_off"
+        if (volume > 0.66) return "volume_up"
+        if (volume > 0.33) return "volume_down"
+        if (volume > 0.0) return "volume_down"
+        return "volume_off"
     }
 
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
 
-    // Bind the pipewire node so its volume will be tracked
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink]
     }
@@ -52,46 +41,56 @@ Item {
     RowLayout {
         id: layout
         anchors.centerIn: parent
-        spacing: 8
+        spacing: Math.round(Style.spaceMd * root.sf)
 
-        MaterialIcon {
-            text: root.iconName
-            font.pixelSize: 24
-            color: Style.textColor
-            fill: 0
+        Item {
+            implicitWidth: muteIcon.implicitWidth + Math.round(Style.spaceMd * root.sf * 2)
+            implicitHeight: muteIcon.implicitHeight + Math.round(Style.spaceMd * root.sf * 2)
+
+            MaterialIcon {
+                id: muteIcon
+                anchors.centerIn: parent
+                text: root.iconName
+                font.pixelSize: Math.round(20 * root.sf)
+                color: root.muted ? Style.textDimmed : Style.accentPink
+                fill: 0
+
+                Behavior on color {
+                    ColorAnimation { duration: Style.animFast }
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (Pipewire.defaultAudioSink?.audio)
+                        Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted
+                }
+            }
         }
 
-        Text {
-            color: Style.textColor
-            font.pixelSize: Style.fontSize
+        StyledText {
             text: Math.round(root.volume * 100) + "%"
+            font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
+            color: Style.textSecondary
         }
 
-        // Main volume bar container
         Rectangle {
             id: volumeBar
-            Layout.preferredWidth: 100
-
+            Layout.preferredWidth: Math.round(100 * root.sf)
             implicitHeight: root.barHeight
             radius: root.barRadius
             color: hoverHandler.hovered ? root.hoverBackgroundColor : root.backgroundColor
 
-            // Smooth color transition on hover
             Behavior on color {
-                ColorAnimation {
-                    duration: 200
-                }
+                ColorAnimation { duration: Style.animNormal }
             }
 
-            // Smooth height expansion on hover
             Behavior on implicitHeight {
-                NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.OutCubic
-                }
+                NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic }
             }
 
-            // Filled portion of the bar representing current volume
             Rectangle {
                 id: fillRect
                 anchors {
@@ -99,26 +98,20 @@ Item {
                     top: parent.top
                     bottom: parent.bottom
                 }
-
                 implicitWidth: Math.min(parent.width * root.volume, parent.width)
                 radius: parent.radius
                 color: hoverHandler.hovered ? root.hoverFillColor : root.fillColor
 
-                // Smooth color transition on hover
                 Behavior on color {
-                    ColorAnimation {
-                        duration: 200
-                    }
+                    ColorAnimation { duration: Style.animNormal }
                 }
             }
 
-            // Handles hover detection and bar expansion
             HoverHandler {
                 id: hoverHandler
                 cursorShape: Qt.PointingHandCursor
             }
 
-            // Handles click and drag interactions for volume adjustment
             WrapperMouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
@@ -126,49 +119,38 @@ Item {
 
                 property bool isDragging: false
 
-                // Start dragging and set initial volume
                 onPressed: mouse => {
                     isDragging = true;
                     updateVolume(mouse.x);
                 }
 
-                // Stop dragging
                 onReleased: {
                     isDragging = false;
                 }
 
-                // Update volume while dragging
                 onPositionChanged: mouse => {
                     if (isDragging) {
                         updateVolume(mouse.x);
                     }
                 }
 
-                // Handle single click to set volume
                 onClicked: mouse => {
                     updateVolume(mouse.x);
                 }
 
-                // Handle scroll wheel for volume adjustment
                 onWheel: wheel => {
                     if (Pipewire.defaultAudioSink?.audio) {
-                        var delta = wheel.angleDelta.y / 120; // Standard scroll step
-                        var volumeChange = delta * 0.05; // 5% per scroll step
+                        var delta = wheel.angleDelta.y / 120;
+                        var volumeChange = delta * 0.05;
                         var currentVolume = Pipewire.defaultAudioSink.audio.volume;
-                        var newVolume = currentVolume + volumeChange;
-                        // Clamp to 0.0 to 1.0 range (0% to 100%)
-                        newVolume = Math.max(0.0, Math.min(1.5, newVolume));
+                        var newVolume = Math.max(0.0, Math.min(1.5, currentVolume + volumeChange));
                         Pipewire.defaultAudioSink.audio.volume = newVolume;
                     }
                 }
 
-                // Convert mouse position to volume value and apply it
                 function updateVolume(x) {
-                    // Clamp x to be within the bar bounds first
                     var clampedX = Math.max(0.0, Math.min(volumeBar.width, x));
-                    var newVolume = (clampedX / volumeBar.width) * 1.0;
-                    // Ensure volume stays within 0.0 to 1.0 range (0% to 100%)
-                    newVolume = Math.max(0.0, Math.min(1.0, newVolume));
+                    var newVolume = Math.max(0.0, Math.min(1.0, clampedX / volumeBar.width));
                     if (Pipewire.defaultAudioSink?.audio) {
                         Pipewire.defaultAudioSink.audio.volume = newVolume;
                     }
