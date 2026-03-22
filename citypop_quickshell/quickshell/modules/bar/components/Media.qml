@@ -35,6 +35,7 @@ Item {
     }
     readonly property bool isPlaying: player?.playbackState === MprisPlaybackState.Playing
 
+
     RowLayout {
         id: layout
         anchors.centerIn: parent
@@ -53,14 +54,91 @@ Item {
             }
         }
 
-        MaterialIcon {
-            text: root.isPlaying ? "pause" : "play_arrow"
-            font.pixelSize: Math.round(20 * root.sf)
-            color: Style.accentPink
-            fill: 1
+        // Vinyl disc / play-pause button
+        Item {
+            id: discContainer
+            implicitWidth: Math.round(20 * root.sf)
+            implicitHeight: Math.round(20 * root.sf)
+
+            // Disc (visible when playing)
+            Rectangle {
+                id: disc
+                anchors.fill: parent
+                radius: width / 2
+                color: Style.bgTertiary
+                border.width: 1.5
+                border.color: Style.accentPink
+                visible: root.isPlaying
+                opacity: discHover.containsMouse ? 0.4 : 1
+
+                Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+
+                // Groove ring (spins to show rotation)
+                Rectangle {
+                    id: grooveRing
+                    anchors.centerIn: parent
+                    width: parent.width * 0.65
+                    height: parent.height * 0.65
+                    radius: width / 2
+                    color: "transparent"
+                    border.width: 1
+                    border.color: Style.accentPink
+                    opacity: 0.3
+
+                    // Small notch to make spinning visible
+                    Rectangle {
+                        width: 3
+                        height: 3
+                        radius: 1.5
+                        color: Style.accentPink
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top
+                        anchors.topMargin: -1
+                    }
+
+                    RotationAnimation on rotation {
+                        running: root.isPlaying
+                        from: 0
+                        to: 360
+                        duration: 3000
+                        loops: Animation.Infinite
+                    }
+                }
+
+                // Center hole
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: Math.round(4 * root.sf)
+                    height: Math.round(4 * root.sf)
+                    radius: width / 2
+                    color: Style.accentPink
+                }
+            }
+
+            // Pause icon on hover (over disc)
+            MaterialIcon {
+                anchors.centerIn: parent
+                text: "pause"
+                font.pixelSize: Math.round(16 * root.sf)
+                color: Style.accentPink
+                fill: 1
+                visible: root.isPlaying && discHover.containsMouse
+            }
+
+            // Play icon (when paused)
+            MaterialIcon {
+                anchors.centerIn: parent
+                text: "play_arrow"
+                font.pixelSize: Math.round(20 * root.sf)
+                color: Style.accentPink
+                fill: 1
+                visible: !root.isPlaying
+            }
 
             MouseArea {
+                id: discHover
                 anchors.fill: parent
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     if (root.isPlaying)
@@ -147,4 +225,5 @@ Item {
             }
         }
     }
+
 }

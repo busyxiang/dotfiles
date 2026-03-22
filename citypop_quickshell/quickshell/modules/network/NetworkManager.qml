@@ -11,6 +11,11 @@ Singleton {
     property bool panelVisible: false
     property var panelScreen: null
 
+    // Tooltip state
+    property bool tooltipVisible: false
+    property var tooltipScreen: null
+    property real tooltipX: 0
+
     property string connectionName: ""
     property string connectionType: ""
     readonly property bool connected: connectionName !== ""
@@ -20,6 +25,8 @@ Singleton {
     property bool scanning: false
     property string connectingTo: ""
     property string connectError: ""
+    property int signalStrength: 0
+    readonly property bool isWifi: connectionType.indexOf("wifi") >= 0 || connectionType.indexOf("wireless") >= 0
 
     readonly property string iconName: {
         if (!connected) return "wifi_off"
@@ -60,17 +67,54 @@ Singleton {
         disconnectProc.running = true
     }
 
+    function forgetNetwork(ssid) {
+        forgetProc.command = ["nmcli", "connection", "delete", ssid]
+        forgetProc.running = true
+    }
+
+    Process {
+        id: forgetProc
+        onRunningChanged: {
+            if (!running) {
+                // Refresh known connections list
+                knownProc.running = true
+            }
+        }
+    }
+
     // Poll active connection
     Process {
         id: statusProc
         command: ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active"]
         running: true
+
+        property string pendingName: ""
+        property string pendingType: ""
+        property bool foundConnection: false
+
         stdout: SplitParser {
             onRead: data => {
                 var parts = data.split(":")
                 if (parts.length >= 2 && parts[1] !== "loopback") {
-                    root.connectionName = parts[0]
-                    root.connectionType = parts[1]
+                    statusProc.pendingName = parts[0]
+                    statusProc.pendingType = parts[1]
+                    statusProc.foundConnection = true
+                }
+            }
+        }
+
+        onRunningChanged: {
+            if (running) {
+                foundConnection = false
+                pendingName = ""
+                pendingType = ""
+            } else {
+                if (foundConnection) {
+                    root.connectionName = pendingName
+                    root.connectionType = pendingType
+                } else {
+                    root.connectionName = ""
+                    root.connectionType = ""
                 }
             }
         }
@@ -82,10 +126,30 @@ Singleton {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            root.connectionName = ""
-            root.connectionType = ""
             statusProc.running = true
         }
+    }
+
+    // Poll signal strength for connected wifi
+    Process {
+        id: signalProc
+        command: ["nmcli", "-t", "-f", "IN-USE,SIGNAL", "dev", "wifi", "list"]
+        stdout: SplitParser {
+            onRead: data => {
+                var parts = data.split(":")
+                if (parts.length >= 2 && parts[0] === "*") {
+                    root.signalStrength = parseInt(parts[1]) || 0
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 10000
+        running: root.isWifi && root.connected
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: signalProc.running = true
     }
 
     // Auto-refresh while panel is open (waits for initial load)

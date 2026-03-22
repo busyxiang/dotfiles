@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Hyprland
 import "../../../Singleton"
+import "../../../common"
 
 Item {
     id: root
@@ -29,37 +30,75 @@ Item {
         id: row
         spacing: Math.round(Style.spaceSm * root.sf)
 
-    Repeater {
-        model: Hyprland.workspaces
+        Repeater {
+            model: Hyprland.workspaces
 
-        delegate: Rectangle {
-            id: ws
-            required property var modelData
+            delegate: Item {
+                id: ws
+                required property var modelData
 
-            readonly property bool isActive: Hyprland.focusedWorkspace === modelData
-                && Hyprland.focusedMonitor === root.monitor
-            readonly property bool onThisMonitor: modelData.monitor === root.monitor
+                readonly property bool isActive: Hyprland.focusedWorkspace === modelData
+                    && Hyprland.focusedMonitor === root.monitor
+                readonly property bool onThisMonitor: modelData.monitor === root.monitor
 
-            visible: onThisMonitor
-            implicitWidth: visible ? Math.round((isActive ? 24 : 10) * root.sf) : 0
-            implicitHeight: Math.round(10 * root.sf)
-            radius: Style.radiusFull
-            color: isActive ? Style.accentPink : Style.bgTertiary
+                visible: onThisMonitor
+                implicitWidth: visible ? Math.round(22 * root.sf) : 0
+                implicitHeight: Math.round(22 * root.sf)
 
-            Behavior on implicitWidth {
-                NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic }
-            }
+                Behavior on implicitWidth {
+                    NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic }
+                }
 
-            Behavior on color {
-                ColorAnimation { duration: Style.animNormal }
-            }
+                // Neon glow (behind the box, only for active)
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: -3
+                    radius: Style.radiusSm + 3
+                    color: "transparent"
+                    border.width: 2
+                    border.color: Style.accentPink
+                    opacity: ws.isActive ? 0.35 : 0
+                    visible: opacity > 0
 
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: ws.modelData.activate()
+                    Behavior on opacity {
+                        NumberAnimation { duration: Style.animNormal }
+                    }
+                }
+
+                // Number box
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Style.radiusSm
+                    color: ws.isActive ? Style.accentPink : "transparent"
+                    border.width: ws.isActive ? 0 : 1
+                    border.color: Style.accentPurple
+
+                    Behavior on color {
+                        ColorAnimation { duration: Style.animNormal }
+                    }
+                    Behavior on border.color {
+                        ColorAnimation { duration: Style.animNormal }
+                    }
+
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: ws.modelData.id ?? ""
+                        font.pixelSize: Math.round(11 * root.sf)
+                        font.bold: true
+                        color: ws.isActive ? Style.bgPrimary : Style.accentPurple
+
+                        Behavior on color {
+                            ColorAnimation { duration: Style.animNormal }
+                        }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: ws.modelData.activate()
+                }
             }
         }
-    }
     }
 }
