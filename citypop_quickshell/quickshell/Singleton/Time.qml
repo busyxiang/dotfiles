@@ -5,6 +5,7 @@ import QtQuick
 
 Singleton {
     readonly property string time: Qt.formatDateTime(clock.date, "hh:mm AP")
+    readonly property string timeSeconds: Qt.formatDateTime(clock.date, "hh:mm:ss AP")
     readonly property string date: Qt.formatDateTime(clock.date, "ddd, MMM d")
     readonly property string fullTime: Qt.formatDateTime(clock.date, "hh:mm:ss AP | dddd, MMM d")
 

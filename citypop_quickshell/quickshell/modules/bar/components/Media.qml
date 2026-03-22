@@ -80,6 +80,6 @@ RowLayout {
         color: Style.textSecondary
         font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
         elide: Text.ElideRight
-        Layout.maximumWidth: Math.round(200 * root.sf)
+        Layout.preferredWidth: Math.round(200 * root.sf)
     }
 }

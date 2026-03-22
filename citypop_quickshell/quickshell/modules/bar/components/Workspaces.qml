@@ -5,10 +5,29 @@ import QtQuick.Layouts
 import Quickshell.Hyprland
 import "../../../Singleton"
 
-RowLayout {
+Item {
+    id: root
     property real sf: 1.0
+    property var screen: null
 
-    spacing: Math.round(Style.spaceSm * sf)
+    readonly property var monitor: screen ? Hyprland.monitorFor(screen) : null
+
+    implicitWidth: row.implicitWidth
+    implicitHeight: row.implicitHeight
+
+    MouseArea {
+        anchors.fill: parent
+        onWheel: event => {
+            if (event.angleDelta.y > 0)
+                Hyprland.dispatch("workspace m-1")
+            else if (event.angleDelta.y < 0)
+                Hyprland.dispatch("workspace m+1")
+        }
+    }
+
+    RowLayout {
+        id: row
+        spacing: Math.round(Style.spaceSm * root.sf)
 
     Repeater {
         model: Hyprland.workspaces
@@ -18,10 +37,12 @@ RowLayout {
             required property var modelData
 
             readonly property bool isActive: Hyprland.focusedWorkspace === modelData
-            readonly property real sf: parent.sf
+                && Hyprland.focusedMonitor === root.monitor
+            readonly property bool onThisMonitor: modelData.monitor === root.monitor
 
-            implicitWidth: Math.round((isActive ? 24 : 10) * sf)
-            implicitHeight: Math.round(10 * sf)
+            visible: onThisMonitor
+            implicitWidth: visible ? Math.round((isActive ? 24 : 10) * root.sf) : 0
+            implicitHeight: Math.round(10 * root.sf)
             radius: Style.radiusFull
             color: isActive ? Style.accentPink : Style.bgTertiary
 
@@ -39,5 +60,6 @@ RowLayout {
                 onClicked: ws.modelData.activate()
             }
         }
+    }
     }
 }

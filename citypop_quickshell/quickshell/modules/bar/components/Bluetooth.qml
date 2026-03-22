@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import "../../network"
+import "../../bluetooth"
 import "../../../Singleton"
 import "../../../common"
 
@@ -14,10 +14,11 @@ Item {
 
     MaterialIcon {
         id: icon
-        text: NetworkManager.iconName
+        text: BluetoothManager.powered ? "bluetooth" : "bluetooth_disabled"
         font.pixelSize: Math.round(18 * root.sf)
-        color: NetworkManager.panelVisible ? Style.accentMagenta
-             : NetworkManager.connected ? Style.accentPink
+        color: BluetoothManager.panelVisible ? Style.accentMagenta
+             : BluetoothManager.hasConnected ? Style.accentPink
+             : BluetoothManager.powered ? Style.textSecondary
              : Style.textDimmed
         fill: 0
 
@@ -30,8 +31,8 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            NetworkManager.panelScreen = root.screen
-            NetworkManager.togglePanel()
+            BluetoothManager.panelScreen = root.screen
+            BluetoothManager.togglePanel()
         }
     }
 }

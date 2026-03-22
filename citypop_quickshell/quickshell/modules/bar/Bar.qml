@@ -32,8 +32,10 @@ Scope {
                 anchors.leftMargin: Math.round(Style.barPadding * panel.sf)
                 spacing: Math.round(Style.spaceLg * panel.sf)
 
-                Workspaces { sf: panel.sf }
+                Workspaces { sf: panel.sf; screen: panel.modelData }
                 WindowTitle { sf: panel.sf }
+                SysMon { sf: panel.sf; screen: panel.modelData }
+                NetStat { sf: panel.sf }
             }
 
             // Center section
@@ -41,7 +43,7 @@ Scope {
                 anchors.centerIn: parent
                 spacing: Math.round(Style.spaceSm * panel.sf)
 
-                Clock { sf: panel.sf }
+                Media { sf: panel.sf }
             }
 
             // Right section
@@ -51,13 +53,14 @@ Scope {
                 anchors.rightMargin: Math.round(Style.barPadding * panel.sf)
                 spacing: Math.round(Style.spaceLg * panel.sf)
 
-                Media { sf: panel.sf }
-                SysTray { sf: panel.sf }
-                Volume { showIcon: true; sf: panel.sf }
-                Network { sf: panel.sf }
+                SysTray { sf: panel.sf; panelWindow: panel; screen: panel.modelData }
+                Bluetooth { sf: panel.sf; screen: panel.modelData }
+                Volume { showIcon: true; sf: panel.sf; screen: panel.modelData }
+                Network { sf: panel.sf; screen: panel.modelData }
                 Keyboard { sf: panel.sf }
                 NotificationButton { sf: panel.sf; screen: panel.modelData }
-                PowerMenu { sf: panel.sf }
+                Clock { sf: panel.sf; screen: panel.modelData }
+                PowerMenu { sf: panel.sf; screen: panel.modelData }
             }
         }
     }

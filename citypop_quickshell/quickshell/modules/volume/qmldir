@@ -1,0 +1,2 @@
+singleton VolumeState 1.0 VolumeState.qml
+VolumePanel 1.0 VolumePanel.qml

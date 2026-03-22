@@ -1,0 +1,2 @@
+singleton SysMonState 1.0 SysMonState.qml
+SysMonPanel 1.0 SysMonPanel.qml

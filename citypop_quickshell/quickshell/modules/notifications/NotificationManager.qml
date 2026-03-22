@@ -29,6 +29,12 @@ Singleton {
         unreadCount = 0
     }
 
+    function invokeAction(notifData, actionIndex) {
+        var actions = notifData.actions
+        if (actions && actions.length > actionIndex)
+            actions[actionIndex].invoke()
+    }
+
     function dismissNotification(index) {
         var copy = history.slice()
         var removed = copy.splice(index, 1)
@@ -85,7 +91,8 @@ Singleton {
                 hasTimeout: hasTimeout,
                 image: notification.image || "",
                 appIcon: notification.appIcon || "",
-                notifObj: notification
+                notifObj: notification,
+                actions: notification.actions || []
             }
 
             // Listen for the notification's closed signal

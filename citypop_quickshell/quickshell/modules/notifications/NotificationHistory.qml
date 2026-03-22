@@ -188,10 +188,26 @@ Scope {
 
                                 width: ListView.view.width
                                 implicitHeight: histContent.implicitHeight + Style.spaceLg * 2
-                                color: Style.bgPrimary
+                                color: histClickArea.containsMouse ? Style.bgTertiary : Style.bgPrimary
                                 radius: Style.radiusMd
                                 border.width: 1
                                 border.color: Style.bgTertiary
+
+                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                // Click to invoke default action
+                                MouseArea {
+                                    id: histClickArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: histItem.modelData.actions.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    onClicked: {
+                                        if (histItem.modelData.actions.length > 0) {
+                                            NotificationManager.invokeAction(histItem.modelData, 0)
+                                            NotificationManager.dismissNotification(histItem.index)
+                                        }
+                                    }
+                                }
 
                                 RowLayout {
                                     id: histContent

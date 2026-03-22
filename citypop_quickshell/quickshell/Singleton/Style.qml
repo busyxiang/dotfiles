@@ -45,10 +45,10 @@ Singleton {
     // === Font ===
     readonly property string fontFamily: "CaskaydiaCove Nerd Font"
     readonly property string iconFontFamily: "Material Symbols Rounded"
-    readonly property int fontSizeSm: 11
-    readonly property int fontSizeMd: 13
-    readonly property int fontSizeLg: 15
-    readonly property int fontSizeXl: 18
+    readonly property int fontSizeSm: 13
+    readonly property int fontSizeMd: 15
+    readonly property int fontSizeLg: 17
+    readonly property int fontSizeXl: 20
 
     // === Animation ===
     readonly property int animFast: 120

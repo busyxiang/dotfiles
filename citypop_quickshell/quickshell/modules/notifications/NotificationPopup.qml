@@ -50,6 +50,18 @@ Scope {
                         border.width: 1
                         border.color: Style.bgTertiary
 
+                        // Click card to invoke default action
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: notifCard.modelData.actions.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: {
+                                if (notifCard.modelData.actions.length > 0) {
+                                    NotificationManager.invokeAction(notifCard.modelData, 0)
+                                    NotificationManager.dismissPopupById(notifCard.modelData.id)
+                                }
+                            }
+                        }
+
                         RowLayout {
                             id: notifContent
                             anchors.fill: parent
@@ -92,7 +104,7 @@ Scope {
                                         MouseArea {
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: NotificationManager.dismissPopupById(notifCard.modelData.id)
+                                            onClicked: NotificationManager.removeById(notifCard.modelData.id)
                                         }
                                     }
                                 }

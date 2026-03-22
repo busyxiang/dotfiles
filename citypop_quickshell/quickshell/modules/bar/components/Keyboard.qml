@@ -4,25 +4,32 @@ import Quickshell.Io
 import "../../../Singleton"
 import "../../../common"
 
-RowLayout {
+Item {
     id: root
     property real sf: 1.0
 
-    spacing: Math.round(Style.spaceSm * sf)
-
     property string layout: "en"
 
-    MaterialIcon {
-        text: "keyboard"
-        font.pixelSize: Math.round(16 * root.sf)
-        color: Style.accentPink
-        fill: 0
-    }
+    implicitWidth: row.implicitWidth
+    implicitHeight: row.implicitHeight
 
-    StyledText {
-        text: root.layout.toUpperCase()
-        font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
-        color: Style.textSecondary
+    RowLayout {
+        id: row
+        anchors.fill: parent
+        spacing: Math.round(Style.spaceSm * sf)
+
+        MaterialIcon {
+            text: "keyboard"
+            font.pixelSize: Math.round(16 * root.sf)
+            color: Style.accentPink
+            fill: 0
+        }
+
+        StyledText {
+            text: root.layout.toUpperCase()
+            font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
+            color: Style.textSecondary
+        }
     }
 
     MouseArea {
