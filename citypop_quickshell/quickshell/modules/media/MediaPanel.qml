@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.Mpris
+import Quickshell.Widgets
 import "../../Singleton"
 import "../../common"
 
@@ -112,6 +113,18 @@ Scope {
                 onClicked: MediaState.visible = false
             }
 
+            // ── Neon glow (behind card) ──
+            Rectangle {
+                id: glowRect
+                anchors.fill: card
+                anchors.margins: -3
+                radius: Style.radiusLg + 3
+                color: Style.accentPink
+                opacity: root.isPlaying ? 0.3 : 0
+
+                Behavior on opacity { NumberAnimation { duration: Style.animNormal } }
+            }
+
             // --- Dropdown Card ---
             Rectangle {
                 id: card
@@ -123,7 +136,9 @@ Scope {
                 color: Style.bgSecondary
                 radius: Style.radiusLg
                 border.width: 1
-                border.color: Style.bgTertiary
+                border.color: root.isPlaying ? Qt.rgba(1, 0.41, 0.71, 0.3) : Style.bgTertiary
+
+                Behavior on border.color { ColorAnimation { duration: Style.animNormal } }
 
                 MouseArea { anchors.fill: parent }
 
@@ -176,35 +191,104 @@ Scope {
                         }
                     }
 
-                    // ── Album Art ──
-                    Rectangle {
-                        Layout.preferredWidth: 140
-                        Layout.preferredHeight: 140
+                    // ── Vinyl Record Album Art ──
+                    Item {
+                        Layout.preferredWidth: 160
+                        Layout.preferredHeight: 160
                         Layout.alignment: Qt.AlignHCenter
-                        radius: Style.radiusMd
-                        color: Style.bgTertiary
-                        clip: true
-                        border.width: 1
-                        border.color: Style.bgTertiary
 
-                        Image {
-                            id: albumArtImg
+                        // Vinyl disc — ClippingRectangle for proper circular clip
+                        ClippingRectangle {
+                            id: vinylClip
                             anchors.fill: parent
-                            source: root.artUrl
-                            fillMode: Image.PreserveAspectCrop
-                            smooth: true
-                            asynchronous: true
-                            visible: status === Image.Ready
+                            radius: Infinity
+                            color: "#1a1a1a"
+
+                            // Rotating content
+                            Item {
+                                id: vinylDisc
+                                anchors.fill: parent
+
+                                RotationAnimation on rotation {
+                                    running: root.isPlaying && MediaState.visible
+                                    from: 0
+                                    to: 360
+                                    duration: 5000
+                                    loops: Animation.Infinite
+                                }
+
+                                // Groove rings
+                                Repeater {
+                                    model: 3
+
+                                    Rectangle {
+                                        required property int index
+                                        anchors.centerIn: parent
+                                        width: parent.width - index * 8 - 4
+                                        height: parent.height - index * 8 - 4
+                                        radius: width / 2
+                                        color: "transparent"
+                                        border.width: 1
+                                        border.color: Qt.rgba(1, 1, 1, 0.06)
+                                    }
+                                }
+
+                                // Spin notch
+                                Rectangle {
+                                    width: 4
+                                    height: 4
+                                    radius: 2
+                                    color: Style.accentPink
+                                    opacity: 0.6
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.top: parent.top
+                                    anchors.topMargin: 4
+                                }
+
+                                // Album art (fills disc)
+                                Image {
+                                    id: albumArtImg
+                                    anchors.centerIn: parent
+                                    width: parent.width - 12
+                                    height: parent.height - 12
+                                    source: root.artUrl
+                                    fillMode: Image.PreserveAspectCrop
+                                    smooth: true
+                                    asynchronous: true
+                                    visible: status === Image.Ready
+                                }
+
+                                // Fallback icon
+                                MaterialIcon {
+                                    anchors.centerIn: parent
+                                    text: "album"
+                                    font.pixelSize: 56
+                                    color: Style.textDimmed
+                                    visible: albumArtImg.status !== Image.Ready
+                                }
+
+                                // Center hole
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: 12
+                                    height: 12
+                                    radius: 6
+                                    color: "#1a1a1a"
+                                }
+                            }
                         }
 
-                        // Fallback icon when no art
-                        MaterialIcon {
-                            anchors.centerIn: parent
-                            text: "album"
-                            font.pixelSize: 56
-                            color: Style.textDimmed
-                            visible: albumArtImg.status !== Image.Ready
-                            z: 0
+                        // Outer ring accent
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: width / 2
+                            color: "transparent"
+                            border.width: 1.5
+                            border.color: root.isPlaying ? Style.accentPink : Style.bgTertiary
+                            opacity: root.isPlaying ? 0.5 : 0.3
+
+                            Behavior on border.color { ColorAnimation { duration: Style.animNormal } }
+                            Behavior on opacity { NumberAnimation { duration: Style.animNormal } }
                         }
                     }
 
@@ -244,51 +328,61 @@ Scope {
                         }
                     }
 
-                    // ── Seek Bar ──
+                    // ── VU Meter Seek Bar ──
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: Style.spaceXs
 
                         Item {
+                            id: seekItem
                             Layout.fillWidth: true
-                            implicitHeight: 16
+                            implicitHeight: 20
 
                             property real pos: root.trackedPosition
                             property real len: root.player?.length ?? 0
                             property real fraction: len > 0 ? Math.min(1.0, Math.max(0, pos / len)) : 0
 
-                            Rectangle {
-                                id: seekTrack
+                            // VU meter segments
+                            Row {
+                                id: vuMeter
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.verticalCenter: parent.verticalCenter
-                                height: seekArea.containsMouse || seekArea.isDragging ? 6 : 4
-                                radius: height / 2
-                                color: Style.bgTertiary
+                                spacing: 2
 
-                                Behavior on height { NumberAnimation { duration: Style.animFast } }
+                                property int totalSegments: 20
+                                property int litSegments: Math.round(seekItem.fraction * totalSegments)
 
-                                Rectangle {
-                                    width: parent.width * parent.parent.fraction
-                                    height: parent.height
-                                    radius: parent.radius
-                                    color: Style.accentPink
+                                Repeater {
+                                    model: vuMeter.totalSegments
 
-                                    Behavior on width { NumberAnimation { duration: 200 } }
+                                    Rectangle {
+                                        required property int index
+                                        property bool isLit: index < vuMeter.litSegments
+
+                                        width: (vuMeter.width - (vuMeter.totalSegments - 1) * vuMeter.spacing) / vuMeter.totalSegments
+                                        height: seekArea.containsMouse || seekArea.isDragging ? 10 : 8
+                                        radius: 1
+                                        color: isLit ? Style.accentPink : Style.bgTertiary
+
+                                        Behavior on color { ColorAnimation { duration: 60 } }
+                                        Behavior on height { NumberAnimation { duration: Style.animFast } }
+                                    }
                                 }
+                            }
 
-                                // Seek handle
-                                Rectangle {
-                                    x: Math.max(0, Math.min(parent.width - width, parent.width * parent.parent.fraction - width / 2))
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    width: seekArea.containsMouse || seekArea.isDragging ? 12 : 0
-                                    height: width
-                                    radius: width / 2
-                                    color: Style.accentPink
-                                    visible: width > 0
+                            // Seek handle
+                            Rectangle {
+                                x: Math.max(0, Math.min(seekItem.width - width, seekItem.width * seekItem.fraction - width / 2))
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: seekArea.containsMouse || seekArea.isDragging ? 14 : 0
+                                height: width
+                                radius: width / 2
+                                color: Style.accentPink
+                                visible: width > 0
+                                z: 1
 
-                                    Behavior on width { NumberAnimation { duration: Style.animFast } }
-                                }
+                                Behavior on width { NumberAnimation { duration: Style.animFast } }
                             }
 
                             MouseArea {
@@ -313,7 +407,7 @@ Scope {
                                     if (!(root.player?.canSeek ?? false)) return
                                     var len = root.player?.length ?? 0
                                     if (len <= 0) return
-                                    var frac = Math.max(0, Math.min(1, x / seekTrack.width))
+                                    var frac = Math.max(0, Math.min(1, x / seekItem.width))
                                     root.player.position = frac * len
                                 }
                             }
