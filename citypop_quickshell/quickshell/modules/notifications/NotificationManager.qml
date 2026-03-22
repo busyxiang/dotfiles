@@ -61,6 +61,23 @@ Singleton {
         popups = popups.filter(n => n.id !== id)
     }
 
+    // Build grouped history: array of { appName, notifications: [...], collapsed: bool }
+    function getGroupedHistory() {
+        var groups = []
+        var groupMap = {}
+        for (var i = 0; i < history.length; i++) {
+            var n = history[i]
+            var app = n.appName || "Notification"
+            if (!(app in groupMap)) {
+                var group = { appName: app, notifications: [], collapsed: false }
+                groupMap[app] = group
+                groups.push(group)
+            }
+            groupMap[app].notifications.push(n)
+        }
+        return groups
+    }
+
     NotificationServer {
         id: server
         keepOnReload: false
@@ -71,12 +88,20 @@ Singleton {
         persistenceSupported: true
 
         onNotification: notification => {
-            if (root.dndEnabled) return
             notification.tracked = true
+
+            var isCritical = (notification.urgency === NotificationUrgency.Critical)
+            var isResident = notification.resident || false
+
+            // DND blocks non-critical notifications
+            if (root.dndEnabled && !isCritical) return
 
             var rawTimeout = notification.expireTimeout
             var hasTimeout = rawTimeout > 0
             var timeout = hasTimeout ? rawTimeout : 5000
+
+            // Persistent notifications: resident or no timeout
+            var persistent = isResident || !hasTimeout
 
             var notifId = Date.now()
 
@@ -85,10 +110,13 @@ Singleton {
                 body: notification.body,
                 appName: notification.appName,
                 urgency: notification.urgency,
+                isCritical: isCritical,
                 time: new Date(),
                 id: notifId,
                 timeout: timeout,
                 hasTimeout: hasTimeout,
+                persistent: persistent,
+                resident: isResident,
                 image: notification.image || "",
                 appIcon: notification.appIcon || "",
                 notifObj: notification,

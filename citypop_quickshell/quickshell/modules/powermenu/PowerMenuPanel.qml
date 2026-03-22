@@ -27,6 +27,46 @@ Scope {
 
             exclusionMode: ExclusionMode.Ignore
 
+            // Countdown state
+            property string pendingCmd: ""
+            property string pendingLabel: ""
+            property int countdown: 0
+
+            function startCountdown(cmd, label) {
+                pendingCmd = cmd
+                pendingLabel = label
+                countdown = 5
+                countdownTimer.start()
+            }
+
+            function cancelCountdown() {
+                countdownTimer.stop()
+                pendingCmd = ""
+                pendingLabel = ""
+                countdown = 0
+            }
+
+            Timer {
+                id: countdownTimer
+                interval: 1000
+                repeat: true
+                onTriggered: {
+                    panel.countdown--
+                    if (panel.countdown <= 0) {
+                        countdownTimer.stop()
+                        proc.command = ["sh", "-c", panel.pendingCmd]
+                        proc.startDetached()
+                        panel.cancelCountdown()
+                        PowerMenuState.visible = false
+                    }
+                }
+            }
+
+            // Reset countdown when panel closes
+            onVisibleChanged: {
+                if (!visible) cancelCountdown()
+            }
+
             // Click outside to close
             MouseArea {
                 anchors.top: parent.top
@@ -43,7 +83,7 @@ Scope {
                 anchors.right: parent.right
                 anchors.topMargin: Style.barHeight + Style.spaceMd
                 anchors.rightMargin: Style.spaceMd
-                width: 180
+                width: 200
                 implicitHeight: menuCol.implicitHeight + Style.spaceLg * 2
                 color: Style.bgSecondary
                 radius: Style.radiusLg
@@ -71,14 +111,30 @@ Scope {
                             required property var modelData
                             required property int index
 
+                            readonly property bool isPending: panel.pendingCmd === menuItem.modelData.cmd && panel.countdown > 0
+
                             Layout.fillWidth: true
                             height: 36
                             radius: Style.radiusSm
-                            color: itemHover.containsMouse
-                                ? (menuItem.modelData.accent ? Qt.rgba(1, 0.27, 0.4, 0.15) : Style.bgTertiary)
-                                : "transparent"
+                            color: isPending ? Qt.rgba(1, 0.27, 0.4, 0.25)
+                                 : itemHover.containsMouse
+                                    ? (menuItem.modelData.accent ? Qt.rgba(1, 0.27, 0.4, 0.15) : Style.bgTertiary)
+                                    : "transparent"
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                            // Countdown progress bar
+                            Rectangle {
+                                anchors.left: parent.left
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: menuItem.isPending ? parent.width * (panel.countdown / 5) : 0
+                                radius: parent.radius
+                                color: Qt.rgba(1, 0.27, 0.4, 0.15)
+                                visible: menuItem.isPending
+
+                                Behavior on width { NumberAnimation { duration: 900; easing.type: Easing.Linear } }
+                            }
 
                             RowLayout {
                                 anchors.fill: parent
@@ -87,21 +143,25 @@ Scope {
                                 spacing: Style.spaceMd
 
                                 MaterialIcon {
-                                    text: menuItem.modelData.icon
+                                    text: menuItem.isPending ? "cancel" : menuItem.modelData.icon
                                     font.pixelSize: 18
-                                    color: itemHover.containsMouse
-                                        ? (menuItem.modelData.accent ? Style.colorUrgent : Style.accentPink)
-                                        : Style.textSecondary
+                                    color: menuItem.isPending ? Style.colorUrgent
+                                         : itemHover.containsMouse
+                                            ? (menuItem.modelData.accent ? Style.colorUrgent : Style.accentPink)
+                                            : Style.textSecondary
 
                                     Behavior on color { ColorAnimation { duration: Style.animFast } }
                                 }
 
                                 StyledText {
-                                    text: menuItem.modelData.label
+                                    text: menuItem.isPending
+                                        ? "Cancel (" + panel.countdown + "s)"
+                                        : menuItem.modelData.label
                                     font.pixelSize: Style.fontSizeMd
-                                    color: itemHover.containsMouse
-                                        ? (menuItem.modelData.accent ? Style.colorUrgent : Style.textPrimary)
-                                        : Style.textSecondary
+                                    color: menuItem.isPending ? Style.colorUrgent
+                                         : itemHover.containsMouse
+                                            ? (menuItem.modelData.accent ? Style.colorUrgent : Style.textPrimary)
+                                            : Style.textSecondary
                                     Layout.fillWidth: true
 
                                     Behavior on color { ColorAnimation { duration: Style.animFast } }
@@ -114,9 +174,18 @@ Scope {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    proc.command = ["sh", "-c", menuItem.modelData.cmd]
-                                    proc.startDetached()
-                                    PowerMenuState.visible = false
+                                    if (menuItem.isPending) {
+                                        // Cancel the countdown
+                                        panel.cancelCountdown()
+                                    } else if (menuItem.modelData.accent) {
+                                        // Destructive action — start countdown
+                                        panel.startCountdown(menuItem.modelData.cmd, menuItem.modelData.label)
+                                    } else {
+                                        // Safe action — execute immediately
+                                        proc.command = ["sh", "-c", menuItem.modelData.cmd]
+                                        proc.startDetached()
+                                        PowerMenuState.visible = false
+                                    }
                                 }
                             }
                         }

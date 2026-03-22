@@ -43,7 +43,7 @@ Scope {
                 anchors.centerIn: parent
                 spacing: Math.round(Style.spaceSm * panel.sf)
 
-                Media { sf: panel.sf }
+                Media { sf: panel.sf; screen: panel.modelData }
             }
 
             // Right section

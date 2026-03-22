@@ -16,6 +16,7 @@ Singleton {
     property list<var> devices: []
     property string connectingTo: ""
     property string connectError: ""
+    property string pairingPin: ""
 
     readonly property list<var> connectedDevices: devices.filter(d => d.connected)
     readonly property bool hasConnected: connectedDevices.length > 0
@@ -43,6 +44,7 @@ Singleton {
     function connectDevice(mac) {
         connectingTo = mac
         connectError = ""
+        pairingPin = ""
         connectProc.command = ["bluetoothctl", "connect", mac]
         connectProc.running = true
     }
@@ -50,6 +52,11 @@ Singleton {
     function disconnectDevice(mac) {
         disconnectProc.command = ["bluetoothctl", "disconnect", mac]
         disconnectProc.running = true
+    }
+
+    function removeDevice(mac) {
+        removeProc.command = ["bluetoothctl", "remove", mac]
+        removeProc.running = true
     }
 
     function refreshDevices() {
@@ -203,6 +210,25 @@ Singleton {
     // ── Connect ──
     Process {
         id: connectProc
+        stdout: SplitParser {
+            onRead: data => {
+                var trimmed = data.trim()
+                // Capture pairing PIN/passkey from stdout
+                // Typical formats:
+                //   [agent] Confirm passkey 123456 (yes/no):
+                //   [agent] PIN code: 1234
+                //   Request confirmation ... Passkey: 123456
+                var passMatch = trimmed.match(/[Pp]ass(?:key|code)[:\s]+(\d+)/)
+                if (passMatch) {
+                    root.pairingPin = passMatch[1]
+                    return
+                }
+                var pinMatch = trimmed.match(/PIN[:\s]+(\d+)/)
+                if (pinMatch) {
+                    root.pairingPin = pinMatch[1]
+                }
+            }
+        }
         stderr: SplitParser {
             onRead: data => {
                 root.connectError = data
@@ -211,6 +237,7 @@ Singleton {
         onRunningChanged: {
             if (!running) {
                 root.connectingTo = ""
+                root.pairingPin = ""
                 root.refreshDevices()
             }
         }
@@ -219,6 +246,16 @@ Singleton {
     // ── Disconnect ──
     Process {
         id: disconnectProc
+        onRunningChanged: {
+            if (!running) {
+                root.refreshDevices()
+            }
+        }
+    }
+
+    // ── Remove / Unpair ──
+    Process {
+        id: removeProc
         onRunningChanged: {
             if (!running) {
                 root.refreshDevices()

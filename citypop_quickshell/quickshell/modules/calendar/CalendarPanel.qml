@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import "../../Singleton"
 import "../../common"
 
@@ -42,7 +43,7 @@ Scope {
                 anchors.right: parent.right
                 anchors.topMargin: Style.barHeight + Style.spaceMd
                 anchors.rightMargin: Style.spaceMd + 56 // offset to align near clock
-                width: 300
+                width: 320
                 height: cardContent.implicitHeight + Style.spaceXl * 2
                 color: Style.bgSecondary
                 radius: Style.radiusLg
@@ -51,13 +52,40 @@ Scope {
 
                 MouseArea { anchors.fill: parent }
 
+                // --- Clipboard Process ---
+                Process {
+                    id: clipProc
+                    command: ["wl-copy", ""]
+                }
+
+                // --- Copied feedback state ---
+                property string copiedText: ""
+                property bool showCopied: false
+
+                Timer {
+                    id: copiedTimer
+                    interval: 1200
+                    onTriggered: card.showCopied = false
+                }
+
+                function copyDate(day: int): void {
+                    var monthNames = ["January","February","March","April","May","June",
+                                      "July","August","September","October","November","December"]
+                    var dateStr = monthNames[calendarArea.viewMonth] + " " + day + ", " + calendarArea.viewYear
+                    clipProc.command = ["wl-copy", dateStr]
+                    clipProc.startDetached()
+                    copiedText = dateStr
+                    showCopied = true
+                    copiedTimer.restart()
+                }
+
                 ColumnLayout {
                     id: cardContent
                     anchors.fill: parent
                     anchors.margins: Style.spaceXl
                     spacing: Style.spaceLg
 
-                    // ── Current Time ──
+                    // -- Current Time --
                     ColumnLayout {
                         spacing: Style.spaceXs
 
@@ -75,14 +103,14 @@ Scope {
                         }
                     }
 
-                    // ── Divider ──
+                    // -- Divider --
                     Rectangle {
                         Layout.fillWidth: true
                         height: 1
                         color: Style.bgTertiary
                     }
 
-                    // ── Month/Year Header ──
+                    // -- Month/Year Header --
                     RowLayout {
                         spacing: Style.spaceMd
 
@@ -107,9 +135,11 @@ Scope {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    var d = new Date(calGrid.viewYear, calGrid.viewMonth - 1, 1)
-                                    calGrid.viewYear = d.getFullYear()
-                                    calGrid.viewMonth = d.getMonth()
+                                    calendarArea.direction = -1
+                                    calendarArea.animateTransition()
+                                    var d = new Date(calendarArea.viewYear, calendarArea.viewMonth - 1, 1)
+                                    calendarArea.viewYear = d.getFullYear()
+                                    calendarArea.viewMonth = d.getMonth()
                                 }
                             }
                         }
@@ -120,7 +150,7 @@ Scope {
                             text: {
                                 var names = ["January","February","March","April","May","June",
                                              "July","August","September","October","November","December"]
-                                return names[calGrid.viewMonth] + " " + calGrid.viewYear
+                                return names[calendarArea.viewMonth] + " " + calendarArea.viewYear
                             }
                             font.pixelSize: Style.fontSizeMd
                             font.bold: true
@@ -130,8 +160,8 @@ Scope {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     var now = new Date()
-                                    calGrid.viewYear = now.getFullYear()
-                                    calGrid.viewMonth = now.getMonth()
+                                    calendarArea.viewYear = now.getFullYear()
+                                    calendarArea.viewMonth = now.getMonth()
                                 }
                             }
                         }
@@ -159,45 +189,115 @@ Scope {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    var d = new Date(calGrid.viewYear, calGrid.viewMonth + 1, 1)
-                                    calGrid.viewYear = d.getFullYear()
-                                    calGrid.viewMonth = d.getMonth()
+                                    calendarArea.direction = 1
+                                    calendarArea.animateTransition()
+                                    var d = new Date(calendarArea.viewYear, calendarArea.viewMonth + 1, 1)
+                                    calendarArea.viewYear = d.getFullYear()
+                                    calendarArea.viewMonth = d.getMonth()
                                 }
                             }
                         }
                     }
 
-                    // ── Day-of-week headers ──
-                    GridLayout {
-                        columns: 7
-                        columnSpacing: 0
-                        rowSpacing: 0
+                    // -- Day-of-week headers (with week number spacer) --
+                    RowLayout {
+                        spacing: 0
                         Layout.fillWidth: true
 
-                        Repeater {
-                            model: ["Su","Mo","Tu","We","Th","Fr","Sa"]
+                        // Week number column header
+                        Item {
+                            implicitWidth: 26
+                            implicitHeight: 20
 
                             StyledText {
-                                required property string modelData
-                                Layout.fillWidth: true
-                                text: modelData
+                                anchors.centerIn: parent
+                                text: "W"
                                 color: Style.textDimmed
-                                font.pixelSize: Style.fontSizeSm
-                                horizontalAlignment: Text.AlignHCenter
+                                font.pixelSize: 11
+                            }
+                        }
+
+                        // Thin separator
+                        Rectangle {
+                            implicitWidth: 1
+                            implicitHeight: 16
+                            Layout.alignment: Qt.AlignVCenter
+                            color: Style.bgTertiary
+                        }
+
+                        GridLayout {
+                            columns: 7
+                            columnSpacing: 0
+                            rowSpacing: 0
+                            Layout.fillWidth: true
+
+                            Repeater {
+                                model: ["Su","Mo","Tu","We","Th","Fr","Sa"]
+
+                                StyledText {
+                                    required property string modelData
+                                    Layout.fillWidth: true
+                                    text: modelData
+                                    color: Style.textDimmed
+                                    font.pixelSize: Style.fontSizeSm
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
                             }
                         }
                     }
 
-                    // ── Calendar Grid ──
-                    GridLayout {
-                        id: calGrid
-                        columns: 7
-                        columnSpacing: 0
-                        rowSpacing: 2
+                    // -- Calendar Grid with transition animation --
+                    Item {
+                        id: calendarArea
                         Layout.fillWidth: true
+                        implicitHeight: calGrid.implicitHeight
+                        clip: true
 
                         property int viewYear: new Date().getFullYear()
                         property int viewMonth: new Date().getMonth()
+                        property int direction: 1 // 1 = forward, -1 = back
+
+                        // Transition animation properties
+                        property real gridOpacity: 1.0
+                        property real gridTranslateX: 0
+
+                        function animateTransition(): void {
+                            // Start: slide out in the given direction
+                            gridOpacity = 0.0
+                            gridTranslateX = -direction * 30
+                            // After a brief moment, snap to the incoming side and animate in
+                            snapInTimer.start()
+                        }
+
+                        Timer {
+                            id: snapInTimer
+                            interval: 80
+                            onTriggered: {
+                                // Snap to opposite side
+                                calendarArea.gridTranslateX = calendarArea.direction * 30
+                                // Now animate back to center
+                                slideInAnim.start()
+                                fadeInAnim.start()
+                            }
+                        }
+
+                        NumberAnimation {
+                            id: slideInAnim
+                            target: calendarArea
+                            property: "gridTranslateX"
+                            to: 0
+                            duration: Style.animNormal
+                            easing.type: Easing.OutCubic
+                        }
+
+                        NumberAnimation {
+                            id: fadeInAnim
+                            target: calendarArea
+                            property: "gridOpacity"
+                            to: 1.0
+                            duration: Style.animNormal
+                            easing.type: Easing.OutCubic
+                        }
 
                         property var days: {
                             var result = []
@@ -221,47 +321,195 @@ Scope {
                             return result
                         }
 
-                        Repeater {
-                            model: calGrid.days
-
-                            Rectangle {
-                                id: dayCell
-                                required property var modelData
-                                required property int index
-
-                                readonly property bool isToday: {
-                                    var now = new Date()
-                                    return modelData.current &&
-                                           modelData.day === now.getDate() &&
-                                           calGrid.viewMonth === now.getMonth() &&
-                                           calGrid.viewYear === now.getFullYear()
+                        // Compute ISO week numbers for each row
+                        property var weekNumbers: {
+                            var weeks = []
+                            for (var row = 0; row < 6; row++) {
+                                var idx = row * 7
+                                var entry = days[idx]
+                                // Figure out the actual date for the first cell in this row
+                                var actualMonth = viewMonth
+                                var actualYear = viewYear
+                                if (!entry.current) {
+                                    if (row === 0) {
+                                        // Previous month
+                                        var prev = new Date(viewYear, viewMonth - 1, 1)
+                                        actualMonth = prev.getMonth()
+                                        actualYear = prev.getFullYear()
+                                    } else {
+                                        // Next month
+                                        var next = new Date(viewYear, viewMonth + 1, 1)
+                                        actualMonth = next.getMonth()
+                                        actualYear = next.getFullYear()
+                                    }
                                 }
-
-                                Layout.fillWidth: true
-                                implicitHeight: 30
-                                radius: Style.radiusFull
-                                color: isToday ? Style.accentPink
-                                     : dayHover.containsMouse && modelData.current ? Style.bgTertiary
-                                     : "transparent"
-
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                                StyledText {
-                                    anchors.centerIn: parent
-                                    text: dayCell.modelData.day
-                                    font.pixelSize: Style.fontSizeSm
-                                    font.bold: dayCell.isToday
-                                    color: dayCell.isToday ? Style.bgPrimary
-                                         : dayCell.modelData.current ? Style.textPrimary
-                                         : Style.textDimmed
+                                // Use Thursday of that week for ISO week calc
+                                // The row starts on Sunday; Thursday is idx+4
+                                var thuEntry = days[idx + 4]
+                                var thuMonth = viewMonth
+                                var thuYear = viewYear
+                                if (!thuEntry.current) {
+                                    if (row === 0) {
+                                        var p = new Date(viewYear, viewMonth - 1, 1)
+                                        thuMonth = p.getMonth()
+                                        thuYear = p.getFullYear()
+                                    } else {
+                                        var n = new Date(viewYear, viewMonth + 1, 1)
+                                        thuMonth = n.getMonth()
+                                        thuYear = n.getFullYear()
+                                    }
                                 }
+                                var thuDate = new Date(thuYear, thuMonth, thuEntry.day)
+                                // ISO week number: week containing Jan 4
+                                var jan4 = new Date(thuDate.getFullYear(), 0, 4)
+                                var startOfYear = new Date(jan4.getTime())
+                                startOfYear.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7))
+                                var diff = thuDate.getTime() - startOfYear.getTime()
+                                var weekNum = Math.floor(diff / (7 * 24 * 60 * 60 * 1000)) + 1
+                                weeks.push(weekNum)
+                            }
+                            return weeks
+                        }
 
-                                MouseArea {
-                                    id: dayHover
-                                    anchors.fill: parent
-                                    hoverEnabled: true
+                        RowLayout {
+                            anchors.fill: parent
+                            spacing: 0
+                            opacity: calendarArea.gridOpacity
+                            transform: Translate { x: calendarArea.gridTranslateX }
+
+                            // -- Week numbers column --
+                            ColumnLayout {
+                                spacing: Style.spaceXs
+                                Layout.alignment: Qt.AlignTop
+
+                                Repeater {
+                                    model: calendarArea.weekNumbers
+
+                                    Item {
+                                        required property int modelData
+                                        implicitWidth: 26
+                                        implicitHeight: 30
+
+                                        StyledText {
+                                            anchors.centerIn: parent
+                                            text: parent.modelData
+                                            color: Style.textDimmed
+                                            font.pixelSize: 11
+                                        }
+                                    }
                                 }
                             }
+
+                            // Thin separator
+                            Rectangle {
+                                implicitWidth: 1
+                                Layout.fillHeight: true
+                                color: Style.bgTertiary
+                                Layout.alignment: Qt.AlignTop
+                            }
+
+                            // -- Day grid --
+                            GridLayout {
+                                id: calGrid
+                                columns: 7
+                                columnSpacing: 0
+                                rowSpacing: 2
+                                Layout.fillWidth: true
+
+                                Repeater {
+                                    model: calendarArea.days
+
+                                    Rectangle {
+                                        id: dayCell
+                                        required property var modelData
+                                        required property int index
+
+                                        readonly property bool isToday: {
+                                            var now = new Date()
+                                            return modelData.current &&
+                                                   modelData.day === now.getDate() &&
+                                                   calendarArea.viewMonth === now.getMonth() &&
+                                                   calendarArea.viewYear === now.getFullYear()
+                                        }
+
+                                        Layout.fillWidth: true
+                                        implicitHeight: 30
+                                        radius: Style.radiusFull
+                                        color: isToday ? Style.accentPink
+                                             : dayHover.containsMouse && modelData.current ? Style.bgTertiary
+                                             : "transparent"
+
+                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                        StyledText {
+                                            anchors.centerIn: parent
+                                            text: dayCell.modelData.day
+                                            font.pixelSize: Style.fontSizeSm
+                                            font.bold: dayCell.isToday
+                                            color: dayCell.isToday ? Style.bgPrimary
+                                                 : dayCell.modelData.current ? Style.textPrimary
+                                                 : Style.textDimmed
+                                        }
+
+                                        // "Copied" flash overlay
+                                        Rectangle {
+                                            id: flashOverlay
+                                            anchors.fill: parent
+                                            radius: parent.radius
+                                            color: Style.accentPink
+                                            opacity: 0
+
+                                            SequentialAnimation {
+                                                id: flashAnim
+                                                NumberAnimation {
+                                                    target: flashOverlay
+                                                    property: "opacity"
+                                                    to: 0.5
+                                                    duration: Style.animFast
+                                                }
+                                                NumberAnimation {
+                                                    target: flashOverlay
+                                                    property: "opacity"
+                                                    to: 0
+                                                    duration: Style.animSlow
+                                                }
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: dayHover
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: dayCell.modelData.current ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                            onClicked: {
+                                                if (dayCell.modelData.current) {
+                                                    card.copyDate(dayCell.modelData.day)
+                                                    flashAnim.start()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // -- Copied tooltip --
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: card.showCopied ? 24 : 0
+                        color: Style.bgTertiary
+                        radius: Style.radiusSm
+                        clip: true
+                        visible: card.showCopied
+
+                        Behavior on implicitHeight { NumberAnimation { duration: Style.animFast } }
+
+                        StyledText {
+                            anchors.centerIn: parent
+                            text: "Copied: " + card.copiedText
+                            font.pixelSize: 11
+                            color: Style.accentPink
                         }
                     }
                 }

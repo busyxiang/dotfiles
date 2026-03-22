@@ -173,102 +173,289 @@ Scope {
                             }
                         }
 
-                        // Notification list
+                        // Grouped notification list
                         ListView {
+                            id: groupedList
                             anchors.fill: parent
                             clip: true
                             spacing: Style.spaceSm
-                            model: NotificationManager.history
                             visible: NotificationManager.history.length > 0
 
-                            delegate: Rectangle {
-                                id: histItem
+                            // Rebuild grouped model whenever history changes
+                            property var groupedModel: NotificationManager.getGroupedHistory()
+
+                            Connections {
+                                target: NotificationManager
+                                function onHistoryChanged() {
+                                    groupedList.groupedModel = NotificationManager.getGroupedHistory()
+                                }
+                            }
+
+                            model: groupedList.groupedModel
+
+                            delegate: ColumnLayout {
+                                id: groupDelegate
                                 required property var modelData
                                 required property int index
 
-                                width: ListView.view.width
-                                implicitHeight: histContent.implicitHeight + Style.spaceLg * 2
-                                color: histClickArea.containsMouse ? Style.bgTertiary : Style.bgPrimary
-                                radius: Style.radiusMd
-                                border.width: 1
-                                border.color: Style.bgTertiary
+                                property bool collapsed: false
 
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                width: groupedList.width
+                                spacing: Style.spaceSm
 
-                                // Click to invoke default action
-                                MouseArea {
-                                    id: histClickArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: histItem.modelData.actions.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                    onClicked: {
-                                        if (histItem.modelData.actions.length > 0) {
-                                            NotificationManager.invokeAction(histItem.modelData, 0)
-                                            NotificationManager.dismissNotification(histItem.index)
+                                // App group header
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    implicitHeight: groupHeader.implicitHeight + Style.spaceMd * 2
+                                    color: groupHeaderArea.containsMouse ? Style.bgTertiary : Style.bgPrimary
+                                    radius: Style.radiusMd
+
+                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                    MouseArea {
+                                        id: groupHeaderArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: groupDelegate.collapsed = !groupDelegate.collapsed
+                                    }
+
+                                    RowLayout {
+                                        id: groupHeader
+                                        anchors.fill: parent
+                                        anchors.margins: Style.spaceMd
+                                        spacing: Style.spaceMd
+
+                                        MaterialIcon {
+                                            text: groupDelegate.collapsed ? "expand_more" : "expand_less"
+                                            font.pixelSize: 16
+                                            color: Style.textDimmed
                                         }
+
+                                        StyledText {
+                                            text: groupDelegate.modelData.appName
+                                            color: Style.accentAmber
+                                            font.pixelSize: Style.fontSizeSm
+                                            font.bold: true
+                                        }
+
+                                        // Count badge
+                                        Rectangle {
+                                            implicitWidth: countLabel.implicitWidth + Style.spaceMd * 2
+                                            implicitHeight: countLabel.implicitHeight + Style.spaceSm
+                                            radius: Style.radiusFull
+                                            color: Style.bgTertiary
+
+                                            StyledText {
+                                                id: countLabel
+                                                anchors.centerIn: parent
+                                                text: groupDelegate.modelData.notifications.length.toString()
+                                                color: Style.textSecondary
+                                                font.pixelSize: Style.fontSizeSm
+                                            }
+                                        }
+
+                                        Item { Layout.fillWidth: true }
                                     }
                                 }
 
-                                RowLayout {
-                                    id: histContent
-                                    anchors.fill: parent
-                                    anchors.margins: Style.spaceLg
-                                    spacing: Style.spaceLg
+                                // Nested notification items (collapsible)
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    Layout.leftMargin: Style.spaceMd
+                                    spacing: Style.spaceSm
+                                    visible: !groupDelegate.collapsed
 
-                                    Image {
-                                        source: histItem.modelData.image || histItem.modelData.appIcon || ""
-                                        visible: status === Image.Ready
-                                        Layout.preferredWidth: 40
-                                        Layout.preferredHeight: 40
-                                        Layout.alignment: Qt.AlignTop
-                                        fillMode: Image.PreserveAspectCrop
-                                        sourceSize.width: 40
-                                        sourceSize.height: 40
-                                    }
+                                    Repeater {
+                                        model: groupDelegate.modelData.notifications
 
-                                    ColumnLayout {
-                                        spacing: Style.spaceSm
-                                        Layout.fillWidth: true
+                                        delegate: Rectangle {
+                                            id: histItem
+                                            required property var modelData
+                                            required property int index
 
-                                        RowLayout {
-                                            spacing: Style.spaceMd
+                                            property bool bodyExpanded: false
 
-                                            StyledText {
-                                                text: histItem.modelData.appName || "Notification"
-                                                color: Style.accentAmber
-                                                font.pixelSize: Style.fontSizeSm
-                                                font.bold: true
+                                            Layout.fillWidth: true
+                                            implicitHeight: histContent.implicitHeight + Style.spaceLg * 2
+                                            color: histClickArea.containsMouse ? Style.bgTertiary : Style.bgPrimary
+                                            radius: Style.radiusMd
+                                            border.width: histItem.modelData.isCritical ? 2 : 1
+                                            border.color: histItem.modelData.isCritical ? Style.colorUrgent : Style.bgTertiary
+
+                                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                            // Find index in flat history for dismissal
+                                            function findHistoryIndex() {
+                                                var history = NotificationManager.history
+                                                for (var i = 0; i < history.length; i++) {
+                                                    if (history[i].id === histItem.modelData.id)
+                                                        return i
+                                                }
+                                                return -1
                                             }
 
-                                            Item { Layout.fillWidth: true }
-
-                                            MaterialIcon {
-                                                text: "close"
-                                                font.pixelSize: 14
-                                                color: Style.textDimmed
-
-                                                MouseArea {
-                                                    anchors.fill: parent
-                                                    cursorShape: Qt.PointingHandCursor
-                                                    onClicked: NotificationManager.dismissNotification(histItem.index)
+                                            // Click to invoke default action
+                                            MouseArea {
+                                                id: histClickArea
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: histItem.modelData.actions.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                onClicked: {
+                                                    if (histItem.modelData.actions.length > 0) {
+                                                        var idx = histItem.findHistoryIndex()
+                                                        NotificationManager.invokeAction(histItem.modelData, 0)
+                                                        if (idx >= 0)
+                                                            NotificationManager.dismissNotification(idx)
+                                                    }
                                                 }
                                             }
-                                        }
 
-                                        StyledText {
-                                            text: histItem.modelData.summary || ""
-                                            font.bold: true
-                                            Layout.fillWidth: true
-                                            wrapMode: Text.WordWrap
-                                        }
+                                            RowLayout {
+                                                id: histContent
+                                                anchors.fill: parent
+                                                anchors.margins: Style.spaceLg
+                                                spacing: Style.spaceLg
 
-                                        StyledText {
-                                            text: histItem.modelData.body || ""
-                                            color: Style.textSecondary
-                                            font.pixelSize: Style.fontSizeSm
-                                            Layout.fillWidth: true
-                                            wrapMode: Text.WordWrap
-                                            visible: text !== ""
+                                                Image {
+                                                    source: histItem.modelData.image || histItem.modelData.appIcon || ""
+                                                    visible: status === Image.Ready
+                                                    Layout.preferredWidth: 40
+                                                    Layout.preferredHeight: 40
+                                                    Layout.alignment: Qt.AlignTop
+                                                    fillMode: Image.PreserveAspectCrop
+                                                    sourceSize.width: 40
+                                                    sourceSize.height: 40
+                                                }
+
+                                                ColumnLayout {
+                                                    spacing: Style.spaceSm
+                                                    Layout.fillWidth: true
+
+                                                    RowLayout {
+                                                        spacing: Style.spaceMd
+
+                                                        // Critical urgency icon
+                                                        MaterialIcon {
+                                                            text: "priority_high"
+                                                            font.pixelSize: 14
+                                                            color: Style.colorUrgent
+                                                            visible: histItem.modelData.isCritical
+                                                        }
+
+                                                        // Persistent pin icon
+                                                        MaterialIcon {
+                                                            text: "push_pin"
+                                                            font.pixelSize: 12
+                                                            color: Style.textDimmed
+                                                            visible: histItem.modelData.persistent
+                                                        }
+
+                                                        Item { Layout.fillWidth: true }
+
+                                                        MaterialIcon {
+                                                            text: "close"
+                                                            font.pixelSize: 14
+                                                            color: Style.textDimmed
+
+                                                            MouseArea {
+                                                                anchors.fill: parent
+                                                                cursorShape: Qt.PointingHandCursor
+                                                                onClicked: {
+                                                                    var idx = histItem.findHistoryIndex()
+                                                                    if (idx >= 0)
+                                                                        NotificationManager.dismissNotification(idx)
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    StyledText {
+                                                        text: histItem.modelData.summary || ""
+                                                        font.bold: true
+                                                        Layout.fillWidth: true
+                                                        wrapMode: Text.WordWrap
+                                                    }
+
+                                                    // Body text with click-to-expand
+                                                    StyledText {
+                                                        id: histBodyText
+                                                        text: histItem.modelData.body || ""
+                                                        color: Style.textSecondary
+                                                        font.pixelSize: Style.fontSizeSm
+                                                        Layout.fillWidth: true
+                                                        wrapMode: Text.WordWrap
+                                                        visible: text !== ""
+                                                        maximumLineCount: histItem.bodyExpanded ? 999 : 3
+                                                        elide: histItem.bodyExpanded ? Text.ElideNone : Text.ElideRight
+
+                                                        property bool wasTruncated: false
+                                                        onTruncatedChanged: { if (truncated) wasTruncated = true }
+                                                    }
+
+                                                    // "Show more / Show less" toggle
+                                                    StyledText {
+                                                        text: histItem.bodyExpanded ? "Show less" : "Show more"
+                                                        color: Style.accentPink
+                                                        font.pixelSize: Style.fontSizeSm
+                                                        visible: histBodyText.visible && (histBodyText.truncated || histBodyText.wasTruncated)
+
+                                                        MouseArea {
+                                                            anchors.fill: parent
+                                                            cursorShape: Qt.PointingHandCursor
+                                                            onClicked: histItem.bodyExpanded = !histItem.bodyExpanded
+                                                        }
+                                                    }
+
+                                                    // Action buttons row
+                                                    Flow {
+                                                        Layout.fillWidth: true
+                                                        spacing: Style.spaceSm
+                                                        visible: histItem.modelData.actions.length > 0
+
+                                                        Repeater {
+                                                            model: histItem.modelData.actions
+
+                                                            delegate: Rectangle {
+                                                                required property var modelData
+                                                                required property int index
+
+                                                                implicitWidth: histActionLabel.implicitWidth + Style.spaceLg * 2
+                                                                implicitHeight: histActionLabel.implicitHeight + Style.spaceSm * 2
+                                                                radius: Style.radiusFull
+                                                                color: histActionBtnArea.containsMouse ? Style.accentPink : "transparent"
+                                                                border.width: 1
+                                                                border.color: Style.accentPink
+
+                                                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                                                StyledText {
+                                                                    id: histActionLabel
+                                                                    anchors.centerIn: parent
+                                                                    text: modelData.text || ""
+                                                                    color: histActionBtnArea.containsMouse ? Style.bgPrimary : Style.accentPink
+                                                                    font.pixelSize: Style.fontSizeSm
+
+                                                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                                                }
+
+                                                                MouseArea {
+                                                                    id: histActionBtnArea
+                                                                    anchors.fill: parent
+                                                                    hoverEnabled: true
+                                                                    cursorShape: Qt.PointingHandCursor
+                                                                    onClicked: {
+                                                                        var idx = histItem.findHistoryIndex()
+                                                                        NotificationManager.invokeAction(histItem.modelData, index)
+                                                                        if (idx >= 0)
+                                                                            NotificationManager.dismissNotification(idx)
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }

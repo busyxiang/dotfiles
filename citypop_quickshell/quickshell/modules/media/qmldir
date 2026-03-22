@@ -1,0 +1,2 @@
+singleton MediaState 1.0 MediaState.qml
+MediaPanel 1.0 MediaPanel.qml

@@ -157,6 +157,47 @@ Scope {
                         }
                     }
 
+                    // Fan speed (only shown when fanRpm > 0)
+                    RowLayout {
+                        spacing: Style.spaceMd
+                        visible: SysMonState.fanRpm > 0
+
+                        MaterialIcon {
+                            text: "mode_fan"
+                            font.pixelSize: 18
+                            color: SysMonState.fanRpm >= 3500 ? Style.colorUrgent
+                                 : SysMonState.fanRpm >= 2000 ? Style.accentAmber
+                                 : Style.textSecondary
+                            fill: 1
+
+                            RotationAnimation on rotation {
+                                running: SysMonState.fanRpm > 0
+                                from: 0; to: 360
+                                duration: SysMonState.fanRpm > 2000 ? 2000 : 4000
+                                loops: Animation.Infinite
+                            }
+                        }
+
+                        StyledText {
+                            text: "Fan Speed"
+                            color: Style.textSecondary
+                            font.pixelSize: Style.fontSizeSm
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        StyledText {
+                            text: SysMonState.fanRpm.toLocaleString() + " RPM"
+                            font.pixelSize: Style.fontSizeSm
+                            font.bold: true
+                            color: SysMonState.fanRpm >= 3500 ? Style.colorUrgent
+                                 : SysMonState.fanRpm >= 2000 ? Style.accentAmber
+                                 : Style.textPrimary
+
+                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+                        }
+                    }
+
                     // ── Divider ──
                     Rectangle {
                         Layout.fillWidth: true
@@ -313,6 +354,98 @@ Scope {
                         text: SysMonState.ramUsed + "G / " + SysMonState.ramTotal + "G"
                         color: Style.textSecondary
                         font.pixelSize: Style.fontSizeSm
+                    }
+
+                    // ── Divider ──
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 1
+                        color: Style.bgTertiary
+                    }
+
+                    // ═══════════════════════════════════
+                    // Top Processes Section
+                    // ═══════════════════════════════════
+
+                    RowLayout {
+                        spacing: Style.spaceMd
+
+                        MaterialIcon {
+                            text: "monitoring"
+                            font.pixelSize: 20
+                            color: Style.accentPink
+                            fill: 1
+                        }
+
+                        StyledText {
+                            text: "Top Processes"
+                            font.pixelSize: Style.fontSizeMd
+                            font.bold: true
+                        }
+                    }
+
+                    // Column headers
+                    RowLayout {
+                        spacing: Style.spaceSm
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: "Name"
+                            font.pixelSize: Style.fontSizeSm
+                            color: Style.textDimmed
+                        }
+
+                        StyledText {
+                            Layout.preferredWidth: 48
+                            text: "CPU%"
+                            font.pixelSize: Style.fontSizeSm
+                            color: Style.textDimmed
+                            horizontalAlignment: Text.AlignRight
+                        }
+
+                        StyledText {
+                            Layout.preferredWidth: 48
+                            text: "MEM%"
+                            font.pixelSize: Style.fontSizeSm
+                            color: Style.textDimmed
+                            horizontalAlignment: Text.AlignRight
+                        }
+                    }
+
+                    // Process list
+                    Repeater {
+                        model: SysMonState.topProcesses
+
+                        RowLayout {
+                            required property var modelData
+                            spacing: Style.spaceSm
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: modelData.name
+                                font.pixelSize: Style.fontSizeSm
+                                color: Style.textPrimary
+                                elide: Text.ElideRight
+                            }
+
+                            StyledText {
+                                Layout.preferredWidth: 48
+                                text: modelData.cpu
+                                font.pixelSize: Style.fontSizeSm
+                                color: parseFloat(modelData.cpu) >= 50 ? Style.colorUrgent
+                                     : parseFloat(modelData.cpu) >= 20 ? Style.accentAmber
+                                     : Style.textSecondary
+                                horizontalAlignment: Text.AlignRight
+                            }
+
+                            StyledText {
+                                Layout.preferredWidth: 48
+                                text: modelData.mem
+                                font.pixelSize: Style.fontSizeSm
+                                color: Style.textSecondary
+                                horizontalAlignment: Text.AlignRight
+                            }
+                        }
                     }
                 }
             }

@@ -5,9 +5,6 @@ import Quickshell
 import "modules/bar"
 import "modules/notifications"
 import "modules/osd"
-import "modules/launcher"
-import "modules/lock"
-import "modules/wallpaper"
 import "modules/network"
 import "modules/bluetooth"
 import "modules/powermenu"
@@ -15,9 +12,10 @@ import "modules/systray"
 import "modules/calendar"
 import "modules/volume"
 import "modules/sysmon"
+import "modules/media"
 
 Scope {
-    // Wallpaper {}
+
     Bar {}
     NetworkPanel {}
     BluetoothPanel {}
@@ -26,9 +24,8 @@ Scope {
     CalendarPanel {}
     VolumePanel {}
     SysMonPanel {}
+    MediaPanel {}
     NotificationPopup {}
     NotificationHistory {}
     OSD {}
-    Launcher { id: launcher }
-    LockScreen { id: lockScreen }
 }

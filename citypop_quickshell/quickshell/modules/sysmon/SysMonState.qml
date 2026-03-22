@@ -17,6 +17,8 @@ Singleton {
     property int ramPercent: 0
     property int gpuPercent: 0
     property int gpuTemp: 0
+    property int fanRpm: 0
+    property var topProcesses: []
 
     // Previous CPU tick values for delta calculation
     property real prevIdle: 0
@@ -30,12 +32,13 @@ Singleton {
         triggeredOnStart: true
         onTriggered: {
             statsProc.running = true
+            psProc.running = true
         }
     }
 
     Process {
         id: statsProc
-        command: ["bash", "-c", "head -1 /proc/stat; head -3 /proc/meminfo; cat /sys/class/thermal/thermal_zone0/temp; echo GPU_BUSY:$(cat /sys/class/drm/card1/device/gpu_busy_percent 2>/dev/null || cat /sys/class/drm/card0/device/gpu_busy_percent 2>/dev/null || echo 0); echo GPU_TEMP:$(cat /sys/class/drm/card1/device/hwmon/hwmon*/temp1_input 2>/dev/null || cat /sys/class/drm/card0/device/hwmon/hwmon*/temp1_input 2>/dev/null || echo 0)"]
+        command: ["bash", "-c", "head -1 /proc/stat; head -3 /proc/meminfo; cat /sys/class/thermal/thermal_zone0/temp; echo GPU_BUSY:$(cat /sys/class/drm/card1/device/gpu_busy_percent 2>/dev/null || cat /sys/class/drm/card0/device/gpu_busy_percent 2>/dev/null || echo 0); echo GPU_TEMP:$(cat /sys/class/drm/card1/device/hwmon/hwmon*/temp1_input 2>/dev/null || cat /sys/class/drm/card0/device/hwmon/hwmon*/temp1_input 2>/dev/null || echo 0); echo FAN_RPM:$(cat /sys/class/hwmon/hwmon*/fan1_input 2>/dev/null || echo 0)"]
         stdout: SplitParser {
             onRead: data => {
                 if (data.indexOf("cpu ") === 0) {
@@ -80,6 +83,10 @@ Singleton {
                     var gpuTempVal = parseInt(data.substring(9))
                     if (!isNaN(gpuTempVal) && gpuTempVal > 0)
                         root.gpuTemp = Math.round(gpuTempVal / 1000)
+                } else if (data.indexOf("FAN_RPM:") === 0) {
+                    var fanVal = parseInt(data.substring(8))
+                    if (!isNaN(fanVal))
+                        root.fanRpm = fanVal
                 } else {
                     // CPU temp line — raw integer in millidegrees
                     var temp = parseInt(data)
@@ -87,6 +94,31 @@ Singleton {
                         root.cpuTemp = Math.round(temp / 1000)
                 }
             }
+        }
+    }
+
+    Process {
+        id: psProc
+        property var _lines: []
+        command: ["bash", "-c", "ps -eo comm,%cpu,%mem --sort=-%cpu | head -6"]
+        stdout: SplitParser {
+            onRead: data => {
+                // Skip the header line
+                if (data.indexOf("COMMAND") !== -1 || data.indexOf("%CPU") !== -1)
+                    return
+                var parts = data.trim().split(/\s+/)
+                if (parts.length >= 3) {
+                    psProc._lines.push({
+                        name: parts.slice(0, parts.length - 2).join(" "),
+                        cpu: parts[parts.length - 2],
+                        mem: parts[parts.length - 1]
+                    })
+                }
+            }
+        }
+        onExited: {
+            root.topProcesses = psProc._lines
+            psProc._lines = []
         }
     }
 }

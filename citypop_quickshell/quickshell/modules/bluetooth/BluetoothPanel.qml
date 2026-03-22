@@ -341,6 +341,51 @@ Scope {
                         }
                     }
 
+                    // ── Pairing PIN display ──
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: pinRow.implicitHeight + Style.spaceMd * 2
+                        radius: Style.radiusSm
+                        color: Qt.rgba(1, 0.7, 0.28, 0.1)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 0.7, 0.28, 0.3)
+                        visible: BluetoothManager.pairingPin !== ""
+
+                        RowLayout {
+                            id: pinRow
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: Style.spaceMd
+                            spacing: Style.spaceMd
+
+                            MaterialIcon {
+                                text: "pin"
+                                font.pixelSize: 16
+                                color: Style.accentAmber
+                            }
+
+                            ColumnLayout {
+                                spacing: Style.spaceXs
+                                Layout.fillWidth: true
+
+                                StyledText {
+                                    text: "Pairing PIN"
+                                    color: Style.accentAmber
+                                    font.pixelSize: Style.fontSizeSm
+                                }
+
+                                StyledText {
+                                    text: BluetoothManager.pairingPin
+                                    color: Style.textPrimary
+                                    font.pixelSize: Style.fontSizeXl
+                                    font.bold: true
+                                    font.letterSpacing: 4
+                                }
+                            }
+                        }
+                    }
+
                     // ── Scanning indicator ──
                     RowLayout {
                         visible: BluetoothManager.scanning
@@ -423,6 +468,34 @@ Scope {
                                         from: 0; to: 360
                                         duration: 800
                                         loops: Animation.Infinite
+                                    }
+                                }
+
+                                // Forget / unpair button (visible on hover for paired, non-connecting devices)
+                                Rectangle {
+                                    implicitWidth: 28
+                                    implicitHeight: 28
+                                    radius: Style.radiusFull
+                                    visible: devHover.containsMouse && devItem.modelData.paired && !devItem.isConnecting
+                                    color: forgetHover.containsMouse ? Qt.rgba(1, 0.27, 0.4, 0.15) : "transparent"
+
+                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "delete"
+                                        font.pixelSize: 16
+                                        color: forgetHover.containsMouse ? Style.colorUrgent : Style.textDimmed
+
+                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                    }
+
+                                    MouseArea {
+                                        id: forgetHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: BluetoothManager.removeDevice(devItem.modelData.mac)
                                     }
                                 }
 
