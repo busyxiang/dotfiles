@@ -11,10 +11,13 @@ Scope {
         model: Quickshell.screens
 
         PanelWindow {
+            id: popupPanel
             required property var modelData
             screen: modelData
             color: "transparent"
             visible: NotificationManager.popups.length > 0
+
+            property var _knownIds: ({})
 
             anchors {
                 top: true
@@ -25,6 +28,7 @@ Scope {
             implicitHeight: popupColumn.implicitHeight + Style.barHeight + Style.spaceLg * 2
 
             exclusionMode: ExclusionMode.Ignore
+            focusable: false
 
             ColumnLayout {
                 id: popupColumn
@@ -44,6 +48,15 @@ Scope {
                         required property int index
 
                         property bool bodyExpanded: false
+                        property bool _appeared: !!popupPanel._knownIds[modelData.id]
+                        readonly property bool _exiting: NotificationManager.exitingIds.indexOf(modelData.id) >= 0
+                        readonly property bool _dismissed: NotificationManager.dismissedIds.indexOf(modelData.id) >= 0
+
+                        function dismiss() {
+                            if (_exiting) return
+                            NotificationManager.startDismiss(modelData.id)
+                            _removeTimer.start()
+                        }
 
                         Layout.fillWidth: true
                         implicitHeight: notifContent.implicitHeight + Style.spaceLg * 2
@@ -52,6 +65,37 @@ Scope {
                         border.width: notifCard.modelData.isCritical ? 2 : 1
                         border.color: notifCard.modelData.isCritical ? Style.colorUrgent : Style.bgTertiary
 
+                        opacity: (_appeared && !_exiting && !_dismissed) ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+
+                        transform: Translate {
+                            x: (notifCard._appeared && !notifCard._exiting && !notifCard._dismissed) ? 0 : 80
+                            Behavior on x { NumberAnimation { duration: Style.animSlow; easing.type: Easing.OutCubic } }
+                        }
+
+                        Component.onCompleted: {
+                            if (_exiting) {
+                                _removeTimer.start()
+                            } else if (!_appeared) {
+                                var copy = Object.assign({}, popupPanel._knownIds)
+                                copy[modelData.id] = true
+                                popupPanel._knownIds = copy
+                                _appearTimer.start()
+                            }
+                        }
+
+                        Timer {
+                            id: _appearTimer
+                            interval: 16
+                            onTriggered: notifCard._appeared = true
+                        }
+
+                        Timer {
+                            id: _removeTimer
+                            interval: 400
+                            onTriggered: NotificationManager.finishDismiss(notifCard.modelData.id, notifCard.modelData.hasTimeout)
+                        }
+
                         // Click card to invoke default action
                         MouseArea {
                             anchors.fill: parent
@@ -59,7 +103,7 @@ Scope {
                             onClicked: {
                                 if (notifCard.modelData.actions.length > 0) {
                                     NotificationManager.invokeAction(notifCard.modelData, 0)
-                                    NotificationManager.dismissPopupById(notifCard.modelData.id)
+                                    notifCard.dismiss()
                                 }
                             }
                         }
@@ -70,7 +114,6 @@ Scope {
                             anchors.margins: Style.spaceLg
                             spacing: Style.spaceLg
 
-                            // Notification image/icon
                             Image {
                                 source: notifCard.modelData.image || notifCard.modelData.appIcon || ""
                                 visible: status === Image.Ready
@@ -89,7 +132,6 @@ Scope {
                                 RowLayout {
                                     spacing: Style.spaceMd
 
-                                    // Critical urgency icon
                                     MaterialIcon {
                                         text: "priority_high"
                                         font.pixelSize: 16
@@ -104,7 +146,6 @@ Scope {
                                         font.bold: true
                                     }
 
-                                    // Persistent pin icon
                                     MaterialIcon {
                                         text: "push_pin"
                                         font.pixelSize: 14
@@ -122,7 +163,7 @@ Scope {
                                         MouseArea {
                                             anchors.fill: parent
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: NotificationManager.removeById(notifCard.modelData.id)
+                                            onClicked: notifCard.dismiss()
                                         }
                                     }
                                 }
@@ -135,7 +176,6 @@ Scope {
                                     wrapMode: Text.WordWrap
                                 }
 
-                                // Body text with click-to-expand
                                 StyledText {
                                     id: popupBodyText
                                     text: notifCard.modelData.body || ""
@@ -151,7 +191,6 @@ Scope {
                                     onTruncatedChanged: { if (truncated) wasTruncated = true }
                                 }
 
-                                // "Show more / Show less" toggle
                                 StyledText {
                                     text: notifCard.bodyExpanded ? "Show less" : "Show more"
                                     color: Style.accentPink
@@ -165,7 +204,6 @@ Scope {
                                     }
                                 }
 
-                                // Action buttons row
                                 Flow {
                                     Layout.fillWidth: true
                                     Layout.topMargin: Style.spaceSm
@@ -205,7 +243,7 @@ Scope {
                                                 cursorShape: Qt.PointingHandCursor
                                                 onClicked: {
                                                     NotificationManager.invokeAction(notifCard.modelData, index)
-                                                    NotificationManager.dismissPopupById(notifCard.modelData.id)
+                                                    notifCard.dismiss()
                                                 }
                                             }
                                         }
@@ -214,16 +252,12 @@ Scope {
                             }
                         }
 
-                        // Auto-dismiss popup — always dismiss from popup after timeout
                         Timer {
-                            interval: notifCard.modelData.timeout || 5000
-                            running: true
-                            onTriggered: {
-                                if (notifCard.modelData.hasTimeout)
-                                    NotificationManager.removeById(notifCard.modelData.id)
-                                else
-                                    NotificationManager.dismissPopupById(notifCard.modelData.id)
-                            }
+                            readonly property int totalTimeout: notifCard.modelData.timeout || 5000
+                            readonly property int elapsed: Date.now() - notifCard.modelData.time.getTime()
+                            interval: Math.max(100, totalTimeout - elapsed)
+                            running: notifCard._appeared && !notifCard._exiting
+                            onTriggered: notifCard.dismiss()
                         }
                     }
                 }

@@ -1,6 +1,7 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
+import QtQuick
 import Quickshell
 import Quickshell.Services.Notifications
 
@@ -13,6 +14,28 @@ Singleton {
     property bool historyVisible: false
     property var historyScreen: null
     property bool dndEnabled: false
+    property var exitingIds: []
+    property var dismissedIds: []
+
+    function startDismiss(id) {
+        if (exitingIds.indexOf(id) >= 0) return
+        exitingIds = exitingIds.concat([id])
+    }
+
+    function finishDismiss(id, shouldRemove) {
+        exitingIds = exitingIds.filter(eid => eid !== id)
+        dismissedIds = dismissedIds.concat([id])
+        if (shouldRemove) {
+            history = history.filter(n => n.id !== id)
+            if (unreadCount > 0) unreadCount--
+        }
+        // Clean up array only when ALL popups are dismissed
+        if (popups.every(p => dismissedIds.indexOf(p.id) >= 0)) {
+            popups = []
+            dismissedIds = []
+            exitingIds = []
+        }
+    }
 
     function clearHistory() {
         // Dismiss all tracked notifications so they expire properly
@@ -157,8 +180,9 @@ Singleton {
             if (histCopy.length > 50) histCopy.pop()
             root.history = histCopy
 
-            // Add to popups
-            var popCopy = root.popups.slice()
+            // Add to popups (filter out dismissed items first)
+            var popCopy = root.popups.filter(p => root.dismissedIds.indexOf(p.id) < 0)
+            root.dismissedIds = []
             popCopy.unshift(notifData)
             if (popCopy.length > 3) popCopy.pop()
             root.popups = popCopy
