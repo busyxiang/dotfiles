@@ -248,7 +248,7 @@ Scope {
                                 segments: 15; segmentHeight: 10
                                 value: root.outVol / 1.5
                                 muted: root.outMuted
-                                warnAt: 0.667; critAt: 0.867
+                                warnAt: 0.7; critAt: 0.867
                             }
 
                             MouseArea {
@@ -554,7 +554,7 @@ Scope {
                                         segments: 15
                                         value: appItem.appVol / 1.5
                                         muted: appItem.appMuted
-                                        warnAt: 0.667; critAt: 0.867
+                                        warnAt: 0.7; critAt: 0.867
                                     }
 
                                     MouseArea {

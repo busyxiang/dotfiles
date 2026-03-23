@@ -292,7 +292,7 @@ Scope {
                                 segments: 16
                                 value: root.currentVolume / 1.5
                                 muted: root.muted
-                                warnAt: 0.667; critAt: 0.867
+                                warnAt: 0.7; critAt: 0.867
                                 animDuration: 60
                             }
                         }

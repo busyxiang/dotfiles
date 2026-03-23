@@ -48,7 +48,8 @@ Scope {
     readonly property string title: player?.trackTitle ?? ""
     readonly property string artist: {
         var artists = player?.trackArtists ?? []
-        return artists.length > 0 ? artists[0] : ""
+        if (typeof artists === "string") return artists
+        return artists.length > 0 ? artists.join(", ") : ""
     }
     readonly property string album: player?.trackAlbum ?? ""
     readonly property bool isPlaying: player?.playbackState === MprisPlaybackState.Playing
