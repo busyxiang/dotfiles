@@ -14,10 +14,6 @@ Singleton {
     property var historyScreen: null
     property bool dndEnabled: false
 
-    function toggleHistory() {
-        historyVisible = !historyVisible
-    }
-
     function clearHistory() {
         // Dismiss all tracked notifications so they expire properly
         for (var i = 0; i < history.length; i++) {

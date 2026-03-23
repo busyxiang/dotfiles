@@ -105,14 +105,6 @@ Scope {
                 anchors.right: parent.right
                 anchors.topMargin: Math.round(Style.spaceMd * panel.sf)
                 anchors.rightMargin: Math.round((Style.spaceMd + 200) * panel.sf)
-
-
-                opacity: panel._open ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
-                transform: Translate {
-                    y: panel._open ? 0 : -8
-                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
-                }
                 width: 340
                 height: Math.min(cardContent.implicitHeight + Style.spaceXl * 2, panel.height - Style.spaceXl * 2)
                 color: Style.bgSecondary
@@ -120,6 +112,13 @@ Scope {
                 border.width: 1
                 border.color: Style.bgTertiary
                 clip: true
+
+                opacity: panel._open ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                transform: Translate {
+                    y: panel._open ? 0 : -8
+                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                }
 
                 NeonStrip {}
 

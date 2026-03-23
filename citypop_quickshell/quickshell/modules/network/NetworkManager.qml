@@ -35,8 +35,7 @@ Singleton {
         return "language"
     }
 
-    function togglePanel() {
-        panelVisible = !panelVisible
+    onPanelVisibleChanged: {
         if (panelVisible) {
             initialLoaded = false
             scan()

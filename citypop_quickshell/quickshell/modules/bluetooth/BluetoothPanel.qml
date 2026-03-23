@@ -146,30 +146,7 @@ Scope {
                             }
                         }
 
-                        // Close
-                        Rectangle {
-                            implicitWidth: 28
-                            implicitHeight: 28
-                            radius: Style.radiusFull
-                            color: closeHover.containsMouse ? Style.bgTertiary : "transparent"
-
-                            Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: "close"
-                                font.pixelSize: 16
-                                color: closeHover.containsMouse ? Style.textPrimary : Style.textDimmed
-                            }
-
-                            MouseArea {
-                                id: closeHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: BluetoothManager.panelVisible = false
-                            }
-                        }
+                        CloseButton { onClicked: BluetoothManager.panelVisible = false }
                     }
 
                     // Neon header divider

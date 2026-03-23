@@ -26,8 +26,7 @@ Singleton {
     readonly property list<var> connectedDevices: devices.filter(d => d.connected)
     readonly property bool hasConnected: connectedDevices.length > 0
 
-    function togglePanel() {
-        panelVisible = !panelVisible
+    onPanelVisibleChanged: {
         if (panelVisible) {
             initialLoaded = false
             refreshDevices()
