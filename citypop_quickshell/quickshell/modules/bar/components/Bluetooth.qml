@@ -57,8 +57,12 @@ Item {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            BluetoothManager.panelScreen = root.screen
-            BluetoothManager.togglePanel()
+            var wasOpen = BluetoothManager.panelVisible
+            PanelManager.closeAll()
+            if (!wasOpen) {
+                BluetoothManager.panelScreen = root.screen
+                BluetoothManager.panelVisible = true
+            }
         }
         onContainsMouseChanged: {
             if (containsMouse && BluetoothManager.hasConnected) {

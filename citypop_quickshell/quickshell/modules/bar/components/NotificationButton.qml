@@ -83,10 +83,14 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            NotificationManager.historyScreen = root.screen
-            NotificationManager.toggleHistory()
-            if (!NotificationManager.historyVisible)
+            var wasOpen = NotificationManager.historyVisible
+            PanelManager.closeAll()
+            if (!wasOpen) {
+                NotificationManager.historyScreen = root.screen
+                NotificationManager.historyVisible = true
+            } else {
                 NotificationManager.unreadCount = 0
+            }
         }
     }
 }

@@ -126,8 +126,12 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            CalendarState.screen = root.screen
-            CalendarState.visible = !CalendarState.visible
+            var wasOpen = CalendarState.visible
+            PanelManager.closeAll()
+            if (!wasOpen) {
+                CalendarState.screen = root.screen
+                CalendarState.visible = true
+            }
         }
     }
 }

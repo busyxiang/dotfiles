@@ -14,8 +14,9 @@ Scope {
             id: historyPanel
             required property var modelData
             screen: modelData
+            readonly property real sf: modelData.height / 1080
             property bool _open: NotificationManager.historyVisible && NotificationManager.historyScreen === modelData
-            visible: _open || historyCard.opacity > 0
+            visible: NotificationManager.historyVisible || historyCard.opacity > 0
             color: "transparent"
 
             anchors {
@@ -26,14 +27,11 @@ Scope {
             }
 
             exclusionMode: ExclusionMode.Ignore
+            margins.top: Math.round(Style.barHeight * historyPanel.sf)
 
             // Click outside to close (starts below bar)
             MouseArea {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.topMargin: Style.barHeight
+                anchors.fill: parent
                 onClicked: NotificationManager.historyVisible = false
             }
 
@@ -42,8 +40,8 @@ Scope {
                 id: historyCard
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.topMargin: Style.barHeight + Style.spaceMd
-                anchors.rightMargin: Style.spaceMd
+                anchors.topMargin: Math.round(Style.spaceMd * historyPanel.sf)
+                anchors.rightMargin: Math.round(Style.spaceMd * historyPanel.sf)
                 width: 380
                 height: 500
                 color: Style.bgSecondary

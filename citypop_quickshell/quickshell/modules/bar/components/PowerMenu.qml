@@ -52,8 +52,12 @@ Item {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            PowerMenuState.screen = root.screen
-            PowerMenuState.visible = !PowerMenuState.visible
+            var wasOpen = PowerMenuState.visible
+            PanelManager.closeAll()
+            if (!wasOpen) {
+                PowerMenuState.screen = root.screen
+                PowerMenuState.visible = true
+            }
         }
     }
 }

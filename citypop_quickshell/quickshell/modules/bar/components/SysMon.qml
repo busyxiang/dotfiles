@@ -155,8 +155,12 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            SysMonState.screen = root.screen
-            SysMonState.visible = !SysMonState.visible
+            var wasOpen = SysMonState.visible
+            PanelManager.closeAll()
+            if (!wasOpen) {
+                SysMonState.screen = root.screen
+                SysMonState.visible = true
+            }
         }
     }
 }

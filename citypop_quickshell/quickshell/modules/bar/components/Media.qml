@@ -219,8 +219,12 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    MediaState.screen = root.screen
-                    MediaState.visible = !MediaState.visible
+                    var wasOpen = MediaState.visible
+                    PanelManager.closeAll()
+                    if (!wasOpen) {
+                        MediaState.screen = root.screen
+                        MediaState.visible = true
+                    }
                 }
             }
         }

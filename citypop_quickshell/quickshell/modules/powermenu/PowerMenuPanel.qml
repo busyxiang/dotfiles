@@ -15,8 +15,9 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
+            readonly property real sf: modelData.height / 1080
             property bool _open: PowerMenuState.visible && PowerMenuState.screen === modelData
-            visible: _open || powerCard.opacity > 0
+            visible: PowerMenuState.visible || powerCard.opacity > 0
             color: "transparent"
 
             anchors {
@@ -27,6 +28,7 @@ Scope {
             }
 
             exclusionMode: ExclusionMode.Ignore
+            margins.top: Math.round(Style.barHeight * panel.sf)
 
             // Countdown state
             property string pendingCmd: ""
@@ -70,11 +72,7 @@ Scope {
 
             // Click outside to close
             MouseArea {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.topMargin: Style.barHeight
+                anchors.fill: parent
                 onClicked: PowerMenuState.visible = false
             }
 
@@ -83,8 +81,8 @@ Scope {
                 id: powerCard
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.topMargin: Style.barHeight + Style.spaceMd
-                anchors.rightMargin: Style.spaceMd
+                anchors.topMargin: Math.round(Style.spaceMd * panel.sf)
+                anchors.rightMargin: Math.round(Style.spaceMd * panel.sf)
                 width: 200
                 implicitHeight: menuCol.implicitHeight + Style.spaceLg * 2
                 color: Style.bgSecondary

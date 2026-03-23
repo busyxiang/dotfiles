@@ -14,8 +14,9 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
+            readonly property real sf: modelData.height / 1080
             property bool _open: NetworkManager.panelVisible && NetworkManager.panelScreen === modelData
-            visible: _open || card.opacity > 0
+            visible: NetworkManager.panelVisible || card.opacity > 0
             color: "transparent"
             onVisibleChanged: if (!visible) passwordSsid = ""
 
@@ -27,13 +28,10 @@ Scope {
             }
 
             exclusionMode: ExclusionMode.Ignore
+            margins.top: Math.round(Style.barHeight * panel.sf)
 
             MouseArea {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.topMargin: Style.barHeight
+                anchors.fill: parent
                 onClicked: NetworkManager.panelVisible = false
             }
 
@@ -45,8 +43,8 @@ Scope {
                 id: card
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.topMargin: Style.barHeight + Style.spaceMd
-                anchors.rightMargin: Style.spaceMd
+                anchors.topMargin: Math.round(Style.spaceMd * panel.sf)
+                anchors.rightMargin: Math.round(Style.spaceMd * panel.sf)
                 width: 360
                 height: Math.min(cardContent.implicitHeight + Style.spaceXl * 2, 520)
                 color: Style.bgSecondary

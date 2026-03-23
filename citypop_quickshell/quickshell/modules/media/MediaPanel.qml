@@ -92,8 +92,9 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
+            readonly property real sf: modelData.height / 1080
             property bool _open: MediaState.visible && MediaState.screen === modelData
-            visible: _open || card.opacity > 0
+            visible: MediaState.visible || card.opacity > 0
             color: "transparent"
 
             anchors {
@@ -104,13 +105,10 @@ Scope {
             }
 
             exclusionMode: ExclusionMode.Ignore
+            margins.top: Math.round(Style.barHeight * panel.sf)
 
             MouseArea {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.topMargin: Style.barHeight
+                anchors.fill: parent
                 onClicked: MediaState.visible = false
             }
 
@@ -135,7 +133,7 @@ Scope {
                 id: card
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.topMargin: Style.barHeight + Style.spaceMd
+                anchors.topMargin: Math.round(Style.spaceMd * panel.sf)
                 width: 320
                 height: cardContent.implicitHeight + Style.spaceXl * 2
                 color: Style.bgSecondary

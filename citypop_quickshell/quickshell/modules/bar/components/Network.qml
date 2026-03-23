@@ -80,8 +80,12 @@ Item {
 
         onClicked: {
             NetworkManager.tooltipVisible = false
-            NetworkManager.panelScreen = root.screen
-            NetworkManager.togglePanel()
+            var wasOpen = NetworkManager.panelVisible
+            PanelManager.closeAll()
+            if (!wasOpen) {
+                NetworkManager.panelScreen = root.screen
+                NetworkManager.panelVisible = true
+            }
         }
     }
 }

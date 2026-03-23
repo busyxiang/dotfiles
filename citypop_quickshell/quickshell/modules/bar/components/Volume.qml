@@ -76,8 +76,12 @@ Item {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton
         onClicked: {
-            VolumeState.screen = root.screen
-            VolumeState.visible = !VolumeState.visible
+            var wasOpen = VolumeState.visible
+            PanelManager.closeAll()
+            if (!wasOpen) {
+                VolumeState.screen = root.screen
+                VolumeState.visible = true
+            }
         }
         onWheel: wheel => {
             if (Pipewire.defaultAudioSink?.audio) {

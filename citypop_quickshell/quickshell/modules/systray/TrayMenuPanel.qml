@@ -20,8 +20,9 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
+            readonly property real sf: modelData.height / 1080
             property bool _open: TrayMenuState.visible && TrayMenuState.screen === modelData
-            visible: _open || menuCard.opacity > 0
+            visible: TrayMenuState.visible || menuCard.opacity > 0
             color: "transparent"
 
             anchors {
@@ -32,6 +33,7 @@ Scope {
             }
 
             exclusionMode: ExclusionMode.Ignore
+            margins.top: Math.round(Style.barHeight * panel.sf)
 
             // Click outside to close
             MouseArea {
@@ -43,7 +45,7 @@ Scope {
             Rectangle {
                 id: menuCard
                 x: Math.min(TrayMenuState.anchorX, panel.width - width - Style.spaceMd)
-                y: Style.barHeight + Style.spaceMd
+                y: Math.round(Style.spaceMd * panel.sf)
                 width: 220
                 implicitHeight: menuCol.implicitHeight + Style.spaceMd * 2
                 color: Qt.rgba(0.11, 0.04, 0.18, 0.95)

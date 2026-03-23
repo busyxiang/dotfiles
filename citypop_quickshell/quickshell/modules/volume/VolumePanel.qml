@@ -78,8 +78,9 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
+            readonly property real sf: modelData.height / 1080
             property bool _open: VolumeState.visible && VolumeState.screen === modelData
-            visible: _open || card.opacity > 0
+            visible: VolumeState.visible || card.opacity > 0
             color: "transparent"
 
             anchors {
@@ -90,13 +91,10 @@ Scope {
             }
 
             exclusionMode: ExclusionMode.Ignore
+            margins.top: Math.round(Style.barHeight * panel.sf)
 
             MouseArea {
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.topMargin: Style.barHeight
+                anchors.fill: parent
                 onClicked: VolumeState.visible = false
             }
 
@@ -105,8 +103,9 @@ Scope {
                 id: card
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.topMargin: Style.barHeight + Style.spaceMd
-                anchors.rightMargin: Style.spaceMd + 200
+                anchors.topMargin: Math.round(Style.spaceMd * panel.sf)
+                anchors.rightMargin: Math.round((Style.spaceMd + 200) * panel.sf)
+
 
                 opacity: panel._open ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
@@ -115,7 +114,7 @@ Scope {
                     Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
                 }
                 width: 340
-                height: Math.min(cardContent.implicitHeight + Style.spaceXl * 2, panel.height - Style.barHeight - Style.spaceXl * 2)
+                height: Math.min(cardContent.implicitHeight + Style.spaceXl * 2, panel.height - Style.spaceXl * 2)
                 color: Style.bgSecondary
                 radius: Style.radiusLg
                 border.width: 1
