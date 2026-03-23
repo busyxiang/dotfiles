@@ -49,6 +49,18 @@ Scope {
                 border.width: 1
                 border.color: Style.bgTertiary
 
+                // Neon top strip
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 2
+                    radius: Style.radiusLg
+                    color: Style.accentPink
+                    opacity: 0.8
+                    z: 1
+                }
+
                 MouseArea { anchors.fill: parent }
 
                 ColumnLayout {
@@ -162,6 +174,14 @@ Scope {
                                 onClicked: BluetoothManager.panelVisible = false
                             }
                         }
+                    }
+
+                    // Neon header divider
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 2
+                        color: Style.accentPink
+                        opacity: 0.6
                     }
 
                     // ── Connected Devices ──
@@ -303,7 +323,8 @@ Scope {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 1
-                            color: Style.bgTertiary
+                            color: Style.accentPink
+                            opacity: 0.3
                         }
                     }
 
@@ -428,7 +449,7 @@ Scope {
                             width: ListView.view.width
                             implicitHeight: devRow.implicitHeight + Style.spaceMd * 2
                             radius: Style.radiusSm
-                            color: devHover.containsMouse ? Style.bgTertiary : "transparent"
+                            color: devHover.containsMouse ? Qt.rgba(1, 0.41, 0.71, 0.08) : "transparent"
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
 

@@ -90,6 +90,18 @@ Scope {
                 border.width: 1
                 border.color: Style.bgTertiary
 
+                // Neon top strip
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 2
+                    radius: Style.radiusLg
+                    color: Style.accentPink
+                    opacity: 0.8
+                    z: 1
+                }
+
                 MouseArea { anchors.fill: parent }
 
                 ColumnLayout {
@@ -175,13 +187,10 @@ Scope {
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
                                     if (menuItem.isPending) {
-                                        // Cancel the countdown
                                         panel.cancelCountdown()
                                     } else if (menuItem.modelData.accent) {
-                                        // Destructive action — start countdown
                                         panel.startCountdown(menuItem.modelData.cmd, menuItem.modelData.label)
                                     } else {
-                                        // Safe action — execute immediately
                                         proc.command = ["sh", "-c", menuItem.modelData.cmd]
                                         proc.startDetached()
                                         PowerMenuState.visible = false

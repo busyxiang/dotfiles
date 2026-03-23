@@ -50,7 +50,49 @@ Scope {
                 border.width: 1
                 border.color: Style.bgTertiary
 
+                // Neon top strip
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 2
+                    radius: Style.radiusLg
+                    color: Style.accentPink
+                    opacity: 0.8
+                    z: 1
+                }
+
                 MouseArea { anchors.fill: parent }
+
+                // Close button (floating top-right)
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.topMargin: Style.spaceMd
+                    anchors.rightMargin: Style.spaceMd
+                    z: 2
+                    implicitWidth: 28
+                    implicitHeight: 28
+                    radius: Style.radiusFull
+                    color: calCloseHover.containsMouse ? Style.bgTertiary : "transparent"
+
+                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                    MaterialIcon {
+                        anchors.centerIn: parent
+                        text: "close"
+                        font.pixelSize: 16
+                        color: calCloseHover.containsMouse ? Style.textPrimary : Style.textDimmed
+                    }
+
+                    MouseArea {
+                        id: calCloseHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: CalendarState.visible = false
+                    }
+                }
 
                 // --- Clipboard Process ---
                 Process {
@@ -103,11 +145,12 @@ Scope {
                         }
                     }
 
-                    // -- Divider --
+                    // -- Neon Divider --
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 1
-                        color: Style.bgTertiary
+                        height: 2
+                        color: Style.accentPink
+                        opacity: 0.6
                     }
 
                     // -- Month/Year Header --
@@ -440,6 +483,18 @@ Scope {
                                              : "transparent"
 
                                         Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                        // Neon glow behind today's cell
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            anchors.margins: -3
+                                            radius: Style.radiusFull
+                                            color: "transparent"
+                                            border.width: 2
+                                            border.color: Style.accentPink
+                                            opacity: 0.4
+                                            visible: dayCell.isToday
+                                        }
 
                                         StyledText {
                                             anchors.centerIn: parent

@@ -25,7 +25,6 @@ Scope {
         if (outVol > 0.33) return "volume_down"
         return outVol > 0 ? "volume_down" : "volume_off"
     }
-    // Color for output slider fill: progressive warning on overdrive
     readonly property color outSliderColor: {
         if (outMuted) return Style.textDimmed
         if (outVol > 1.3) return Style.colorUrgent
@@ -39,19 +38,16 @@ Scope {
     readonly property string inName: Pipewire.defaultAudioSource?.description ?? "No input"
     readonly property bool hasInput: {
         if (!Pipewire.defaultAudioSource) return false
-        // Hide monitor sources (they mirror the sink)
         var name = Pipewire.defaultAudioSource.name ?? ""
         if (name.indexOf("monitor") >= 0) return false
-        // Also hide if it's the exact same device as the sink
         if (Pipewire.defaultAudioSource === Pipewire.defaultAudioSink) return false
         return true
     }
-    // Input level color feedback
     readonly property color inLevelColor: {
         if (inMuted) return Style.textDimmed
         if (inVol > 0.9) return Style.colorUrgent
         if (inVol > 0.7) return Style.accentAmber
-        return "#66bb6a"  // green
+        return "#66bb6a"
     }
 
     // ── Helper: detect device icon from name/description ──
@@ -73,7 +69,29 @@ Scope {
         return "mic_none"
     }
 
-    // ── Device lists (built from ObjectModel) ──
+    // ── VU meter color helper: 15 segments, each 10% (0-150%) ──
+    function vuColor(segIndex: int, volume: real, muted: bool): color {
+        if (muted) return Style.bgTertiary
+        var threshold = segIndex * 10
+        var percent = Math.round(volume * 100)
+        if (percent <= threshold) return Style.bgTertiary
+        // Lit segment color
+        if (segIndex >= 13) return Style.colorUrgent    // 130%+
+        if (segIndex >= 10) return Style.accentAmber     // 100-130%
+        return Style.accentPink                          // 0-100%
+    }
+
+    // Input VU: 10 segments, each 10% (0-100%)
+    function vuColorInput(segIndex: int, volume: real, muted: bool): color {
+        if (muted) return Style.bgTertiary
+        var threshold = segIndex * 10
+        var percent = Math.round(volume * 100)
+        if (percent <= threshold) return Style.bgTertiary
+        if (segIndex >= 9) return Style.colorUrgent
+        if (segIndex >= 7) return Style.accentAmber
+        return "#66bb6a"
+    }
+
     readonly property var nodeModel: Pipewire.nodes
 
     Variants {
@@ -119,6 +137,18 @@ Scope {
                 border.color: Style.bgTertiary
                 clip: true
 
+                // Neon top strip
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 2
+                    radius: Style.radiusLg
+                    color: Style.accentPink
+                    opacity: 0.8
+                    z: 1
+                }
+
                 MouseArea { anchors.fill: parent }
 
                 Flickable {
@@ -134,26 +164,69 @@ Scope {
                         spacing: 0
 
                         // ═══════════════════════════════════
-                        // SECTION 1: Volume Control
+                        // HEADER
                         // ═══════════════════════════════════
 
-                        // ── Header ──
                         RowLayout {
                             spacing: Style.spaceMd
+
+                            MaterialIcon {
+                                text: "volume_up"
+                                font.pixelSize: 20
+                                color: Style.accentPink
+                                fill: 1
+                            }
 
                             StyledText {
                                 text: "Volume"
                                 font.pixelSize: Style.fontSizeXl
                                 font.bold: true
-                                color: Style.accentPink
                             }
 
                             Item { Layout.fillWidth: true }
+
+                            // Close button
+                            Rectangle {
+                                implicitWidth: 28
+                                implicitHeight: 28
+                                radius: Style.radiusFull
+                                color: volCloseHover.containsMouse ? Style.bgTertiary : "transparent"
+
+                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                MaterialIcon {
+                                    anchors.centerIn: parent
+                                    text: "close"
+                                    font.pixelSize: 16
+                                    color: volCloseHover.containsMouse ? Style.textPrimary : Style.textDimmed
+                                }
+
+                                MouseArea {
+                                    id: volCloseHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: VolumeState.visible = false
+                                }
+                            }
+                        }
+
+                        // Neon header divider
+                        Item { implicitHeight: Style.spaceMd }
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 2
+                            color: Style.accentPink
+                            opacity: 0.6
                         }
 
                         Item { implicitHeight: Style.spaceLg }
 
-                        // ── Output device name ──
+                        // ═══════════════════════════════════
+                        // SECTION 1: Output Volume
+                        // ═══════════════════════════════════
+
+                        // Output device name
                         StyledText {
                             text: root.outName
                             color: Style.textSecondary
@@ -164,7 +237,7 @@ Scope {
 
                         Item { implicitHeight: Style.spaceSm }
 
-                        // ── Output slider ──
+                        // Output icon + percentage
                         RowLayout {
                             spacing: Style.spaceMd
 
@@ -187,52 +260,7 @@ Scope {
                                 }
                             }
 
-                            Item {
-                                Layout.fillWidth: true
-                                implicitHeight: 28
-
-                                Rectangle {
-                                    id: outTrack
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    height: 8
-                                    radius: 4
-                                    color: Style.bgTertiary
-
-                                    Rectangle {
-                                        width: Math.min(parent.width * root.outVol, parent.width)
-                                        height: parent.height
-                                        radius: parent.radius
-                                        color: root.outSliderColor
-
-                                        Behavior on width { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
-                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                    }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    property bool isDragging: false
-
-                                    onPressed: mouse => { isDragging = true; setVol(mouse.x) }
-                                    onReleased: isDragging = false
-                                    onPositionChanged: mouse => { if (isDragging) setVol(mouse.x) }
-                                    onClicked: mouse => setVol(mouse.x)
-                                    onWheel: wheel => {
-                                        if (Pipewire.defaultAudioSink?.audio) {
-                                            var d = wheel.angleDelta.y / 120
-                                            Pipewire.defaultAudioSink.audio.volume = Math.max(0, Math.min(1.5, Pipewire.defaultAudioSink.audio.volume + d * 0.05))
-                                        }
-                                    }
-
-                                    function setVol(x) {
-                                        if (Pipewire.defaultAudioSink?.audio)
-                                            Pipewire.defaultAudioSink.audio.volume = Math.max(0, Math.min(1.0, x / outTrack.width))
-                                    }
-                                }
-                            }
+                            Item { Layout.fillWidth: true }
 
                             // Overdrive warning icon
                             MaterialIcon {
@@ -241,27 +269,83 @@ Scope {
                                 color: Style.colorUrgent
                                 visible: root.outOverdrive && !root.outMuted
                                 Layout.alignment: Qt.AlignVCenter
-
-                                Behavior on opacity { NumberAnimation { duration: Style.animFast } }
                             }
 
                             StyledText {
                                 text: Math.round(root.outVol * 100) + "%"
-                                font.pixelSize: Style.fontSizeSm
+                                font.pixelSize: Style.fontSizeMd
                                 font.bold: true
                                 color: {
                                     if (root.outMuted) return Style.textDimmed
-                                    if (root.outOverdrive) return Style.colorUrgent
+                                    if (root.outVol > 1.3) return Style.colorUrgent
+                                    if (root.outOverdrive) return Style.accentAmber
                                     return Style.textPrimary
                                 }
-                                Layout.preferredWidth: 38
-                                horizontalAlignment: Text.AlignRight
 
                                 Behavior on color { ColorAnimation { duration: Style.animFast } }
                             }
                         }
 
+                        Item { implicitHeight: Style.spaceSm }
+
+                        // Output VU meter (15 segments: 0-150%)
+                        Item {
+                            Layout.fillWidth: true
+                            implicitHeight: 10
+
+                            Row {
+                                id: outVuRow
+                                anchors.fill: parent
+                                spacing: 2
+
+                                Repeater {
+                                    model: 15
+
+                                    Rectangle {
+                                        required property int index
+                                        width: (outVuRow.width - 14 * outVuRow.spacing) / 15
+                                        height: 10
+                                        radius: 1
+                                        color: root.vuColor(index, root.outVol, root.outMuted)
+
+                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                property bool isDragging: false
+
+                                onPressed: mouse => { isDragging = true; setVol(mouse.x) }
+                                onReleased: isDragging = false
+                                onPositionChanged: mouse => { if (isDragging) setVol(mouse.x) }
+                                onClicked: mouse => setVol(mouse.x)
+                                onWheel: wheel => {
+                                    if (Pipewire.defaultAudioSink?.audio) {
+                                        var d = wheel.angleDelta.y / 120
+                                        Pipewire.defaultAudioSink.audio.volume = Math.max(0, Math.min(1.5, Pipewire.defaultAudioSink.audio.volume + d * 0.05))
+                                    }
+                                }
+
+                                function setVol(x) {
+                                    if (Pipewire.defaultAudioSink?.audio)
+                                        Pipewire.defaultAudioSink.audio.volume = Math.max(0, Math.min(1.5, x / width * 1.5))
+                                }
+                            }
+                        }
+
                         // ── Input section (only if input device exists) ──
+                        Item { implicitHeight: Style.spaceLg; visible: root.hasInput }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 1
+                            color: Style.bgTertiary
+                            visible: root.hasInput
+                        }
+
                         Item { implicitHeight: Style.spaceLg; visible: root.hasInput }
 
                         StyledText {
@@ -275,6 +359,7 @@ Scope {
 
                         Item { implicitHeight: Style.spaceSm; visible: root.hasInput }
 
+                        // Input icon + percentage
                         RowLayout {
                             spacing: Style.spaceMd
                             visible: root.hasInput
@@ -298,106 +383,103 @@ Scope {
                                 }
                             }
 
-                            Item {
-                                Layout.fillWidth: true
-                                implicitHeight: 28
-
-                                Rectangle {
-                                    id: inTrack
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    height: 8
-                                    radius: 4
-                                    color: Style.bgTertiary
-
-                                    Rectangle {
-                                        width: Math.min(parent.width * root.inVol, parent.width)
-                                        height: parent.height
-                                        radius: parent.radius
-                                        color: root.inMuted ? Style.textDimmed : Style.accentPurple
-
-                                        Behavior on width { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
-                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                    }
-                                }
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    property bool isDragging: false
-
-                                    onPressed: mouse => { isDragging = true; setVol(mouse.x) }
-                                    onReleased: isDragging = false
-                                    onPositionChanged: mouse => { if (isDragging) setVol(mouse.x) }
-                                    onClicked: mouse => setVol(mouse.x)
-                                    onWheel: wheel => {
-                                        if (Pipewire.defaultAudioSource?.audio) {
-                                            var d = wheel.angleDelta.y / 120
-                                            Pipewire.defaultAudioSource.audio.volume = Math.max(0, Math.min(1.5, Pipewire.defaultAudioSource.audio.volume + d * 0.05))
-                                        }
-                                    }
-
-                                    function setVol(x) {
-                                        if (Pipewire.defaultAudioSource?.audio)
-                                            Pipewire.defaultAudioSource.audio.volume = Math.max(0, Math.min(1.0, x / inTrack.width))
-                                    }
-                                }
-                            }
+                            Item { Layout.fillWidth: true }
 
                             StyledText {
                                 text: Math.round(root.inVol * 100) + "%"
-                                font.pixelSize: Style.fontSizeSm
+                                font.pixelSize: Style.fontSizeMd
                                 font.bold: true
                                 color: root.inMuted ? Style.textDimmed : Style.textPrimary
-                                Layout.preferredWidth: 38
-                                horizontalAlignment: Text.AlignRight
                             }
                         }
 
-                        // ── Input level meter (visual VU bar) ──
-                        Rectangle {
+                        Item { implicitHeight: Style.spaceSm; visible: root.hasInput }
+
+                        // Input VU meter (10 segments: 0-100%)
+                        Item {
                             Layout.fillWidth: true
-                            Layout.leftMargin: 20 + Style.spaceMd  // align with slider (icon width + spacing)
-                            Layout.rightMargin: 38 + Style.spaceMd  // align with percentage text
-                            implicitHeight: 3
-                            radius: 1.5
-                            color: Style.bgTertiary
+                            implicitHeight: 10
                             visible: root.hasInput
 
-                            Rectangle {
-                                width: Math.min(parent.width * root.inVol, parent.width)
-                                height: parent.height
-                                radius: parent.radius
-                                color: root.inLevelColor
+                            Row {
+                                id: inVuRow
+                                anchors.fill: parent
+                                spacing: 2
 
-                                Behavior on width { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                Repeater {
+                                    model: 10
 
-                                // Pulsing glow effect at high levels
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: parent.radius
-                                    color: parent.color
-                                    opacity: 0.5
-                                    visible: root.inVol > 0.7 && !root.inMuted
+                                    Rectangle {
+                                        required property int index
+                                        width: (inVuRow.width - 9 * inVuRow.spacing) / 10
+                                        height: 10
+                                        radius: 1
+                                        color: root.vuColorInput(index, root.inVol, root.inMuted)
 
-                                    SequentialAnimation on opacity {
-                                        id: pulseAnim
-                                        running: root.inVol > 0.7 && !root.inMuted
-                                        loops: Animation.Infinite
-                                        NumberAnimation { from: 0.3; to: 0.8; duration: 600; easing.type: Easing.InOutSine }
-                                        NumberAnimation { from: 0.8; to: 0.3; duration: 600; easing.type: Easing.InOutSine }
+                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                    }
+                                }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                property bool isDragging: false
+
+                                onPressed: mouse => { isDragging = true; setVol(mouse.x) }
+                                onReleased: isDragging = false
+                                onPositionChanged: mouse => { if (isDragging) setVol(mouse.x) }
+                                onClicked: mouse => setVol(mouse.x)
+                                onWheel: wheel => {
+                                    if (Pipewire.defaultAudioSource?.audio) {
+                                        var d = wheel.angleDelta.y / 120
+                                        Pipewire.defaultAudioSource.audio.volume = Math.max(0, Math.min(1.5, Pipewire.defaultAudioSource.audio.volume + d * 0.05))
+                                    }
+                                }
+
+                                function setVol(x) {
+                                    if (Pipewire.defaultAudioSource?.audio)
+                                        Pipewire.defaultAudioSource.audio.volume = Math.max(0, Math.min(1.0, x / width))
+                                }
+                            }
+                        }
+
+                        // Input level meter (pulsing VU)
+                        Item {
+                            Layout.fillWidth: true
+                            implicitHeight: 4
+                            visible: root.hasInput
+
+                            Row {
+                                id: inLevelRow
+                                anchors.fill: parent
+                                spacing: 2
+
+                                Repeater {
+                                    model: 10
+
+                                    Rectangle {
+                                        required property int index
+                                        width: (inLevelRow.width - 9 * inLevelRow.spacing) / 10
+                                        height: 4
+                                        radius: 1
+                                        color: root.vuColorInput(index, root.inVol, root.inMuted)
+                                        opacity: root.inVol > 0.7 && !root.inMuted && root.vuColorInput(index, root.inVol, root.inMuted) !== Style.bgTertiary ? pulseOpacity : 1.0
+
+                                        property real pulseOpacity: 1.0
+
+                                        SequentialAnimation on pulseOpacity {
+                                            running: root.inVol > 0.7 && !root.inMuted
+                                            loops: Animation.Infinite
+                                            NumberAnimation { from: 0.4; to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+                                            NumberAnimation { from: 1.0; to: 0.4; duration: 600; easing.type: Easing.InOutSine }
+                                        }
                                     }
                                 }
                             }
                         }
 
-                        Item { implicitHeight: Style.spaceXl }
-
-                        // ═══════════════════════════════════
-                        // SECTION 2: Applications
-                        // ═══════════════════════════════════
+                        Item { implicitHeight: Style.spaceLg }
 
                         Rectangle {
                             Layout.fillWidth: true
@@ -407,11 +489,25 @@ Scope {
 
                         Item { implicitHeight: Style.spaceLg }
 
-                        StyledText {
-                            text: "Applications"
-                            font.pixelSize: Style.fontSizeMd
-                            font.bold: true
-                            color: Style.accentPink
+                        // ═══════════════════════════════════
+                        // SECTION 2: Applications
+                        // ═══════════════════════════════════
+
+                        RowLayout {
+                            spacing: Style.spaceMd
+
+                            MaterialIcon {
+                                text: "apps"
+                                font.pixelSize: 20
+                                color: Style.accentPink
+                                fill: 1
+                            }
+
+                            StyledText {
+                                text: "Applications"
+                                font.pixelSize: Style.fontSizeMd
+                                font.bold: true
+                            }
                         }
 
                         Item { implicitHeight: Style.spaceMd }
@@ -429,8 +525,11 @@ Scope {
                                 readonly property real appVol: modelData.audio?.volume ?? 0
                                 readonly property bool appMuted: modelData.audio?.muted ?? false
                                 readonly property bool appOverdrive: appVol > 1.0
-                                readonly property string appIconSource: {
-                                    if (!isAppStream) return ""
+                                property string appIconSource: ""
+                                property int _iconRetries: 0
+
+                                function resolveIcon(): void {
+                                    if (!isAppStream) return
                                     var candidates = [
                                         modelData.name ?? "",
                                         modelData.nickname ?? "",
@@ -440,11 +539,25 @@ Scope {
                                         var c = candidates[i].toLowerCase()
                                         if (c === "") continue
                                         var entry = DesktopEntries.byId(c) ?? DesktopEntries.heuristicLookup(c)
-                                        if (entry && entry.icon) return Quickshell.iconPath(entry.icon)
+                                        if (entry && entry.icon) {
+                                            appIconSource = Quickshell.iconPath(entry.icon)
+                                            return
+                                        }
                                     }
-                                    return ""
+                                    // Retry if DesktopEntries hasn't loaded yet
+                                    if (_iconRetries < 5) {
+                                        _iconRetries++
+                                        _iconRetryTimer.start()
+                                    }
                                 }
-                                // App slider color: warning on overdrive
+
+                                Timer {
+                                    id: _iconRetryTimer
+                                    interval: 500
+                                    onTriggered: appItem.resolveIcon()
+                                }
+
+                                Component.onCompleted: resolveIcon()
                                 readonly property color appSliderColor: {
                                     if (appMuted) return Style.textDimmed
                                     if (appVol > 1.3) return Style.colorUrgent
@@ -460,14 +573,14 @@ Scope {
                                     objects: [appItem.modelData]
                                 }
 
-                                // App name + icon
+                                // App name + icon row
                                 RowLayout {
                                     spacing: Style.spaceSm
 
                                     Image {
-                                        id: appIcon
+                                        id: appIconImg
                                         source: appItem.appIconSource
-                                        visible: status === Image.Ready
+                                        visible: appItem.appIconSource !== "" && status === Image.Ready
                                         sourceSize.width: 16
                                         sourceSize.height: 16
                                         Layout.preferredWidth: 16
@@ -478,7 +591,7 @@ Scope {
                                         text: "apps"
                                         font.pixelSize: 16
                                         color: Style.textDimmed
-                                        visible: appIcon.status !== Image.Ready
+                                        visible: !appIconImg.visible
                                     }
 
                                     StyledText {
@@ -489,25 +602,18 @@ Scope {
                                         Layout.fillWidth: true
                                     }
 
-                                    // Overdrive warning icon for apps
                                     MaterialIcon {
                                         text: "warning"
                                         font.pixelSize: 14
                                         color: Style.colorUrgent
                                         visible: appItem.appOverdrive && !appItem.appMuted
                                     }
-                                }
-
-                                // App slider
-                                RowLayout {
-                                    spacing: Style.spaceMd
 
                                     MaterialIcon {
                                         text: appItem.appMuted ? "volume_off" : "volume_up"
                                         font.pixelSize: 16
                                         color: appItem.appSliderColor
                                         fill: 1
-                                        Layout.alignment: Qt.AlignVCenter
 
                                         Behavior on color { ColorAnimation { duration: Style.animFast } }
 
@@ -521,56 +627,10 @@ Scope {
                                         }
                                     }
 
-                                    Item {
-                                        Layout.fillWidth: true
-                                        implicitHeight: 24
-
-                                        Rectangle {
-                                            id: appTrack
-                                            anchors.left: parent.left
-                                            anchors.right: parent.right
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            height: 6
-                                            radius: 3
-                                            color: Style.bgTertiary
-
-                                            Rectangle {
-                                                width: Math.min(parent.width * appItem.appVol, parent.width)
-                                                height: parent.height
-                                                radius: parent.radius
-                                                color: appItem.appSliderColor
-
-                                                Behavior on width { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
-                                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                            }
-                                        }
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            property bool isDragging: false
-
-                                            onPressed: mouse => { isDragging = true; setVol(mouse.x) }
-                                            onReleased: isDragging = false
-                                            onPositionChanged: mouse => { if (isDragging) setVol(mouse.x) }
-                                            onClicked: mouse => setVol(mouse.x)
-                                            onWheel: wheel => {
-                                                if (appItem.modelData.audio) {
-                                                    var d = wheel.angleDelta.y / 120
-                                                    appItem.modelData.audio.volume = Math.max(0, Math.min(1.5, appItem.modelData.audio.volume + d * 0.05))
-                                                }
-                                            }
-
-                                            function setVol(x) {
-                                                if (appItem.modelData.audio)
-                                                    appItem.modelData.audio.volume = Math.max(0, Math.min(1.0, x / appTrack.width))
-                                            }
-                                        }
-                                    }
-
                                     StyledText {
                                         text: Math.round(appItem.appVol * 100) + "%"
                                         font.pixelSize: Style.fontSizeSm
+                                        font.bold: true
                                         color: {
                                             if (appItem.appMuted) return Style.textDimmed
                                             if (appItem.appOverdrive) return Style.colorUrgent
@@ -580,6 +640,62 @@ Scope {
                                         horizontalAlignment: Text.AlignRight
 
                                         Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                    }
+                                }
+
+                                // App VU meter (15 segments: 0-150%)
+                                Item {
+                                    Layout.fillWidth: true
+                                    implicitHeight: 8
+
+                                    Row {
+                                        id: appVuRow
+                                        anchors.fill: parent
+                                        spacing: 2
+
+                                        Repeater {
+                                            model: 15
+
+                                            Rectangle {
+                                                required property int index
+                                                width: (appVuRow.width - 14 * appVuRow.spacing) / 15
+                                                height: 8
+                                                radius: 1
+                                                color: {
+                                                    if (appItem.appMuted) return Style.bgTertiary
+                                                    var threshold = index * 10
+                                                    var percent = Math.round(appItem.appVol * 100)
+                                                    if (percent <= threshold) return Style.bgTertiary
+                                                    if (index >= 13) return Style.colorUrgent
+                                                    if (index >= 10) return Style.accentAmber
+                                                    return Style.accentAmber
+                                                }
+
+                                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                            }
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        property bool isDragging: false
+
+                                        onPressed: mouse => { isDragging = true; setVol(mouse.x) }
+                                        onReleased: isDragging = false
+                                        onPositionChanged: mouse => { if (isDragging) setVol(mouse.x) }
+                                        onClicked: mouse => setVol(mouse.x)
+                                        onWheel: wheel => {
+                                            if (appItem.modelData.audio) {
+                                                var d = wheel.angleDelta.y / 120
+                                                appItem.modelData.audio.volume = Math.max(0, Math.min(1.5, appItem.modelData.audio.volume + d * 0.05))
+                                            }
+                                        }
+
+                                        function setVol(x) {
+                                            if (appItem.modelData.audio)
+                                                appItem.modelData.audio.volume = Math.max(0, Math.min(1.5, x / width * 1.5))
+                                        }
                                     }
                                 }
 
@@ -593,7 +709,6 @@ Scope {
                             color: Style.textDimmed
                             font.pixelSize: Style.fontSizeSm
                             visible: {
-                                // Re-evaluate when model count changes
                                 void appRepeater.count
                                 for (var i = 0; i < appRepeater.count; i++) {
                                     var item = appRepeater.itemAt(i)
@@ -603,11 +718,7 @@ Scope {
                             }
                         }
 
-                        Item { implicitHeight: Style.spaceMd }
-
-                        // ═══════════════════════════════════
-                        // SECTION 3: Playback Device
-                        // ═══════════════════════════════════
+                        Item { implicitHeight: Style.spaceLg }
 
                         Rectangle {
                             Layout.fillWidth: true
@@ -617,11 +728,25 @@ Scope {
 
                         Item { implicitHeight: Style.spaceLg }
 
-                        StyledText {
-                            text: "Playback Device"
-                            font.pixelSize: Style.fontSizeMd
-                            font.bold: true
-                            color: Style.accentPink
+                        // ═══════════════════════════════════
+                        // SECTION 3: Playback Device
+                        // ═══════════════════════════════════
+
+                        RowLayout {
+                            spacing: Style.spaceMd
+
+                            MaterialIcon {
+                                text: "speaker"
+                                font.pixelSize: 20
+                                color: Style.accentPink
+                                fill: 1
+                            }
+
+                            StyledText {
+                                text: "Playback Device"
+                                font.pixelSize: Style.fontSizeMd
+                                font.bold: true
+                            }
                         }
 
                         Item { implicitHeight: Style.spaceMd }
@@ -635,19 +760,15 @@ Scope {
 
                                 readonly property bool isSinkDevice: modelData.isSink && !modelData.isStream && modelData.audio !== null
                                 readonly property bool isDefault: Pipewire.defaultAudioSink === modelData
-                                readonly property string deviceIcon: {
-                                    if (isDefault) {
-                                        // Active device gets type-aware icon
-                                        return root.sinkIconFor(modelData)
-                                    }
-                                    return root.sinkIconFor(modelData)
-                                }
+                                readonly property string deviceIcon: root.sinkIconFor(modelData)
 
                                 visible: isSinkDevice
                                 Layout.fillWidth: true
                                 implicitHeight: isSinkDevice ? sinkRow.implicitHeight + Style.spaceMd * 2 : 0
                                 radius: Style.radiusSm
-                                color: sinkHover.containsMouse ? Style.bgTertiary : "transparent"
+                                color: sinkHover.containsMouse
+                                    ? Qt.rgba(1, 0.41, 0.71, 0.1)
+                                    : "transparent"
 
                                 Behavior on color { ColorAnimation { duration: Style.animFast } }
 
@@ -674,6 +795,14 @@ Scope {
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
                                     }
+
+                                    MaterialIcon {
+                                        text: "check_circle"
+                                        font.pixelSize: 16
+                                        color: Style.accentPink
+                                        visible: sinkItem.isDefault
+                                        fill: 1
+                                    }
                                 }
 
                                 MouseArea {
@@ -690,10 +819,6 @@ Scope {
 
                         Item { implicitHeight: Style.spaceLg }
 
-                        // ═══════════════════════════════════
-                        // SECTION 4: Input Device
-                        // ═══════════════════════════════════
-
                         Rectangle {
                             Layout.fillWidth: true
                             height: 1
@@ -702,11 +827,25 @@ Scope {
 
                         Item { implicitHeight: Style.spaceLg }
 
-                        StyledText {
-                            text: "Input Device"
-                            font.pixelSize: Style.fontSizeMd
-                            font.bold: true
-                            color: Style.accentPink
+                        // ═══════════════════════════════════
+                        // SECTION 4: Input Device
+                        // ═══════════════════════════════════
+
+                        RowLayout {
+                            spacing: Style.spaceMd
+
+                            MaterialIcon {
+                                text: "mic"
+                                font.pixelSize: 20
+                                color: Style.accentPurple
+                                fill: 1
+                            }
+
+                            StyledText {
+                                text: "Input Device"
+                                font.pixelSize: Style.fontSizeMd
+                                font.bold: true
+                            }
                         }
 
                         Item { implicitHeight: Style.spaceMd }
@@ -720,16 +859,15 @@ Scope {
 
                                 readonly property bool isSourceDevice: !modelData.isSink && !modelData.isStream && modelData.audio !== null && (modelData.name ?? "").indexOf("monitor") < 0
                                 readonly property bool isDefault: Pipewire.defaultAudioSource === modelData
-                                readonly property string deviceIcon: {
-                                    if (isDefault) return root.sourceIconFor(modelData)
-                                    return root.sourceIconFor(modelData)
-                                }
+                                readonly property string deviceIcon: root.sourceIconFor(modelData)
 
                                 visible: isSourceDevice
                                 Layout.fillWidth: true
                                 implicitHeight: isSourceDevice ? sourceRow.implicitHeight + Style.spaceMd * 2 : 0
                                 radius: Style.radiusSm
-                                color: sourceHover.containsMouse ? Style.bgTertiary : "transparent"
+                                color: sourceHover.containsMouse
+                                    ? Qt.rgba(0.85, 0.44, 0.84, 0.1)
+                                    : "transparent"
 
                                 Behavior on color { ColorAnimation { duration: Style.animFast } }
 
@@ -755,6 +893,14 @@ Scope {
                                         color: sourceItem.isDefault ? Style.accentPurple : Style.textPrimary
                                         elide: Text.ElideRight
                                         Layout.fillWidth: true
+                                    }
+
+                                    MaterialIcon {
+                                        text: "check_circle"
+                                        font.pixelSize: 16
+                                        color: Style.accentPurple
+                                        visible: sourceItem.isDefault
+                                        fill: 1
                                     }
                                 }
 

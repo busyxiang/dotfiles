@@ -50,6 +50,18 @@ Scope {
                 border.width: 1
                 border.color: Style.bgTertiary
 
+                // Neon top strip
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    height: 2
+                    radius: Style.radiusMd
+                    color: Style.accentPink
+                    opacity: 0.8
+                    z: 1
+                }
+
                 // Block clicks
                 MouseArea { anchors.fill: parent }
 
@@ -83,7 +95,8 @@ Scope {
                                     anchors.centerIn: parent
                                     width: parent.width
                                     height: 1
-                                    color: Style.bgTertiary
+                                    color: Style.accentPink
+                                    opacity: 0.3
                                 }
                             }
 
@@ -95,7 +108,7 @@ Scope {
                                 height: visible ? 32 : 0
                                 radius: Style.radiusSm
                                 color: entryHover.containsMouse && menuEntry.modelData.enabled
-                                    ? Style.bgTertiary : "transparent"
+                                    ? Qt.rgba(1, 0.41, 0.71, 0.1) : "transparent"
                                 opacity: menuEntry.modelData.enabled ? 1.0 : 0.4
 
                                 Behavior on color { ColorAnimation { duration: Style.animFast } }
@@ -124,7 +137,7 @@ Scope {
                                         text: menuEntry.modelData.text
                                         font.pixelSize: Style.fontSizeSm
                                         color: entryHover.containsMouse && menuEntry.modelData.enabled
-                                            ? Style.textPrimary : Style.textSecondary
+                                            ? Style.accentPink : Style.textSecondary
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
 
@@ -136,7 +149,9 @@ Scope {
                                         visible: menuEntry.modelData.hasChildren
                                         text: "chevron_right"
                                         font.pixelSize: 14
-                                        color: Style.textDimmed
+                                        color: entryHover.containsMouse ? Style.accentPink : Style.textDimmed
+
+                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
                                     }
                                 }
 
