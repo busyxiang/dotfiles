@@ -4,11 +4,14 @@ import Quickshell.Io
 import "../../../Singleton"
 import "../../../common"
 
-RowLayout {
+Rectangle {
     id: root
     property real sf: 1.0
 
-    spacing: Math.round(Style.spaceMd * sf)
+    implicitWidth: row.implicitWidth + Math.round(Style.spaceMd * sf) * 2
+    implicitHeight: Math.round(22 * sf)
+    radius: Style.radiusFull
+    color: Style.bgTertiary
 
     property real prevRx: 0
     property real prevTx: 0
@@ -19,14 +22,6 @@ RowLayout {
 
     property real rxPerSec: 0
     property real txPerSec: 0
-    readonly property bool idle: rxPerSec < 1024 && txPerSec < 1024
-
-    opacity: idle ? 0 : 1
-    visible: opacity > 0
-
-    Behavior on opacity {
-        NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
-    }
 
     function formatSpeed(bytesPerSec: real): string {
         if (bytesPerSec >= 1073741824)
@@ -38,30 +33,51 @@ RowLayout {
         return Math.round(bytesPerSec) + " B/s"
     }
 
-    StyledText {
-        text: "↑"
-        font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
-        font.bold: true
-        color: Style.accentAmber
+    function speedColor(bytesPerSec) {
+        if (bytesPerSec >= 10485760) return Style.accentAmber    // >10MB/s
+        if (bytesPerSec >= 1048576) return Style.accentPink      // >1MB/s
+        if (bytesPerSec >= 102400) return Style.accentPink       // >100KB/s
+        return Style.textSecondary
     }
 
-    StyledText {
-        text: root.uploadSpeed
-        font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
-        color: Style.textSecondary
-    }
+    RowLayout {
+        id: row
+        anchors.centerIn: parent
+        spacing: Math.round(Style.spaceSm * root.sf)
 
-    StyledText {
-        text: "↓"
-        font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
-        font.bold: true
-        color: Style.accentPink
-    }
+        StyledText {
+            text: "↑"
+            font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
+            font.bold: true
+            color: root.speedColor(root.txPerSec)
 
-    StyledText {
-        text: root.downloadSpeed
-        font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
-        color: Style.textSecondary
+            Behavior on color { ColorAnimation { duration: Style.animFast } }
+        }
+
+        StyledText {
+            text: root.uploadSpeed
+            font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
+            color: root.speedColor(root.txPerSec)
+
+            Behavior on color { ColorAnimation { duration: Style.animFast } }
+        }
+
+        StyledText {
+            text: "↓"
+            font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
+            font.bold: true
+            color: root.speedColor(root.rxPerSec)
+
+            Behavior on color { ColorAnimation { duration: Style.animFast } }
+        }
+
+        StyledText {
+            text: root.downloadSpeed
+            font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
+            color: root.speedColor(root.rxPerSec)
+
+            Behavior on color { ColorAnimation { duration: Style.animFast } }
+        }
     }
 
     Process {

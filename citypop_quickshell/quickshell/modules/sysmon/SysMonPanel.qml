@@ -58,18 +58,56 @@ Scope {
                     spacing: Style.spaceLg
 
                     // ── Header ──
-                    StyledText {
-                        text: "System Monitor"
-                        font.pixelSize: Style.fontSizeXl
-                        font.bold: true
-                        color: Style.accentPink
+                    RowLayout {
+                        spacing: Style.spaceMd
+
+                        MaterialIcon {
+                            text: "monitor_heart"
+                            font.pixelSize: 20
+                            color: Style.accentPink
+                            fill: 1
+                        }
+
+                        StyledText {
+                            text: "System Monitor"
+                            font.pixelSize: Style.fontSizeXl
+                            font.bold: true
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        // Close
+                        Rectangle {
+                            implicitWidth: 28
+                            implicitHeight: 28
+                            radius: Style.radiusFull
+                            color: closeHover.containsMouse ? Style.bgTertiary : "transparent"
+
+                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                            MaterialIcon {
+                                anchors.centerIn: parent
+                                text: "close"
+                                font.pixelSize: 16
+                                color: closeHover.containsMouse ? Style.textPrimary : Style.textDimmed
+                            }
+
+                            MouseArea {
+                                id: closeHover
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: SysMonState.visible = false
+                            }
+                        }
                     }
 
-                    // ── Divider ──
+                    // ── Neon divider ──
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 1
-                        color: Style.bgTertiary
+                        height: 2
+                        color: Style.accentPink
+                        opacity: 0.6
                     }
 
                     // ═══════════════════════════════════
@@ -104,46 +142,43 @@ Scope {
                         }
                     }
 
-                    // CPU usage bar
-                    Rectangle {
+                    // CPU VU meter
+                    Row {
+                        spacing: 2
                         Layout.fillWidth: true
-                        height: 8
-                        radius: 4
-                        color: Style.bgTertiary
 
-                        Rectangle {
-                            width: Math.min(parent.width * SysMonState.cpuPercent / 100, parent.width)
-                            height: parent.height
-                            radius: parent.radius
-                            color: SysMonState.cpuPercent >= 90 ? Style.colorUrgent
-                                 : SysMonState.cpuPercent >= 70 ? Style.accentAmber
-                                 : Style.accentPink
+                        Repeater {
+                            model: 20
 
-                            Behavior on width { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
-                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+                            Rectangle {
+                                required property int index
+                                property bool isLit: SysMonState.cpuPercent > index * 5
+
+                                width: (parent.width - 19 * parent.spacing) / 20
+                                height: 8
+                                radius: 1
+                                color: isLit ? (SysMonState.cpuPercent >= 90 ? Style.colorUrgent
+                                             : SysMonState.cpuPercent >= 70 ? Style.accentAmber
+                                             : Style.accentPink)
+                                      : Style.bgTertiary
+
+                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+                            }
                         }
                     }
 
-                    // CPU temperature
+                    // CPU temperature with mini VU
                     RowLayout {
                         spacing: Style.spaceMd
 
                         MaterialIcon {
                             text: "thermostat"
-                            font.pixelSize: 18
+                            font.pixelSize: 16
                             color: SysMonState.cpuTemp >= 80 ? Style.colorUrgent
                                  : SysMonState.cpuTemp >= 60 ? Style.accentAmber
                                  : "#66bb6a"
                             fill: 1
                         }
-
-                        StyledText {
-                            text: "Temperature"
-                            color: Style.textSecondary
-                            font.pixelSize: Style.fontSizeSm
-                        }
-
-                        Item { Layout.fillWidth: true }
 
                         StyledText {
                             text: SysMonState.cpuTemp + "\u00B0C"
@@ -155,16 +190,41 @@ Scope {
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
                         }
+
+                        // Temp VU meter (10 segments, 0-100°C)
+                        Row {
+                            spacing: 1
+                            Layout.fillWidth: true
+
+                            Repeater {
+                                model: 10
+
+                                Rectangle {
+                                    required property int index
+                                    property bool isLit: SysMonState.cpuTemp > index * 10
+
+                                    width: (parent.width - 9 * parent.spacing) / 10
+                                    height: 6
+                                    radius: 1
+                                    color: isLit ? (index >= 8 ? Style.colorUrgent
+                                                 : index >= 6 ? Style.accentAmber
+                                                 : "#66bb6a")
+                                          : Style.bgTertiary
+
+                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                }
+                            }
+                        }
                     }
 
-                    // Fan speed (only shown when fanRpm > 0)
+                    // Fan speed with mini VU (only shown when fanRpm > 0)
                     RowLayout {
                         spacing: Style.spaceMd
                         visible: SysMonState.fanRpm > 0
 
                         MaterialIcon {
                             text: "mode_fan"
-                            font.pixelSize: 18
+                            font.pixelSize: 16
                             color: SysMonState.fanRpm >= 3500 ? Style.colorUrgent
                                  : SysMonState.fanRpm >= 2000 ? Style.accentAmber
                                  : Style.textSecondary
@@ -179,14 +239,6 @@ Scope {
                         }
 
                         StyledText {
-                            text: "Fan Speed"
-                            color: Style.textSecondary
-                            font.pixelSize: Style.fontSizeSm
-                        }
-
-                        Item { Layout.fillWidth: true }
-
-                        StyledText {
                             text: SysMonState.fanRpm.toLocaleString() + " RPM"
                             font.pixelSize: Style.fontSizeSm
                             font.bold: true
@@ -196,13 +248,38 @@ Scope {
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
                         }
+
+                        // Fan VU meter (10 segments, 0-5000 RPM)
+                        Row {
+                            spacing: 1
+                            Layout.fillWidth: true
+
+                            Repeater {
+                                model: 10
+
+                                Rectangle {
+                                    required property int index
+                                    property bool isLit: SysMonState.fanRpm > index * 500
+
+                                    width: (parent.width - 9 * parent.spacing) / 10
+                                    height: 6
+                                    radius: 1
+                                    color: isLit ? (index >= 7 ? Style.colorUrgent
+                                                 : index >= 4 ? Style.accentAmber
+                                                 : Style.textSecondary)
+                                          : Style.bgTertiary
+
+                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                }
+                            }
+                        }
                     }
 
-                    // ── Divider ──
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 1
-                        color: Style.bgTertiary
+                        height: 2
+                        color: Style.accentPink
+                        opacity: 0.3
                     }
 
                     // ═══════════════════════════════════
@@ -215,7 +292,7 @@ Scope {
                         MaterialIcon {
                             text: "developer_board"
                             font.pixelSize: 20
-                            color: Style.accentAmber
+                            color: Style.accentPink
                             fill: 1
                         }
 
@@ -237,46 +314,43 @@ Scope {
                         }
                     }
 
-                    // GPU usage bar
-                    Rectangle {
+                    // GPU VU meter
+                    Row {
+                        spacing: 2
                         Layout.fillWidth: true
-                        height: 8
-                        radius: 4
-                        color: Style.bgTertiary
 
-                        Rectangle {
-                            width: Math.min(parent.width * SysMonState.gpuPercent / 100, parent.width)
-                            height: parent.height
-                            radius: parent.radius
-                            color: SysMonState.gpuPercent >= 90 ? Style.colorUrgent
-                                 : SysMonState.gpuPercent >= 70 ? Style.accentAmber
-                                 : Style.accentAmber
+                        Repeater {
+                            model: 20
 
-                            Behavior on width { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
-                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+                            Rectangle {
+                                required property int index
+                                property bool isLit: SysMonState.gpuPercent > index * 5
+
+                                width: (parent.width - 19 * parent.spacing) / 20
+                                height: 8
+                                radius: 1
+                                color: isLit ? (SysMonState.gpuPercent >= 90 ? Style.colorUrgent
+                                             : SysMonState.gpuPercent >= 70 ? Style.accentAmber
+                                             : Style.accentPink)
+                                      : Style.bgTertiary
+
+                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+                            }
                         }
                     }
 
-                    // GPU temperature
+                    // GPU temperature with mini VU
                     RowLayout {
                         spacing: Style.spaceMd
 
                         MaterialIcon {
                             text: "thermostat"
-                            font.pixelSize: 18
+                            font.pixelSize: 16
                             color: SysMonState.gpuTemp >= 80 ? Style.colorUrgent
                                  : SysMonState.gpuTemp >= 60 ? Style.accentAmber
                                  : "#66bb6a"
                             fill: 1
                         }
-
-                        StyledText {
-                            text: "Temperature"
-                            color: Style.textSecondary
-                            font.pixelSize: Style.fontSizeSm
-                        }
-
-                        Item { Layout.fillWidth: true }
 
                         StyledText {
                             text: SysMonState.gpuTemp + "\u00B0C"
@@ -288,13 +362,38 @@ Scope {
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
                         }
+
+                        // Temp VU meter
+                        Row {
+                            spacing: 1
+                            Layout.fillWidth: true
+
+                            Repeater {
+                                model: 10
+
+                                Rectangle {
+                                    required property int index
+                                    property bool isLit: SysMonState.gpuTemp > index * 10
+
+                                    width: (parent.width - 9 * parent.spacing) / 10
+                                    height: 6
+                                    radius: 1
+                                    color: isLit ? (index >= 8 ? Style.colorUrgent
+                                                 : index >= 6 ? Style.accentAmber
+                                                 : "#66bb6a")
+                                          : Style.bgTertiary
+
+                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                }
+                            }
+                        }
                     }
 
-                    // ── Divider ──
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 1
-                        color: Style.bgTertiary
+                        height: 2
+                        color: Style.accentPink
+                        opacity: 0.3
                     }
 
                     // ═══════════════════════════════════
@@ -320,6 +419,12 @@ Scope {
                         Item { Layout.fillWidth: true }
 
                         StyledText {
+                            text: SysMonState.ramUsed + "G / " + SysMonState.ramTotal + "G"
+                            font.pixelSize: Style.fontSizeSm
+                            color: Style.textSecondary
+                        }
+
+                        StyledText {
                             text: SysMonState.ramPercent + "%"
                             font.pixelSize: Style.fontSizeMd
                             font.bold: true
@@ -329,38 +434,37 @@ Scope {
                         }
                     }
 
-                    // RAM usage bar
-                    Rectangle {
+                    // RAM VU meter
+                    Row {
+                        spacing: 2
                         Layout.fillWidth: true
-                        height: 8
-                        radius: 4
-                        color: Style.bgTertiary
 
-                        Rectangle {
-                            width: Math.min(parent.width * SysMonState.ramPercent / 100, parent.width)
-                            height: parent.height
-                            radius: parent.radius
-                            color: SysMonState.ramPercent >= 90 ? Style.colorUrgent
-                                 : SysMonState.ramPercent >= 70 ? Style.accentAmber
-                                 : Style.accentPurple
+                        Repeater {
+                            model: 20
 
-                            Behavior on width { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
-                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+                            Rectangle {
+                                required property int index
+                                property bool isLit: SysMonState.ramPercent > index * 5
+
+                                width: (parent.width - 19 * parent.spacing) / 20
+                                height: 8
+                                radius: 1
+                                color: isLit ? (SysMonState.ramPercent >= 90 ? Style.colorUrgent
+                                             : SysMonState.ramPercent >= 70 ? Style.accentAmber
+                                             : Style.accentPurple)
+                                      : Style.bgTertiary
+
+                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+                            }
                         }
                     }
 
-                    // RAM detail text
-                    StyledText {
-                        text: SysMonState.ramUsed + "G / " + SysMonState.ramTotal + "G"
-                        color: Style.textSecondary
-                        font.pixelSize: Style.fontSizeSm
-                    }
-
-                    // ── Divider ──
+                    // ── Neon divider ──
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 1
-                        color: Style.bgTertiary
+                        height: 2
+                        color: Style.accentPink
+                        opacity: 0.4
                     }
 
                     // ═══════════════════════════════════
@@ -416,34 +520,61 @@ Scope {
                     Repeater {
                         model: SysMonState.topProcesses
 
-                        RowLayout {
+                        Rectangle {
+                            id: procRow
                             required property var modelData
-                            spacing: Style.spaceSm
+                            required property int index
 
-                            StyledText {
-                                Layout.fillWidth: true
-                                text: modelData.name
-                                font.pixelSize: Style.fontSizeSm
-                                color: Style.textPrimary
-                                elide: Text.ElideRight
+                            Layout.fillWidth: true
+                            implicitHeight: procContent.implicitHeight + Style.spaceSm * 2
+                            radius: Style.radiusSm
+                            color: procHover.containsMouse ? Qt.rgba(1, 0.41, 0.71, 0.1)
+                                 : index % 2 === 1 ? Qt.rgba(Style.bgTertiary.r, Style.bgTertiary.g, Style.bgTertiary.b, 0.3)
+                                 : "transparent"
+
+                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                            MouseArea {
+                                id: procHover
+                                anchors.fill: parent
+                                hoverEnabled: true
                             }
 
-                            StyledText {
-                                Layout.preferredWidth: 48
-                                text: modelData.cpu
-                                font.pixelSize: Style.fontSizeSm
-                                color: parseFloat(modelData.cpu) >= 50 ? Style.colorUrgent
-                                     : parseFloat(modelData.cpu) >= 20 ? Style.accentAmber
-                                     : Style.textSecondary
-                                horizontalAlignment: Text.AlignRight
-                            }
+                            RowLayout {
+                                id: procContent
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.margins: Style.spaceSm
+                                spacing: Style.spaceSm
 
-                            StyledText {
-                                Layout.preferredWidth: 48
-                                text: modelData.mem
-                                font.pixelSize: Style.fontSizeSm
-                                color: Style.textSecondary
-                                horizontalAlignment: Text.AlignRight
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: procRow.modelData.name
+                                    font.pixelSize: Style.fontSizeSm
+                                    color: procHover.containsMouse ? Style.textPrimary : Style.textSecondary
+                                    elide: Text.ElideRight
+
+                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                }
+
+                                StyledText {
+                                    Layout.preferredWidth: 48
+                                    text: procRow.modelData.cpu
+                                    font.pixelSize: Style.fontSizeSm
+                                    color: parseFloat(procRow.modelData.cpu) >= 50 ? Style.colorUrgent
+                                         : parseFloat(procRow.modelData.cpu) >= 20 ? Style.accentAmber
+                                         : Style.textSecondary
+                                    horizontalAlignment: Text.AlignRight
+                                }
+
+                                StyledText {
+                                    Layout.preferredWidth: 48
+                                    text: procRow.modelData.mem
+                                    font.pixelSize: Style.fontSizeSm
+                                    color: Style.textSecondary
+                                    horizontalAlignment: Text.AlignRight
+                                }
                             }
                         }
                     }
