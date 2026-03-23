@@ -115,27 +115,8 @@ Scope {
                             color: Style.bgTertiary
                         }
 
-                        // Close button
-                        Rectangle {
-                            implicitWidth: 22
-                            implicitHeight: 22
-                            radius: Style.radiusSm
-                            color: closeArea.containsMouse ? Style.bgTertiary : "transparent"
-
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: "close"
-                                font.pixelSize: 16
-                                color: Style.textDimmed
-                            }
-
-                            MouseArea {
-                                id: closeArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: NotificationManager.historyVisible = false
-                            }
+                        CloseButton {
+                            onClicked: NotificationManager.historyVisible = false
                         }
                     }
 
@@ -262,7 +243,7 @@ Scope {
                                             implicitWidth: 22
                                             implicitHeight: 22
                                             radius: Style.radiusFull
-                                            color: dismissGroupArea.containsMouse ? Qt.rgba(1, 0.27, 0.4, 0.15) : "transparent"
+                                            color: dismissGroupArea.containsMouse ? Style.urgentHover : "transparent"
 
                                             Behavior on color { ColorAnimation { duration: Style.animFast } }
 

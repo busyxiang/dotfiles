@@ -24,6 +24,25 @@ Singleton {
     readonly property string colorActive: "#ff69b4"
     readonly property string colorInactive: "#6b5b7b"
     readonly property string colorUrgent: "#ff4466"
+    readonly property string colorGood: "#66bb6a"
+
+    // === Derived Alpha Colors (common hover/border/gradient tints) ===
+    readonly property string pinkHover: "#1aff69b4"       // accentPink @ 10%
+    readonly property string pinkBorder: "#4dff69b4"      // accentPink @ 30%
+    readonly property string pinkGradientStart: "#1fff69b4" // accentPink @ 12%
+    readonly property string pinkGradientEnd: "#0aff69b4"  // accentPink @ 4%
+
+    readonly property string urgentHover: "#26ff4466"     // colorUrgent @ 15%
+    readonly property string urgentBg: "#1aff4466"        // colorUrgent @ 10%
+    readonly property string urgentBgStrong: "#40ff4466"  // colorUrgent @ 25%
+    readonly property string urgentBorder: "#4dff4466"    // colorUrgent @ 30%
+    readonly property string urgentGlow: "#66ff4466"      // colorUrgent @ 40%
+
+    readonly property string amberBg: "#1affb347"         // accentAmber @ 10%
+    readonly property string amberBorder: "#4dffb347"     // accentAmber @ 30%
+    readonly property string amberGlow: "#66ffb347"       // accentAmber @ 40%
+
+    readonly property string purpleHover: "#1ada70d6"     // accentPurple @ 10%
 
     // === Spacing Scale (px) ===
     readonly property int spaceXs: 2

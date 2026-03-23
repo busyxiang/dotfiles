@@ -51,47 +51,18 @@ Scope {
                 border.color: Style.bgTertiary
 
                 // Neon top strip
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 2
-                    radius: Style.radiusLg
-                    color: Style.accentPink
-                    opacity: 0.8
-                    z: 1
-                }
+                NeonStrip {}
 
                 MouseArea { anchors.fill: parent }
 
                 // Close button (floating top-right)
-                Rectangle {
+                CloseButton {
                     anchors.top: parent.top
                     anchors.right: parent.right
                     anchors.topMargin: Style.spaceMd
                     anchors.rightMargin: Style.spaceMd
                     z: 2
-                    implicitWidth: 28
-                    implicitHeight: 28
-                    radius: Style.radiusFull
-                    color: calCloseHover.containsMouse ? Style.bgTertiary : "transparent"
-
-                    Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                    MaterialIcon {
-                        anchors.centerIn: parent
-                        text: "close"
-                        font.pixelSize: 16
-                        color: calCloseHover.containsMouse ? Style.textPrimary : Style.textDimmed
-                    }
-
-                    MouseArea {
-                        id: calCloseHover
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: CalendarState.visible = false
-                    }
+                    onClicked: CalendarState.visible = false
                 }
 
                 // --- Clipboard Process ---

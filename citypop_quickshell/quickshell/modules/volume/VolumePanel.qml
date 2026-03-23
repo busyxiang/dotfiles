@@ -47,7 +47,7 @@ Scope {
         if (inMuted) return Style.textDimmed
         if (inVol > 0.9) return Style.colorUrgent
         if (inVol > 0.7) return Style.accentAmber
-        return "#66bb6a"
+        return Style.colorGood
     }
 
     // ── Helper: detect device icon from name/description ──
@@ -67,29 +67,6 @@ Scope {
         if (n.indexOf("bluetooth") >= 0 || n.indexOf("bluez") >= 0) return "bluetooth"
         if (n.indexOf("usb") >= 0) return "usb"
         return "mic_none"
-    }
-
-    // ── VU meter color helper: 15 segments, each 10% (0-150%) ──
-    function vuColor(segIndex: int, volume: real, muted: bool): color {
-        if (muted) return Style.bgTertiary
-        var threshold = segIndex * 10
-        var percent = Math.round(volume * 100)
-        if (percent <= threshold) return Style.bgTertiary
-        // Lit segment color
-        if (segIndex >= 13) return Style.colorUrgent    // 130%+
-        if (segIndex >= 10) return Style.accentAmber     // 100-130%
-        return Style.accentPink                          // 0-100%
-    }
-
-    // Input VU: 10 segments, each 10% (0-100%)
-    function vuColorInput(segIndex: int, volume: real, muted: bool): color {
-        if (muted) return Style.bgTertiary
-        var threshold = segIndex * 10
-        var percent = Math.round(volume * 100)
-        if (percent <= threshold) return Style.bgTertiary
-        if (segIndex >= 9) return Style.colorUrgent
-        if (segIndex >= 7) return Style.accentAmber
-        return "#66bb6a"
     }
 
     readonly property var nodeModel: Pipewire.nodes
@@ -137,17 +114,7 @@ Scope {
                 border.color: Style.bgTertiary
                 clip: true
 
-                // Neon top strip
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 2
-                    radius: Style.radiusLg
-                    color: Style.accentPink
-                    opacity: 0.8
-                    z: 1
-                }
+                NeonStrip {}
 
                 MouseArea { anchors.fill: parent }
 
@@ -185,30 +152,7 @@ Scope {
 
                             Item { Layout.fillWidth: true }
 
-                            // Close button
-                            Rectangle {
-                                implicitWidth: 28
-                                implicitHeight: 28
-                                radius: Style.radiusFull
-                                color: volCloseHover.containsMouse ? Style.bgTertiary : "transparent"
-
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                                MaterialIcon {
-                                    anchors.centerIn: parent
-                                    text: "close"
-                                    font.pixelSize: 16
-                                    color: volCloseHover.containsMouse ? Style.textPrimary : Style.textDimmed
-                                }
-
-                                MouseArea {
-                                    id: volCloseHover
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: VolumeState.visible = false
-                                }
-                            }
+                            CloseButton { onClicked: VolumeState.visible = false }
                         }
 
                         // Neon header divider
@@ -293,24 +237,12 @@ Scope {
                             Layout.fillWidth: true
                             implicitHeight: 10
 
-                            Row {
-                                id: outVuRow
+                            VUMeter {
                                 anchors.fill: parent
-                                spacing: 2
-
-                                Repeater {
-                                    model: 15
-
-                                    Rectangle {
-                                        required property int index
-                                        width: (outVuRow.width - 14 * outVuRow.spacing) / 15
-                                        height: 10
-                                        radius: 1
-                                        color: root.vuColor(index, root.outVol, root.outMuted)
-
-                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                    }
-                                }
+                                segments: 15; segmentHeight: 10
+                                value: root.outVol / 1.5
+                                muted: root.outMuted
+                                warnAt: 0.667; critAt: 0.867
                             }
 
                             MouseArea {
@@ -401,24 +333,12 @@ Scope {
                             implicitHeight: 10
                             visible: root.hasInput
 
-                            Row {
-                                id: inVuRow
+                            VUMeter {
                                 anchors.fill: parent
-                                spacing: 2
-
-                                Repeater {
-                                    model: 10
-
-                                    Rectangle {
-                                        required property int index
-                                        width: (inVuRow.width - 9 * inVuRow.spacing) / 10
-                                        height: 10
-                                        radius: 1
-                                        color: root.vuColorInput(index, root.inVol, root.inMuted)
-
-                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                    }
-                                }
+                                segments: 10; segmentHeight: 10
+                                value: root.inVol
+                                muted: root.inMuted
+                                baseColor: Style.colorGood; warnAt: 0.7; critAt: 0.9
                             }
 
                             MouseArea {
@@ -445,38 +365,13 @@ Scope {
                         }
 
                         // Input level meter (pulsing VU)
-                        Item {
+                        VUMeter {
                             Layout.fillWidth: true
-                            implicitHeight: 4
                             visible: root.hasInput
-
-                            Row {
-                                id: inLevelRow
-                                anchors.fill: parent
-                                spacing: 2
-
-                                Repeater {
-                                    model: 10
-
-                                    Rectangle {
-                                        required property int index
-                                        width: (inLevelRow.width - 9 * inLevelRow.spacing) / 10
-                                        height: 4
-                                        radius: 1
-                                        color: root.vuColorInput(index, root.inVol, root.inMuted)
-                                        opacity: root.inVol > 0.7 && !root.inMuted && root.vuColorInput(index, root.inVol, root.inMuted) !== Style.bgTertiary ? pulseOpacity : 1.0
-
-                                        property real pulseOpacity: 1.0
-
-                                        SequentialAnimation on pulseOpacity {
-                                            running: root.inVol > 0.7 && !root.inMuted
-                                            loops: Animation.Infinite
-                                            NumberAnimation { from: 0.4; to: 1.0; duration: 600; easing.type: Easing.InOutSine }
-                                            NumberAnimation { from: 1.0; to: 0.4; duration: 600; easing.type: Easing.InOutSine }
-                                        }
-                                    }
-                                }
-                            }
+                            segments: 10; segmentHeight: 4
+                            value: root.inVol
+                            muted: root.inMuted
+                            baseColor: Style.colorGood; warnAt: 0.7; critAt: 0.9
                         }
 
                         Item { implicitHeight: Style.spaceLg }
@@ -562,7 +457,7 @@ Scope {
                                     if (appMuted) return Style.textDimmed
                                     if (appVol > 1.3) return Style.colorUrgent
                                     if (appOverdrive) return Style.accentAmber
-                                    return Style.accentAmber
+                                    return Style.accentPink
                                 }
 
                                 visible: isAppStream
@@ -648,32 +543,12 @@ Scope {
                                     Layout.fillWidth: true
                                     implicitHeight: 8
 
-                                    Row {
-                                        id: appVuRow
+                                    VUMeter {
                                         anchors.fill: parent
-                                        spacing: 2
-
-                                        Repeater {
-                                            model: 15
-
-                                            Rectangle {
-                                                required property int index
-                                                width: (appVuRow.width - 14 * appVuRow.spacing) / 15
-                                                height: 8
-                                                radius: 1
-                                                color: {
-                                                    if (appItem.appMuted) return Style.bgTertiary
-                                                    var threshold = index * 10
-                                                    var percent = Math.round(appItem.appVol * 100)
-                                                    if (percent <= threshold) return Style.bgTertiary
-                                                    if (index >= 13) return Style.colorUrgent
-                                                    if (index >= 10) return Style.accentAmber
-                                                    return Style.accentAmber
-                                                }
-
-                                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                            }
-                                        }
+                                        segments: 15
+                                        value: appItem.appVol / 1.5
+                                        muted: appItem.appMuted
+                                        warnAt: 0.667; critAt: 0.867
                                     }
 
                                     MouseArea {
@@ -767,7 +642,7 @@ Scope {
                                 implicitHeight: isSinkDevice ? sinkRow.implicitHeight + Style.spaceMd * 2 : 0
                                 radius: Style.radiusSm
                                 color: sinkHover.containsMouse
-                                    ? Qt.rgba(1, 0.41, 0.71, 0.1)
+                                    ? Style.pinkHover
                                     : "transparent"
 
                                 Behavior on color { ColorAnimation { duration: Style.animFast } }
@@ -866,7 +741,7 @@ Scope {
                                 implicitHeight: isSourceDevice ? sourceRow.implicitHeight + Style.spaceMd * 2 : 0
                                 radius: Style.radiusSm
                                 color: sourceHover.containsMouse
-                                    ? Qt.rgba(0.85, 0.44, 0.84, 0.1)
+                                    ? Style.purpleHover
                                     : "transparent"
 
                                 Behavior on color { ColorAnimation { duration: Style.animFast } }

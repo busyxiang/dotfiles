@@ -49,17 +49,7 @@ Scope {
                 border.width: 1
                 border.color: Style.bgTertiary
 
-                // Neon top strip
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 2
-                    radius: Style.radiusLg
-                    color: Style.accentPink
-                    opacity: 0.8
-                    z: 1
-                }
+                NeonStrip {}
 
                 MouseArea { anchors.fill: parent }
 
@@ -198,11 +188,11 @@ Scope {
                             radius: Style.radiusMd
 
                             gradient: Gradient {
-                                GradientStop { position: 0.0; color: Qt.rgba(1, 0.41, 0.71, 0.12) }
-                                GradientStop { position: 1.0; color: Qt.rgba(1, 0.41, 0.71, 0.04) }
+                                GradientStop { position: 0.0; color: Style.pinkGradientStart }
+                                GradientStop { position: 1.0; color: Style.pinkGradientEnd }
                             }
                             border.width: 1
-                            border.color: Qt.rgba(1, 0.41, 0.71, 0.3)
+                            border.color: Style.pinkBorder
 
                             ColumnLayout {
                                 id: connectedCol
@@ -268,7 +258,7 @@ Scope {
                                         implicitWidth: dcRow.implicitWidth + Style.spaceLg * 2
                                         implicitHeight: 28
                                         radius: Style.radiusFull
-                                        color: dcHover.containsMouse ? Qt.rgba(1, 0.27, 0.4, 0.15) : "transparent"
+                                        color: dcHover.containsMouse ? Style.urgentHover : "transparent"
                                         border.width: 1
                                         border.color: dcHover.containsMouse ? Style.colorUrgent : Style.textDimmed
 
@@ -333,9 +323,9 @@ Scope {
                         Layout.fillWidth: true
                         implicitHeight: errorRow.implicitHeight + Style.spaceMd * 2
                         radius: Style.radiusSm
-                        color: Qt.rgba(1, 0.27, 0.4, 0.1)
+                        color: Style.urgentBg
                         border.width: 1
-                        border.color: Qt.rgba(1, 0.27, 0.4, 0.3)
+                        border.color: Style.urgentBorder
                         visible: BluetoothManager.connectError !== ""
 
                         RowLayout {
@@ -367,9 +357,9 @@ Scope {
                         Layout.fillWidth: true
                         implicitHeight: pinRow.implicitHeight + Style.spaceMd * 2
                         radius: Style.radiusSm
-                        color: Qt.rgba(1, 0.7, 0.28, 0.1)
+                        color: Style.amberBg
                         border.width: 1
-                        border.color: Qt.rgba(1, 0.7, 0.28, 0.3)
+                        border.color: Style.amberBorder
                         visible: BluetoothManager.pairingPin !== ""
 
                         RowLayout {
@@ -449,7 +439,7 @@ Scope {
                             width: ListView.view.width
                             implicitHeight: devRow.implicitHeight + Style.spaceMd * 2
                             radius: Style.radiusSm
-                            color: devHover.containsMouse ? Qt.rgba(1, 0.41, 0.71, 0.08) : "transparent"
+                            color: devHover.containsMouse ? Style.pinkHover : "transparent"
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
 
@@ -498,7 +488,7 @@ Scope {
                                     implicitHeight: 28
                                     radius: Style.radiusFull
                                     visible: devHover.containsMouse && devItem.modelData.paired && !devItem.isConnecting
-                                    color: forgetHover.containsMouse ? Qt.rgba(1, 0.27, 0.4, 0.15) : "transparent"
+                                    color: forgetHover.containsMouse ? Style.urgentHover : "transparent"
 
                                     Behavior on color { ColorAnimation { duration: Style.animFast } }
 
@@ -526,7 +516,7 @@ Scope {
                                     implicitHeight: 28
                                     radius: Style.radiusFull
                                     visible: !devItem.isConnecting
-                                    color: connHover.containsMouse ? Qt.rgba(1, 0.41, 0.71, 0.15) : "transparent"
+                                    color: connHover.containsMouse ? Style.pinkHover : "transparent"
                                     border.width: 1
                                     border.color: connHover.containsMouse ? Style.accentPink : Style.textDimmed
 
@@ -646,19 +636,10 @@ Scope {
                     radius: Style.radiusMd
                     color: Style.bgSecondary
 
-                    // Neon top strip
-                    Rectangle {
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 2
-                        radius: Style.radiusMd
-                        color: Style.accentPink
-                        opacity: 0.8
-                    }
+                    NeonStrip {}
 
                     border.width: 1
-                    border.color: Qt.rgba(1, 0.41, 0.71, 0.25)
+                    border.color: Style.pinkBorder
 
                     ColumnLayout {
                         id: btTooltipColumn

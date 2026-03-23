@@ -76,30 +76,7 @@ Scope {
 
                         Item { Layout.fillWidth: true }
 
-                        // Close
-                        Rectangle {
-                            implicitWidth: 28
-                            implicitHeight: 28
-                            radius: Style.radiusFull
-                            color: closeHover.containsMouse ? Style.bgTertiary : "transparent"
-
-                            Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: "close"
-                                font.pixelSize: 16
-                                color: closeHover.containsMouse ? Style.textPrimary : Style.textDimmed
-                            }
-
-                            MouseArea {
-                                id: closeHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: SysMonState.visible = false
-                            }
-                        }
+                        CloseButton { onClicked: SysMonState.visible = false }
                     }
 
                     // ── Neon divider ──
@@ -142,29 +119,10 @@ Scope {
                         }
                     }
 
-                    // CPU VU meter
-                    Row {
-                        spacing: 2
+                    VUMeter {
                         Layout.fillWidth: true
-
-                        Repeater {
-                            model: 20
-
-                            Rectangle {
-                                required property int index
-                                property bool isLit: SysMonState.cpuPercent > index * 5
-
-                                width: (parent.width - 19 * parent.spacing) / 20
-                                height: 8
-                                radius: 1
-                                color: isLit ? (SysMonState.cpuPercent >= 90 ? Style.colorUrgent
-                                             : SysMonState.cpuPercent >= 70 ? Style.accentAmber
-                                             : Style.accentPink)
-                                      : Style.bgTertiary
-
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-                            }
-                        }
+                        value: SysMonState.cpuPercent / 100
+                        warnAt: 0.7; critAt: 0.9
                     }
 
                     // CPU temperature with mini VU
@@ -176,7 +134,7 @@ Scope {
                             font.pixelSize: 16
                             color: SysMonState.cpuTemp >= 80 ? Style.colorUrgent
                                  : SysMonState.cpuTemp >= 60 ? Style.accentAmber
-                                 : "#66bb6a"
+                                 : Style.colorGood
                             fill: 1
                         }
 
@@ -186,34 +144,16 @@ Scope {
                             font.bold: true
                             color: SysMonState.cpuTemp >= 80 ? Style.colorUrgent
                                  : SysMonState.cpuTemp >= 60 ? Style.accentAmber
-                                 : "#66bb6a"
+                                 : Style.colorGood
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
                         }
 
-                        // Temp VU meter (10 segments, 0-100°C)
-                        Row {
-                            spacing: 1
+                        VUMeter {
                             Layout.fillWidth: true
-
-                            Repeater {
-                                model: 10
-
-                                Rectangle {
-                                    required property int index
-                                    property bool isLit: SysMonState.cpuTemp > index * 10
-
-                                    width: (parent.width - 9 * parent.spacing) / 10
-                                    height: 6
-                                    radius: 1
-                                    color: isLit ? (index >= 8 ? Style.colorUrgent
-                                                 : index >= 6 ? Style.accentAmber
-                                                 : "#66bb6a")
-                                          : Style.bgTertiary
-
-                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                }
-                            }
+                            segments: 10; segmentHeight: 6; segmentSpacing: 1
+                            value: SysMonState.cpuTemp / 100
+                            baseColor: Style.colorGood; warnAt: 0.6; critAt: 0.8
                         }
                     }
 
@@ -249,29 +189,11 @@ Scope {
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
                         }
 
-                        // Fan VU meter (10 segments, 0-5000 RPM)
-                        Row {
-                            spacing: 1
+                        VUMeter {
                             Layout.fillWidth: true
-
-                            Repeater {
-                                model: 10
-
-                                Rectangle {
-                                    required property int index
-                                    property bool isLit: SysMonState.fanRpm > index * 500
-
-                                    width: (parent.width - 9 * parent.spacing) / 10
-                                    height: 6
-                                    radius: 1
-                                    color: isLit ? (index >= 7 ? Style.colorUrgent
-                                                 : index >= 4 ? Style.accentAmber
-                                                 : Style.textSecondary)
-                                          : Style.bgTertiary
-
-                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                }
-                            }
+                            segments: 10; segmentHeight: 6; segmentSpacing: 1
+                            value: Math.min(1.0, SysMonState.fanRpm / 5000)
+                            baseColor: Style.textSecondary; warnAt: 0.4; critAt: 0.7
                         }
                     }
 
@@ -314,29 +236,10 @@ Scope {
                         }
                     }
 
-                    // GPU VU meter
-                    Row {
-                        spacing: 2
+                    VUMeter {
                         Layout.fillWidth: true
-
-                        Repeater {
-                            model: 20
-
-                            Rectangle {
-                                required property int index
-                                property bool isLit: SysMonState.gpuPercent > index * 5
-
-                                width: (parent.width - 19 * parent.spacing) / 20
-                                height: 8
-                                radius: 1
-                                color: isLit ? (SysMonState.gpuPercent >= 90 ? Style.colorUrgent
-                                             : SysMonState.gpuPercent >= 70 ? Style.accentAmber
-                                             : Style.accentPink)
-                                      : Style.bgTertiary
-
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-                            }
-                        }
+                        value: SysMonState.gpuPercent / 100
+                        warnAt: 0.7; critAt: 0.9
                     }
 
                     // GPU temperature with mini VU
@@ -348,7 +251,7 @@ Scope {
                             font.pixelSize: 16
                             color: SysMonState.gpuTemp >= 80 ? Style.colorUrgent
                                  : SysMonState.gpuTemp >= 60 ? Style.accentAmber
-                                 : "#66bb6a"
+                                 : Style.colorGood
                             fill: 1
                         }
 
@@ -358,34 +261,16 @@ Scope {
                             font.bold: true
                             color: SysMonState.gpuTemp >= 80 ? Style.colorUrgent
                                  : SysMonState.gpuTemp >= 60 ? Style.accentAmber
-                                 : "#66bb6a"
+                                 : Style.colorGood
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
                         }
 
-                        // Temp VU meter
-                        Row {
-                            spacing: 1
+                        VUMeter {
                             Layout.fillWidth: true
-
-                            Repeater {
-                                model: 10
-
-                                Rectangle {
-                                    required property int index
-                                    property bool isLit: SysMonState.gpuTemp > index * 10
-
-                                    width: (parent.width - 9 * parent.spacing) / 10
-                                    height: 6
-                                    radius: 1
-                                    color: isLit ? (index >= 8 ? Style.colorUrgent
-                                                 : index >= 6 ? Style.accentAmber
-                                                 : "#66bb6a")
-                                          : Style.bgTertiary
-
-                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                }
-                            }
+                            segments: 10; segmentHeight: 6; segmentSpacing: 1
+                            value: SysMonState.gpuTemp / 100
+                            baseColor: Style.colorGood; warnAt: 0.6; critAt: 0.8
                         }
                     }
 
@@ -434,29 +319,10 @@ Scope {
                         }
                     }
 
-                    // RAM VU meter
-                    Row {
-                        spacing: 2
+                    VUMeter {
                         Layout.fillWidth: true
-
-                        Repeater {
-                            model: 20
-
-                            Rectangle {
-                                required property int index
-                                property bool isLit: SysMonState.ramPercent > index * 5
-
-                                width: (parent.width - 19 * parent.spacing) / 20
-                                height: 8
-                                radius: 1
-                                color: isLit ? (SysMonState.ramPercent >= 90 ? Style.colorUrgent
-                                             : SysMonState.ramPercent >= 70 ? Style.accentAmber
-                                             : Style.accentPurple)
-                                      : Style.bgTertiary
-
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-                            }
-                        }
+                        value: SysMonState.ramPercent / 100
+                        baseColor: Style.accentPurple; warnAt: 0.7; critAt: 0.9
                     }
 
                     // ── Neon divider ──
@@ -528,7 +394,7 @@ Scope {
                             Layout.fillWidth: true
                             implicitHeight: procContent.implicitHeight + Style.spaceSm * 2
                             radius: Style.radiusSm
-                            color: procHover.containsMouse ? Qt.rgba(1, 0.41, 0.71, 0.1)
+                            color: procHover.containsMouse ? Style.pinkHover
                                  : index % 2 === 1 ? Qt.rgba(Style.bgTertiary.r, Style.bgTertiary.g, Style.bgTertiary.b, 0.3)
                                  : "transparent"
 

@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -250,7 +252,7 @@ Scope {
                     color: Qt.rgba(0.17, 0.11, 0.24, 0.94)
                     border.width: 1
                     border.color: root.osdType === "volume" && root.currentVolume > 1.0 && !root.muted
-                        ? (root.currentVolume > 1.3 ? Qt.rgba(1, 0.27, 0.4, 0.4) : Qt.rgba(1, 0.7, 0.28, 0.4))
+                        ? (root.currentVolume > 1.3 ? Style.urgentGlow : Style.amberGlow)
                         : Style.bgTertiary
 
                     Behavior on border.color { ColorAnimation { duration: Style.animNormal } }
@@ -285,44 +287,13 @@ Scope {
                                 Behavior on color { ColorAnimation { duration: Style.animFast } }
                             }
 
-                            // ── Segmented VU meter ──
-                            Row {
+                            VUMeter {
                                 Layout.fillWidth: true
-                                spacing: 2
-
-                                property int totalSegments: 16
-                                // How many segments are lit: map volume 0-1.5 → 0-16
-                                property int litSegments: Math.round(Math.min(1.5, root.currentVolume) / 1.5 * totalSegments)
-                                // The segment index where 100% falls (segment 0-indexed)
-                                property int normalMax: Math.round(1.0 / 1.5 * totalSegments) - 1
-
-                                Repeater {
-                                    model: parent.totalSegments
-
-                                    Rectangle {
-                                        required property int index
-
-                                        width: (parent.width - (parent.totalSegments - 1) * parent.spacing) / parent.totalSegments
-                                        height: 8
-                                        radius: 1
-
-                                        property bool isLit: root.muted ? false : index < parent.litSegments
-                                        property bool isOverdrive: index > parent.normalMax
-                                        property bool isHot: index > parent.normalMax + Math.round((parent.totalSegments - parent.normalMax) * 0.6)
-
-                                        color: {
-                                            if (!isLit) return Style.bgTertiary
-                                            if (isHot) return Style.colorUrgent
-                                            if (isOverdrive) return Style.accentAmber
-                                            return Style.accentPink
-                                        }
-
-                                        opacity: isLit ? 1.0 : 0.3
-
-                                        Behavior on color { ColorAnimation { duration: 60 } }
-                                        Behavior on opacity { NumberAnimation { duration: 60 } }
-                                    }
-                                }
+                                segments: 16
+                                value: root.currentVolume / 1.5
+                                muted: root.muted
+                                warnAt: 0.667; critAt: 0.867
+                                animDuration: 60
                             }
                         }
                     }

@@ -116,29 +116,7 @@ Scope {
                         }
 
                         // Close
-                        Rectangle {
-                            implicitWidth: 28
-                            implicitHeight: 28
-                            radius: Style.radiusFull
-                            color: closeHover.containsMouse ? Style.bgTertiary : "transparent"
-
-                            Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: "close"
-                                font.pixelSize: 16
-                                color: closeHover.containsMouse ? Style.textPrimary : Style.textDimmed
-                            }
-
-                            MouseArea {
-                                id: closeHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: NetworkManager.panelVisible = false
-                            }
-                        }
+                        CloseButton { onClicked: NetworkManager.panelVisible = false }
                     }
 
                     // ── Connected Card ──
@@ -150,11 +128,11 @@ Scope {
 
                         // Subtle pink-tinted background
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(1, 0.41, 0.71, 0.12) }
-                            GradientStop { position: 1.0; color: Qt.rgba(1, 0.41, 0.71, 0.04) }
+                            GradientStop { position: 0.0; color: Style.pinkGradientStart }
+                            GradientStop { position: 1.0; color: Style.pinkGradientEnd }
                         }
                         border.width: 1
-                        border.color: Qt.rgba(1, 0.41, 0.71, 0.3)
+                        border.color: Style.pinkBorder
 
                         ColumnLayout {
                             id: connectedCol
@@ -196,7 +174,7 @@ Scope {
                                     implicitWidth: dcRow.implicitWidth + Style.spaceLg * 2
                                     implicitHeight: 28
                                     radius: Style.radiusFull
-                                    color: dcHover.containsMouse ? Qt.rgba(1, 0.27, 0.4, 0.15) : "transparent"
+                                    color: dcHover.containsMouse ? Style.urgentHover : "transparent"
                                     border.width: 1
                                     border.color: dcHover.containsMouse ? Style.colorUrgent : Style.textDimmed
 
@@ -293,9 +271,9 @@ Scope {
                         Layout.fillWidth: true
                         implicitHeight: errorRow.implicitHeight + Style.spaceMd * 2
                         radius: Style.radiusSm
-                        color: Qt.rgba(1, 0.27, 0.4, 0.1)
+                        color: Style.urgentBg
                         border.width: 1
-                        border.color: Qt.rgba(1, 0.27, 0.4, 0.3)
+                        border.color: Style.urgentBorder
                         visible: NetworkManager.connectError !== ""
 
                         RowLayout {
@@ -432,7 +410,7 @@ Scope {
                                         implicitWidth: 24
                                         implicitHeight: 24
                                         radius: Style.radiusFull
-                                        color: forgetHover.containsMouse ? Qt.rgba(1, 0.27, 0.4, 0.15) : "transparent"
+                                        color: forgetHover.containsMouse ? Style.urgentHover : "transparent"
                                         visible: netItem.isKnown && !netItem.isConnected && netHover.containsMouse
                                         opacity: visible ? 1 : 0
 
@@ -668,19 +646,10 @@ Scope {
                     radius: Style.radiusMd
                     color: Style.bgSecondary
 
-                    // Neon top strip
-                    Rectangle {
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 2
-                        radius: Style.radiusMd
-                        color: Style.accentPink
-                        opacity: 0.8
-                    }
+                    NeonStrip {}
 
                     border.width: 1
-                    border.color: Qt.rgba(1, 0.41, 0.71, 0.25)
+                    border.color: Style.pinkBorder
 
                     ColumnLayout {
                         id: tooltipColumn

@@ -50,17 +50,7 @@ Scope {
                 border.width: 1
                 border.color: Style.bgTertiary
 
-                // Neon top strip
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 2
-                    radius: Style.radiusMd
-                    color: Style.accentPink
-                    opacity: 0.8
-                    z: 1
-                }
+                NeonStrip {}
 
                 // Block clicks
                 MouseArea { anchors.fill: parent }
@@ -108,7 +98,7 @@ Scope {
                                 height: visible ? 32 : 0
                                 radius: Style.radiusSm
                                 color: entryHover.containsMouse && menuEntry.modelData.enabled
-                                    ? Qt.rgba(1, 0.41, 0.71, 0.1) : "transparent"
+                                    ? Style.pinkHover : "transparent"
                                 opacity: menuEntry.modelData.enabled ? 1.0 : 0.4
 
                                 Behavior on color { ColorAnimation { duration: Style.animFast } }

@@ -90,17 +90,7 @@ Scope {
                 border.width: 1
                 border.color: Style.bgTertiary
 
-                // Neon top strip
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 2
-                    radius: Style.radiusLg
-                    color: Style.accentPink
-                    opacity: 0.8
-                    z: 1
-                }
+                NeonStrip {}
 
                 MouseArea { anchors.fill: parent }
 
@@ -128,9 +118,9 @@ Scope {
                             Layout.fillWidth: true
                             height: 36
                             radius: Style.radiusSm
-                            color: isPending ? Qt.rgba(1, 0.27, 0.4, 0.25)
+                            color: isPending ? Style.urgentBgStrong
                                  : itemHover.containsMouse
-                                    ? (menuItem.modelData.accent ? Qt.rgba(1, 0.27, 0.4, 0.15) : Style.bgTertiary)
+                                    ? (menuItem.modelData.accent ? Style.urgentHover : Style.bgTertiary)
                                     : "transparent"
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
@@ -142,7 +132,7 @@ Scope {
                                 anchors.bottom: parent.bottom
                                 width: menuItem.isPending ? parent.width * (panel.countdown / 5) : 0
                                 radius: parent.radius
-                                color: Qt.rgba(1, 0.27, 0.4, 0.15)
+                                color: Style.urgentHover
                                 visible: menuItem.isPending
 
                                 Behavior on width { NumberAnimation { duration: 900; easing.type: Easing.Linear } }

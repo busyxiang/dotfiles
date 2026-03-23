@@ -136,7 +136,7 @@ Scope {
                 color: Style.bgSecondary
                 radius: Style.radiusLg
                 border.width: 1
-                border.color: root.isPlaying ? Qt.rgba(1, 0.41, 0.71, 0.3) : Style.bgTertiary
+                border.color: root.isPlaying ? Style.pinkBorder : Style.bgTertiary
 
                 Behavior on border.color { ColorAnimation { duration: Style.animNormal } }
 
@@ -342,33 +342,16 @@ Scope {
                             property real len: root.player?.length ?? 0
                             property real fraction: len > 0 ? Math.min(1.0, Math.max(0, pos / len)) : 0
 
-                            // VU meter segments
-                            Row {
+                            VUMeter {
                                 id: vuMeter
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.verticalCenter: parent.verticalCenter
-                                spacing: 2
-
-                                property int totalSegments: 20
-                                property int litSegments: Math.round(seekItem.fraction * totalSegments)
-
-                                Repeater {
-                                    model: vuMeter.totalSegments
-
-                                    Rectangle {
-                                        required property int index
-                                        property bool isLit: index < vuMeter.litSegments
-
-                                        width: (vuMeter.width - (vuMeter.totalSegments - 1) * vuMeter.spacing) / vuMeter.totalSegments
-                                        height: seekArea.containsMouse || seekArea.isDragging ? 10 : 8
-                                        radius: 1
-                                        color: isLit ? Style.accentPink : Style.bgTertiary
-
-                                        Behavior on color { ColorAnimation { duration: 60 } }
-                                        Behavior on height { NumberAnimation { duration: Style.animFast } }
-                                    }
-                                }
+                                segments: 20
+                                segmentHeight: seekArea.containsMouse || seekArea.isDragging ? 10 : 8
+                                value: seekItem.fraction
+                                warnAt: 1.0; critAt: 1.0
+                                animDuration: 60
                             }
 
                             // Seek handle
