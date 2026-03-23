@@ -45,6 +45,8 @@ Singleton {
         }
         history = []
         popups = []
+        exitingIds = []
+        dismissedIds = []
         unreadCount = 0
     }
 
@@ -75,22 +77,29 @@ Singleton {
         var hadInHistory = history.some(n => n.id === id)
         history = history.filter(n => n.id !== id)
         popups = popups.filter(n => n.id !== id)
+        exitingIds = exitingIds.filter(eid => eid !== id)
+        dismissedIds = dismissedIds.filter(did => did !== id)
         if (hadInHistory && unreadCount > 0)
             unreadCount--
     }
 
     function dismissPopupById(id) {
         popups = popups.filter(n => n.id !== id)
+        exitingIds = exitingIds.filter(eid => eid !== id)
+        dismissedIds = dismissedIds.filter(did => did !== id)
     }
 
     function dismissGroup(appName) {
         var toRemove = history.filter(n => (n.appName || "Notification") === appName)
+        var removeIds = toRemove.map(n => n.id)
         for (var i = 0; i < toRemove.length; i++) {
             if (toRemove[i].notifObj)
                 toRemove[i].notifObj.dismiss()
         }
         history = history.filter(n => (n.appName || "Notification") !== appName)
         popups = popups.filter(n => (n.appName || "Notification") !== appName)
+        exitingIds = exitingIds.filter(eid => removeIds.indexOf(eid) < 0)
+        dismissedIds = dismissedIds.filter(did => removeIds.indexOf(did) < 0)
         if (unreadCount > 0)
             unreadCount = Math.max(0, unreadCount - toRemove.length)
     }

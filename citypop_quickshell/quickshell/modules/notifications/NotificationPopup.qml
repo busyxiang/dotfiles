@@ -19,6 +19,10 @@ Scope {
 
             property var _knownIds: ({})
 
+            onVisibleChanged: {
+                if (!visible) _knownIds = ({})
+            }
+
             anchors {
                 top: true
                 right: true
