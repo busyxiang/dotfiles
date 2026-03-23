@@ -14,7 +14,8 @@ Scope {
             id: historyPanel
             required property var modelData
             screen: modelData
-            visible: NotificationManager.historyVisible && NotificationManager.historyScreen === modelData
+            property bool _open: NotificationManager.historyVisible && NotificationManager.historyScreen === modelData
+            visible: _open || historyCard.opacity > 0
             color: "transparent"
 
             anchors {
@@ -38,6 +39,7 @@ Scope {
 
             // Dropdown card (top-right, below bar)
             Rectangle {
+                id: historyCard
                 anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.topMargin: Style.barHeight + Style.spaceMd
@@ -48,6 +50,13 @@ Scope {
                 radius: Style.radiusLg
                 border.width: 1
                 border.color: Style.bgTertiary
+
+                opacity: historyPanel._open ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                transform: Translate {
+                    y: historyPanel._open ? 0 : -8
+                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                }
 
                 // Prevent clicks on the card from closing the panel
                 MouseArea {

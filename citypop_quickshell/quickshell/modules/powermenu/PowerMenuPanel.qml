@@ -15,7 +15,8 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
-            visible: PowerMenuState.visible && PowerMenuState.screen === modelData
+            property bool _open: PowerMenuState.visible && PowerMenuState.screen === modelData
+            visible: _open || powerCard.opacity > 0
             color: "transparent"
 
             anchors {
@@ -79,6 +80,7 @@ Scope {
 
             // Dropdown card
             Rectangle {
+                id: powerCard
                 anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.topMargin: Style.barHeight + Style.spaceMd
@@ -87,6 +89,13 @@ Scope {
                 implicitHeight: menuCol.implicitHeight + Style.spaceLg * 2
                 color: Style.bgSecondary
                 radius: Style.radiusLg
+
+                opacity: panel._open ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                transform: Translate {
+                    y: panel._open ? 0 : -8
+                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                }
                 border.width: 1
                 border.color: Style.bgTertiary
 

@@ -15,7 +15,8 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
-            visible: CalendarState.visible && CalendarState.screen === modelData
+            property bool _open: CalendarState.visible && CalendarState.screen === modelData
+            visible: _open || card.opacity > 0
             color: "transparent"
 
             anchors {
@@ -50,7 +51,13 @@ Scope {
                 border.width: 1
                 border.color: Style.bgTertiary
 
-                // Neon top strip
+                opacity: panel._open ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                transform: Translate {
+                    y: panel._open ? 0 : -8
+                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                }
+
                 NeonStrip {}
 
                 MouseArea { anchors.fill: parent }

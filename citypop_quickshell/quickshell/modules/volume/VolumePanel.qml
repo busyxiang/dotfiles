@@ -78,7 +78,8 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
-            visible: VolumeState.visible && VolumeState.screen === modelData
+            property bool _open: VolumeState.visible && VolumeState.screen === modelData
+            visible: _open || card.opacity > 0
             color: "transparent"
 
             anchors {
@@ -106,6 +107,13 @@ Scope {
                 anchors.right: parent.right
                 anchors.topMargin: Style.barHeight + Style.spaceMd
                 anchors.rightMargin: Style.spaceMd + 200
+
+                opacity: panel._open ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                transform: Translate {
+                    y: panel._open ? 0 : -8
+                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                }
                 width: 340
                 height: Math.min(cardContent.implicitHeight + Style.spaceXl * 2, panel.height - Style.barHeight - Style.spaceXl * 2)
                 color: Style.bgSecondary

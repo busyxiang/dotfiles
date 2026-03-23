@@ -92,7 +92,8 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
-            visible: MediaState.visible && MediaState.screen === modelData
+            property bool _open: MediaState.visible && MediaState.screen === modelData
+            visible: _open || card.opacity > 0
             color: "transparent"
 
             anchors {
@@ -120,7 +121,11 @@ Scope {
                 anchors.margins: -3
                 radius: Style.radiusLg + 3
                 color: Style.accentPink
-                opacity: root.isPlaying ? 0.3 : 0
+                opacity: panel._open && root.isPlaying ? 0.3 : 0
+                transform: Translate {
+                    y: panel._open ? 0 : -8
+                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                }
 
                 Behavior on opacity { NumberAnimation { duration: Style.animNormal } }
             }
@@ -139,6 +144,13 @@ Scope {
                 border.color: root.isPlaying ? Style.pinkBorder : Style.bgTertiary
 
                 Behavior on border.color { ColorAnimation { duration: Style.animNormal } }
+
+                opacity: panel._open ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                transform: Translate {
+                    y: panel._open ? 0 : -8
+                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                }
 
                 MouseArea { anchors.fill: parent }
 

@@ -14,7 +14,8 @@ Scope {
             id: panel
             required property var modelData
             screen: modelData
-            visible: NetworkManager.panelVisible && NetworkManager.panelScreen === modelData
+            property bool _open: NetworkManager.panelVisible && NetworkManager.panelScreen === modelData
+            visible: _open || card.opacity > 0
             color: "transparent"
             onVisibleChanged: if (!visible) passwordSsid = ""
 
@@ -52,6 +53,13 @@ Scope {
                 radius: Style.radiusLg
                 border.width: 1
                 border.color: Style.bgTertiary
+
+                opacity: panel._open ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                transform: Translate {
+                    y: panel._open ? 0 : -8
+                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                }
 
                 MouseArea { anchors.fill: parent }
 
