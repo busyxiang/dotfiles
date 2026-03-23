@@ -168,6 +168,7 @@ Scope {
                                 // Action buttons row
                                 Flow {
                                     Layout.fillWidth: true
+                                    Layout.topMargin: Style.spaceSm
                                     spacing: Style.spaceSm
                                     visible: notifCard.modelData.actions.length > 0
 
@@ -213,11 +214,10 @@ Scope {
                             }
                         }
 
-                        // Auto-dismiss popup
-                        // Persistent notifications do NOT auto-dismiss from popups
+                        // Auto-dismiss popup — always dismiss from popup after timeout
                         Timer {
                             interval: notifCard.modelData.timeout || 5000
-                            running: !notifCard.modelData.persistent
+                            running: true
                             onTriggered: {
                                 if (notifCard.modelData.hasTimeout)
                                     NotificationManager.removeById(notifCard.modelData.id)

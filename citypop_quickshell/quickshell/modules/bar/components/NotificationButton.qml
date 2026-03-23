@@ -9,11 +9,14 @@ Item {
     property real sf: 1.0
     property var screen: null
 
-    implicitWidth: bellIcon.implicitWidth
+    implicitWidth: bellIcon.implicitWidth + Math.round(4 * sf)
     implicitHeight: bellIcon.implicitHeight
 
     readonly property bool hasUnread: NotificationManager.unreadCount > 0
     readonly property bool panelOpen: NotificationManager.historyVisible
+
+    // Track count for wiggle trigger
+    property int lastCount: 0
 
     MaterialIcon {
         id: bellIcon
@@ -27,19 +30,51 @@ Item {
         Behavior on color {
             ColorAnimation { duration: Style.animFast }
         }
+
+        // Wiggle from bell top
+        transformOrigin: Item.Top
+
+        SequentialAnimation {
+            id: wiggleAnim
+            NumberAnimation { target: bellIcon; property: "rotation"; to: 15; duration: 60 }
+            NumberAnimation { target: bellIcon; property: "rotation"; to: -12; duration: 60 }
+            NumberAnimation { target: bellIcon; property: "rotation"; to: 8; duration: 60 }
+            NumberAnimation { target: bellIcon; property: "rotation"; to: -5; duration: 60 }
+            NumberAnimation { target: bellIcon; property: "rotation"; to: 0; duration: 60 }
+        }
     }
 
-    // Unread badge dot
+    // Unread count badge
     Rectangle {
         visible: root.hasUnread && !root.panelOpen
-        width: Math.round(6 * root.sf)
-        height: Math.round(6 * root.sf)
-        radius: width / 2
-        color: Style.colorUrgent
         anchors.top: bellIcon.top
-        anchors.right: bellIcon.right
-        anchors.topMargin: -1
-        anchors.rightMargin: -1
+        anchors.left: bellIcon.right
+        anchors.topMargin: -3
+        anchors.leftMargin: -6
+        width: Math.max(Math.round(14 * root.sf), countText.implicitWidth + Math.round(6 * root.sf))
+        height: Math.round(14 * root.sf)
+        radius: height / 2
+        color: Style.accentPink
+
+        StyledText {
+            id: countText
+            anchors.centerIn: parent
+            text: NotificationManager.unreadCount > 99 ? "99+" : NotificationManager.unreadCount
+            font.pixelSize: Math.round(8 * root.sf)
+            font.bold: true
+            color: Style.bgPrimary
+        }
+    }
+
+    // Trigger wiggle on new notifications
+    Connections {
+        target: NotificationManager
+        function onUnreadCountChanged() {
+            if (NotificationManager.unreadCount > root.lastCount && NotificationManager.unreadCount > 0) {
+                wiggleAnim.start()
+            }
+            root.lastCount = NotificationManager.unreadCount
+        }
     }
 
     MouseArea {

@@ -556,4 +556,127 @@ Scope {
             }
         }
     }
+
+    // ── Bluetooth Tooltip ──
+    Variants {
+        model: Quickshell.screens
+
+        PanelWindow {
+            required property var modelData
+            screen: modelData
+            visible: btTooltipContent.opacity > 0
+                && BluetoothManager.tooltipScreen === modelData
+            color: "transparent"
+            focusable: false
+
+            anchors {
+                top: true
+                left: true
+                right: true
+            }
+
+            implicitHeight: Style.barHeight + Style.spaceMd + 80
+
+            exclusionMode: ExclusionMode.Ignore
+
+            Item {
+                id: btTooltipContent
+                x: BluetoothManager.tooltipX - width / 2
+                y: Style.barHeight + Style.spaceSm
+                width: Math.max(160, btTooltipColumn.implicitWidth + Style.spaceXl * 2)
+                height: btTooltipColumn.implicitHeight + Style.spaceLg * 2
+
+                opacity: BluetoothManager.tooltipVisible ? 1 : 0
+                scale: BluetoothManager.tooltipVisible ? 1.0 : 0.92
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                }
+                Behavior on scale {
+                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                }
+
+                // Arrow pointer
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: -4
+                    width: 10
+                    height: 10
+                    rotation: 45
+                    color: Style.bgSecondary
+                    border.width: 1
+                    border.color: Style.accentPink
+                    z: 1
+                }
+
+                // Cover the arrow's bottom border where it meets the card
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    width: 14
+                    height: 4
+                    color: Style.bgSecondary
+                    z: 2
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: Style.radiusMd
+                    color: Style.bgSecondary
+
+                    // Neon top strip
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 2
+                        radius: Style.radiusMd
+                        color: Style.accentPink
+                        opacity: 0.8
+                    }
+
+                    border.width: 1
+                    border.color: Qt.rgba(1, 0.41, 0.71, 0.25)
+
+                    ColumnLayout {
+                        id: btTooltipColumn
+                        anchors.centerIn: parent
+                        spacing: Style.spaceSm
+
+                        Repeater {
+                            model: BluetoothManager.connectedDevices
+
+                            delegate: RowLayout {
+                                required property var modelData
+                                spacing: Style.spaceSm
+
+                                MaterialIcon {
+                                    text: modelData.icon
+                                    font.pixelSize: 14
+                                    color: Style.accentPink
+                                    fill: 1
+                                }
+
+                                StyledText {
+                                    text: modelData.name
+                                    font.pixelSize: Style.fontSizeSm
+                                    font.bold: true
+                                    color: Style.textPrimary
+                                }
+
+                                // Battery if available
+                                StyledText {
+                                    visible: modelData.battery >= 0
+                                    text: modelData.battery + "%"
+                                    font.pixelSize: Style.fontSizeSm
+                                    color: modelData.battery > 20 ? Style.textSecondary : Style.colorUrgent
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

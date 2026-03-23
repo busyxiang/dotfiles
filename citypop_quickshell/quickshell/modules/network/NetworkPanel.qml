@@ -16,6 +16,7 @@ Scope {
             screen: modelData
             visible: NetworkManager.panelVisible && NetworkManager.panelScreen === modelData
             color: "transparent"
+            onVisibleChanged: if (!visible) passwordSsid = ""
 
             anchors {
                 top: true
@@ -34,6 +35,9 @@ Scope {
                 anchors.topMargin: Style.barHeight
                 onClicked: NetworkManager.panelVisible = false
             }
+
+            // Track which SSID has password input open (empty = none)
+            property string passwordSsid: ""
 
             // --- Dropdown Card ---
             Rectangle {
@@ -345,7 +349,7 @@ Scope {
                             )
                             readonly property bool isConnecting: NetworkManager.connectingTo === netItem.modelData.ssid
                             readonly property bool isSecured: netItem.modelData.security !== "" && netItem.modelData.security !== "--"
-                            property bool showPassword: false
+                            readonly property bool showPassword: panel.passwordSsid === netItem.modelData.ssid
 
                             // Pulsing border for connecting state
                             border.width: netItem.isConnecting ? 1 : 0
@@ -504,21 +508,20 @@ Scope {
                                                 onAccepted: {
                                                     if (text.length > 0) {
                                                         NetworkManager.connectToNetwork(netItem.modelData.ssid, text)
-                                                        netItem.showPassword = false
+                                                        panel.passwordSsid = ""
                                                         text = ""
                                                     }
                                                 }
-                                            }
 
-                                            // Placeholder
-                                            StyledText {
-                                                anchors.left: parent.left
-                                                anchors.leftMargin: Style.spaceMd
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                text: "Enter password..."
-                                                color: Style.textDimmed
-                                                font.pixelSize: Style.fontSizeSm
-                                                visible: !pwInput.activeFocus && pwInput.text === ""
+                                                // Placeholder
+                                                StyledText {
+                                                    anchors.fill: parent
+                                                    verticalAlignment: Text.AlignVCenter
+                                                    text: "Enter password..."
+                                                    color: Style.textDimmed
+                                                    font.pixelSize: Style.fontSizeSm
+                                                    visible: !pwInput.activeFocus && pwInput.text === ""
+                                                }
                                             }
 
                                             // Show/hide password
@@ -566,7 +569,7 @@ Scope {
                                             onClicked: {
                                                 if (pwInput.text.length > 0) {
                                                     NetworkManager.connectToNetwork(netItem.modelData.ssid, pwInput.text)
-                                                    netItem.showPassword = false
+                                                    panel.passwordSsid = ""
                                                     pwInput.text = ""
                                                 }
                                             }
@@ -586,7 +589,7 @@ Scope {
                                     if (netItem.isKnown) {
                                         NetworkManager.connectToNetwork(netItem.modelData.ssid, "")
                                     } else {
-                                        netItem.showPassword = !netItem.showPassword
+                                        panel.passwordSsid = netItem.showPassword ? "" : netItem.modelData.ssid
                                     }
                                 }
                             }

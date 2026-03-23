@@ -14,6 +14,9 @@ RowLayout {
     property var panelWindow: null
     property var screen: null
 
+    readonly property int iconSize: Math.round(18 * sf)
+    readonly property int hoverSize: Math.round(24 * sf)
+
     spacing: Math.round(Style.spaceSm * sf)
 
     Repeater {
@@ -23,16 +26,34 @@ RowLayout {
             id: trayItem
             required property var modelData
 
-            implicitWidth: Math.round(18 * root.sf)
-            implicitHeight: Math.round(18 * root.sf)
+            implicitWidth: root.hoverSize
+            implicitHeight: root.hoverSize
+
+            // Pink hover circle
+            Rectangle {
+                anchors.centerIn: parent
+                width: root.hoverSize
+                height: root.hoverSize
+                radius: width / 2
+                color: Style.accentPink
+                opacity: trayHover.containsMouse ? 0.15 : 0
+                scale: trayHover.containsMouse ? 1.0 : 0.8
+
+                Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+                Behavior on scale { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
+            }
 
             IconImage {
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: root.iconSize
+                height: root.iconSize
                 source: trayItem.modelData.icon
             }
 
             MouseArea {
+                id: trayHover
                 anchors.fill: parent
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                 onClicked: mouse => {

@@ -25,6 +25,14 @@ Item {
         return "volume_off"
     }
 
+    function getVolumeColor() {
+        if (muted) return Style.textDimmed
+        var pct = Math.round(volume * 100)
+        if (pct > 130) return Style.colorUrgent
+        if (pct > 100) return Style.accentAmber
+        return Style.accentPink
+    }
+
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
 
@@ -41,7 +49,7 @@ Item {
             id: muteIcon
             text: root.iconName
             font.pixelSize: Math.round(20 * root.sf)
-            color: root.muted ? Style.textDimmed : Style.accentPink
+            color: root.getVolumeColor()
             fill: 0
 
             Behavior on color {
@@ -52,7 +60,12 @@ Item {
         StyledText {
             text: Math.round(root.volume * 100) + "%"
             font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
-            color: Style.textSecondary
+            color: root.muted ? Style.textDimmed
+                 : Math.round(root.volume * 100) > 130 ? Style.colorUrgent
+                 : Math.round(root.volume * 100) > 100 ? Style.accentAmber
+                 : Style.textSecondary
+
+            Behavior on color { ColorAnimation { duration: Style.animFast } }
         }
     }
 

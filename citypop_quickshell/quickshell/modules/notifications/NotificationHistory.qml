@@ -256,6 +256,33 @@ Scope {
                                         }
 
                                         Item { Layout.fillWidth: true }
+
+                                        // Dismiss group button
+                                        Rectangle {
+                                            implicitWidth: 22
+                                            implicitHeight: 22
+                                            radius: Style.radiusFull
+                                            color: dismissGroupArea.containsMouse ? Qt.rgba(1, 0.27, 0.4, 0.15) : "transparent"
+
+                                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                            MaterialIcon {
+                                                anchors.centerIn: parent
+                                                text: "close"
+                                                font.pixelSize: 14
+                                                color: dismissGroupArea.containsMouse ? Style.colorUrgent : Style.textDimmed
+
+                                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                            }
+
+                                            MouseArea {
+                                                id: dismissGroupArea
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: NotificationManager.dismissGroup(groupDelegate.modelData.appName)
+                                            }
+                                        }
                                     }
                                 }
 
@@ -311,9 +338,33 @@ Scope {
                                                 }
                                             }
 
+                                            // Close button (top-right corner)
+                                            MaterialIcon {
+                                                anchors.top: parent.top
+                                                anchors.right: parent.right
+                                                anchors.topMargin: Style.spaceSm
+                                                anchors.rightMargin: Style.spaceSm
+                                                text: "close"
+                                                font.pixelSize: 14
+                                                color: Style.textDimmed
+                                                z: 1
+
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: {
+                                                        var idx = histItem.findHistoryIndex()
+                                                        if (idx >= 0)
+                                                            NotificationManager.dismissNotification(idx)
+                                                    }
+                                                }
+                                            }
+
                                             RowLayout {
                                                 id: histContent
-                                                anchors.fill: parent
+                                                anchors.left: parent.left
+                                                anchors.right: parent.right
+                                                anchors.top: parent.top
                                                 anchors.margins: Style.spaceLg
                                                 spacing: Style.spaceLg
 
@@ -332,10 +383,11 @@ Scope {
                                                     spacing: Style.spaceSm
                                                     Layout.fillWidth: true
 
+                                                    // Inline badges (critical/persistent)
                                                     RowLayout {
-                                                        spacing: Style.spaceMd
+                                                        spacing: Style.spaceSm
+                                                        visible: histItem.modelData.isCritical || histItem.modelData.persistent
 
-                                                        // Critical urgency icon
                                                         MaterialIcon {
                                                             text: "priority_high"
                                                             font.pixelSize: 14
@@ -343,30 +395,11 @@ Scope {
                                                             visible: histItem.modelData.isCritical
                                                         }
 
-                                                        // Persistent pin icon
                                                         MaterialIcon {
                                                             text: "push_pin"
                                                             font.pixelSize: 12
                                                             color: Style.textDimmed
                                                             visible: histItem.modelData.persistent
-                                                        }
-
-                                                        Item { Layout.fillWidth: true }
-
-                                                        MaterialIcon {
-                                                            text: "close"
-                                                            font.pixelSize: 14
-                                                            color: Style.textDimmed
-
-                                                            MouseArea {
-                                                                anchors.fill: parent
-                                                                cursorShape: Qt.PointingHandCursor
-                                                                onClicked: {
-                                                                    var idx = histItem.findHistoryIndex()
-                                                                    if (idx >= 0)
-                                                                        NotificationManager.dismissNotification(idx)
-                                                                }
-                                                            }
                                                         }
                                                     }
 
@@ -374,6 +407,7 @@ Scope {
                                                         text: histItem.modelData.summary || ""
                                                         font.bold: true
                                                         Layout.fillWidth: true
+                                                        Layout.rightMargin: Style.spaceLg
                                                         wrapMode: Text.WordWrap
                                                     }
 
@@ -410,6 +444,7 @@ Scope {
                                                     // Action buttons row
                                                     Flow {
                                                         Layout.fillWidth: true
+                                                        Layout.topMargin: Style.spaceSm
                                                         spacing: Style.spaceSm
                                                         visible: histItem.modelData.actions.length > 0
 

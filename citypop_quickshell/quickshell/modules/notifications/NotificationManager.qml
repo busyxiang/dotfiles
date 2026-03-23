@@ -31,8 +31,11 @@ Singleton {
 
     function invokeAction(notifData, actionIndex) {
         var actions = notifData.actions
-        if (actions && actions.length > actionIndex)
-            actions[actionIndex].invoke()
+        if (actions && actions.length > actionIndex) {
+            var action = actions[actionIndex]
+            if (action.actionObj && action.actionObj.invoke)
+                action.actionObj.invoke()
+        }
     }
 
     function dismissNotification(index) {
@@ -59,6 +62,18 @@ Singleton {
 
     function dismissPopupById(id) {
         popups = popups.filter(n => n.id !== id)
+    }
+
+    function dismissGroup(appName) {
+        var toRemove = history.filter(n => (n.appName || "Notification") === appName)
+        for (var i = 0; i < toRemove.length; i++) {
+            if (toRemove[i].notifObj)
+                toRemove[i].notifObj.dismiss()
+        }
+        history = history.filter(n => (n.appName || "Notification") !== appName)
+        popups = popups.filter(n => (n.appName || "Notification") !== appName)
+        if (unreadCount > 0)
+            unreadCount = Math.max(0, unreadCount - toRemove.length)
     }
 
     // Build grouped history: array of { appName, notifications: [...], collapsed: bool }
@@ -100,10 +115,22 @@ Singleton {
             var hasTimeout = rawTimeout > 0
             var timeout = hasTimeout ? rawTimeout : 5000
 
-            // Persistent notifications: resident or no timeout
-            var persistent = isResident || !hasTimeout
+            // Persistent: resident notifications stay in history, but popups always auto-dismiss
+            var persistent = isResident
 
             var notifId = Date.now()
+
+            // Serialize actions to plain objects so properties survive storage
+            // Filter out "default" action (invoked by clicking the notification body)
+            var rawActions = notification.actions || []
+            var serializedActions = []
+            for (var i = 0; i < rawActions.length; i++) {
+                if (rawActions[i].identifier === "default") continue
+                serializedActions.push({
+                    text: rawActions[i].text || rawActions[i].identifier || "",
+                    actionObj: rawActions[i]
+                })
+            }
 
             var notifData = {
                 summary: notification.summary,
@@ -120,7 +147,7 @@ Singleton {
                 image: notification.image || "",
                 appIcon: notification.appIcon || "",
                 notifObj: notification,
-                actions: notification.actions || []
+                actions: serializedActions
             }
 
             // Listen for the notification's closed signal

@@ -11,6 +11,11 @@ Singleton {
     property bool panelVisible: false
     property var panelScreen: null
 
+    // Tooltip state
+    property bool tooltipVisible: false
+    property var tooltipScreen: null
+    property real tooltipX: 0
+
     property bool powered: false
     property bool scanning: false
     property list<var> devices: []
