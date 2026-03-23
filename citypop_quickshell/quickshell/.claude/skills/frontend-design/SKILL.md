@@ -1,98 +1,321 @@
 ## <!-- markdownlint-disable MD041 -->
 
 name: frontend-design
-description: Create distinctive, production-grade Quickshell (QML) widgets and interfaces for the user's desktop environment. Specialized for the @quickshell configuration, using existing components, theme tokens, and services. Generates creative, polished code and UI design that avoids generic AI aesthetics.
+description: Design and build distinctive QML widgets and panels for the City Pop Quickshell desktop. Uses the project's Style tokens, common components, panel patterns, and learned QML gotchas to produce polished, correct interfaces.
 license: Complete terms in LICENSE.txt
 
 ---
 
-# Frontend Design Skill
+# Frontend Design Skill — City Pop Quickshell
 
-This skill guides the creation of high-quality QML interfaces for Quickshell, specifically tailored to the `@quickshell/.config/quickshell/` configuration. It combines technical Quickshell expertise with high-end aesthetic design thinking.
+Guide the creation of high-quality QML interfaces for a Wayland desktop shell built with Quickshell. The aesthetic is **late-night city pop** — dark backgrounds, neon pink accents, warm amber warnings, and retro-futuristic polish.
 
 ## Design Thinking
 
-Before coding, commit to a BOLD aesthetic direction that fits the "City Pop" shell but pushes it further:
+Before writing code, answer these:
 
-- **Tone**: Pick a flavor: brutally minimal, retro-futuristic, refined luxury, industrial/utilitarian, or organic.
-- **Differentiation**: What is the one thing that makes this widget UNFORGETTABLE?
-- **Intentionality**: Bold maximalism and refined minimalism both work; the key is executing with precision.
+1. **Context**: Where does this widget live? Bar widget, dropdown panel, OSD, popup?
+2. **Aesthetic fit**: Does it feel like it belongs in a neon-lit Tokyo side street at 2AM?
+3. **Differentiation**: What makes this widget feel alive? A subtle glow, a spinning vinyl, a pulsing VU meter?
+4. **Restraint**: Bold accents work because the base is dark and minimal. Don't overdo it.
 
-## Quickshell Design Principles
+## Color Palette (Style singleton)
 
-- **Native Integration**: Widgets must look and feel like part of the existing "City Pop" shell.
-- **Theming**: Rigorously use the `Theme` singleton (`qs.Config`) for all colors, sizes, radii, and fonts.
-- **Reusability**: Use existing components from `qs.Components` (`OText`, `OButton`, `IconButton`, `OPanel`) whenever possible.
-- **Reactive**: Bind properties to Services (`qs.Services`) for live data.
+All colors come from `Singleton/Style.qml`. Never hardcode colors.
 
-## Technical Foundation
+### Backgrounds (dark-to-light)
+| Token | Hex | Use |
+|-------|-----|-----|
+| `Style.bgPrimary` | #1a0a2e | Base/bar background |
+| `Style.bgSecondary` | #2b1b3d | Card/panel backgrounds |
+| `Style.bgTertiary` | #3d2b4f | Hover states, off segments, dividers |
 
-Always include necessary imports:
+### Accents
+| Token | Hex | Use |
+|-------|-----|-----|
+| `Style.accentPink` | #ff69b4 | Primary accent — active states, highlights, neon strips |
+| `Style.accentMagenta` | #ff1493 | Stronger pink for emphasis |
+| `Style.accentAmber` | #ffb347 | Warnings, elevated volume, caution states |
+| `Style.accentPurple` | #da70d6 | Secondary accent, variety |
+| `Style.colorUrgent` | #ff4466 | Critical — urgent notifications, overdrive volume |
+| `Style.colorGood` | #66bb6a | Success — connected, healthy |
 
+### Derived alpha tints (hover/border/glow)
+- Pink: `pinkHover`, `pinkBorder`, `pinkGradientStart`, `pinkGradientEnd`
+- Urgent: `urgentHover`, `urgentBg`, `urgentBgStrong`, `urgentBorder`, `urgentGlow`
+- Amber: `amberBg`, `amberBorder`, `amberGlow`
+- Purple: `purpleHover`
+
+### Text hierarchy
+| Token | Hex | Use |
+|-------|-----|-----|
+| `Style.textPrimary` | #f0e6f6 | Headings, primary labels |
+| `Style.textSecondary` | #b8a9c9 | Body text, descriptions |
+| `Style.textDimmed` | #6b5b7b | Inactive, muted, timestamps |
+
+## Spacing, Radii, and Type Scale
+
+### Spacing (px)
+`spaceXs: 2` · `spaceSm: 4` · `spaceMd: 8` · `spaceLg: 12` · `spaceXl: 16`
+
+### Border radii
+`radiusSm: 4` · `radiusMd: 8` · `radiusLg: 12` · `radiusFull: 999`
+
+### Font sizes
+`fontSizeSm: 13` · `fontSizeMd: 15` · `fontSizeLg: 17` · `fontSizeXl: 20`
+
+### Bar dimensions
+`barHeight: 36` · `barPadding: 8`
+
+### Animation durations
+`animFast: 120` · `animNormal: 200` · `animSlow: 350`
+
+## Common Components (common/)
+
+Use these instead of rebuilding from scratch:
+
+### StyledText
+Text with project font (CaskaydiaCove Nerd Font) and native rendering.
+```qml
+StyledText { text: "Label"; font.pixelSize: Style.fontSizeMd; color: Style.textPrimary }
+```
+
+### MaterialIcon
+Material Symbols Rounded icon with fill control.
+```qml
+MaterialIcon { text: "volume_up"; font.pixelSize: 24; color: Style.accentPink; fill: 1 }
+```
+
+### VUMeter
+Segmented bar with threshold-based coloring. Value is normalized 0.0–1.0.
+```qml
+VUMeter {
+    segments: 20; value: 0.75; muted: false
+    baseColor: Style.accentPink; warnAt: 0.7; critAt: 0.9
+    segmentHeight: 8; segmentSpacing: 2; animDuration: Style.animFast
+}
+```
+
+### CloseButton
+28x28 circular close button with hover effect. Emits `clicked()`.
+```qml
+CloseButton { onClicked: SomeState.visible = false }
+```
+
+### NeonStrip
+2px accent strip anchored to parent top. Decorative top border for panels.
+```qml
+NeonStrip {} // anchors to parent top automatically
+```
+
+## Architecture Patterns
+
+### Imports
 ```qml
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Wayland
-import qs.Config      // Theme, Settings
-import qs.Components  // OText, OButton, OPanel, etc.
-import qs.Services    // Core, SystemInfo, WM
+import Quickshell.Services.Pipewire  // or .Mpris, .Notifications, etc.
+import "../../Singleton"              // Style, PanelManager
+import "../../common"                 // StyledText, MaterialIcon, VUMeter, etc.
 ```
 
-### Theming Guidelines (`Theme.qml`)
+### Panel pattern (dropdown from bar)
+Every panel follows this structure:
 
-- **Backgrounds**: `Theme.bgColor`, `Theme.bgElevated`, `Theme.bgElevatedAlt`
-- **Accents**: `Theme.activeColor`, `Theme.onHoverColor`, `Theme.critical` (red), `Theme.warning` (orange)
-- **Text**: `Theme.textActiveColor`, `Theme.textInactiveColor`
-- **Spacing**: `Theme.spacingXs` to `Theme.spacingXl`
-- **Radii**: `Theme.itemRadius`, `Theme.radiusMd`, `Theme.radiusLg`
-
-## Aesthetics & Polish
-
-- **Typography**: Stick to `Theme.fontFamily` (CaskaydiaCove) and `Theme.iconFontFamily`. Use `OText` variants for hierarchy.
-- **Motion**: Use `Behavior on <property>` with `Theme.animationDuration` and `Easing.InOutQuad` for all transitions. Focus on staggered reveals and smooth width/opacity changes.
-- **Visual Details**: Create depth. Use `RectangularShadow` or `MultiEffect` for subtle shadows. Use `Canvas` for custom gradient borders (see `CardStyling.qml`).
-- **Avoid "AI Slop"**: No predictable layouts or generic color schemes. Stay true to the project's City Pop pink palette — warm pinks, deep magentas, soft purples, and dark backgrounds.
-
-## Component Usage
-
-- **OText**: `OText { text: "Label"; bold: true; muted: true }`
-- **IconButton**: For circular icon-only buttons.
-- **OPanel**: For dropdowns/menus. Always provide a unique `panelNamespace`.
-- **ExpandingPill**: Use for collapsible groups of buttons (like PowerMenu or Workspaces).
-
-## New Modules
-
-When creating a new widget:
-
-1. Place it in `Modules/<Category>/<Name>.qml`.
-2. Use `pragma ComponentBehavior: Bound`.
-3. **Example Pattern**:
+1. **State singleton** (`modules/<name>/<Name>State.qml`) — holds `visible` and `screen`
+2. **Panel component** (`modules/<name>/<Name>Panel.qml`) — the UI
+3. **Bar widget** opens panel via `PanelManager.closeAll()` then sets state
 
 ```qml
+// State singleton
+pragma Singleton
+import Quickshell
+Singleton {
+    property bool visible: false
+    property var screen: null
+}
+
+// Bar widget click handler
+onClicked: {
+    var wasOpen = MyState.visible
+    PanelManager.closeAll()
+    if (!wasOpen) {
+        MyState.screen = root.screen
+        MyState.visible = true
+    }
+}
+```
+
+### Panel window with animation
+```qml
+Variants {
+    model: Quickshell.screens
+
+    PanelWindow {
+        id: panel
+        required property var modelData
+        screen: modelData
+        readonly property real sf: modelData.height / 1080  // per-monitor scale
+        property bool _open: MyState.visible && MyState.screen === modelData
+        visible: MyState.visible || card.opacity > 0  // stay visible during fade-out
+        color: "transparent"
+
+        anchors { top: true; bottom: true; left: true; right: true }
+        exclusionMode: ExclusionMode.Ignore
+        margins.top: Math.round(Style.barHeight * panel.sf)  // bar passthrough
+
+        // Click-outside to close
+        MouseArea {
+            anchors.fill: parent
+            onClicked: MyState.visible = false
+        }
+
+        // Card with fade + slide animation
+        Rectangle {
+            id: card
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.topMargin: Math.round(Style.spaceMd * panel.sf)
+            anchors.rightMargin: Math.round(Style.spaceMd * panel.sf)
+            width: 300
+            color: Style.bgSecondary
+            radius: Style.radiusLg
+            border.width: 1
+            border.color: Style.bgTertiary
+
+            opacity: panel._open ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+            transform: Translate {
+                y: panel._open ? 0 : -8
+                Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+            }
+
+            // Block click-through to overlay
+            MouseArea { anchors.fill: parent }
+
+            NeonStrip {}
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: Style.spaceXl
+                spacing: Style.spaceLg
+                // ... content
+            }
+        }
+    }
+}
+```
+
+### Bar widget pattern
+```qml
 pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
-import qs.Config
-import qs.Components
+import "../../Singleton"
+import "../../common"
 
-Rectangle {
-    color: Theme.bgElevated
-    radius: Theme.itemRadius
-    border.color: Theme.borderLight
-    border.width: 1
+Item {
+    id: root
+    property real sf: 1.0
+    property var screen: null
+    implicitWidth: layout.implicitWidth
+    implicitHeight: layout.implicitHeight
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: Theme.spacingMd
-        spacing: Theme.spacingSm
-
-        OText {
-            text: "Widget Title"
-            bold: true
-            size: "lg"
-        }
+    RowLayout {
+        id: layout
+        anchors.centerIn: parent
+        spacing: Math.round(Style.spaceMd * root.sf)
         // ... content
     }
 }
 ```
+
+## Animation Guidelines
+
+### Standard easing
+- **Open/show**: `Easing.OutCubic` — fast start, gentle settle
+- **Close/hide**: `Easing.InCubic` or `Easing.OutCubic`
+- **Hover**: `Easing.InOutQuad` or just use `animFast` duration
+
+### Preferred patterns
+```qml
+// Property behavior (simple)
+Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+// Slide + fade (panels)
+opacity: isOpen ? 1 : 0
+transform: Translate { y: isOpen ? 0 : -8 }
+
+// Hover color change
+color: hoverArea.containsMouse ? Style.bgTertiary : "transparent"
+Behavior on color { ColorAnimation { duration: Style.animFast } }
+```
+
+## QML Gotchas (learned from experience)
+
+These are critical — violating them causes bugs that are hard to diagnose:
+
+1. **Never use `scale` on panels with text** — QML `scale` is a bitmap transform that makes all text blurry. Scale margins/spacing instead.
+
+2. **Repeater + JS array reassignment rebuilds ALL delegates** — Every `array = newArray` destroys and recreates every delegate, breaking animations. Use tracking arrays to avoid rebuilds during animations.
+
+3. **Imperative property assignment breaks declarative bindings** — `opacity = 0` in Component.onCompleted permanently disconnects the binding. Use property initialization or state flags instead.
+
+4. **`Behavior on property` animates initial values** — New delegates will animate from default to target. Use a `_appeared` flag pattern with `_knownIds` map to control which items should animate.
+
+5. **`margins.top` on PanelWindow offsets the layer-shell input region** — This lets clicks pass through to the bar underneath. Essential for bar passthrough on panels.
+
+6. **MPRIS `trackArtists` can be a string** — Firefox returns a string, not an array. Always check `typeof artists === "string"` before indexing.
+
+7. **ColumnLayout height animation causes sibling flicker** — Animating item height in a ColumnLayout forces recalculation on all siblings. Avoid height collapse animations in layouts.
+
+8. **Auto-dismiss Timer restarts on Repeater rebuild** — Calculate remaining time from creation timestamp, not a fixed interval.
+
+## File Structure
+
+```
+quickshell/
+  shell.qml                     # Entry point
+  Singleton/
+    Style.qml                   # All design tokens
+    PanelManager.qml            # Exclusive panel management
+  common/
+    StyledText.qml              # Themed text
+    MaterialIcon.qml            # Material icons
+    VUMeter.qml                 # Segmented bar
+    CloseButton.qml             # Panel close button
+    NeonStrip.qml               # Decorative accent strip
+    Button.qml                  # Command button data
+  modules/
+    bar/
+      Bar.qml                   # Main bar layout
+      components/               # Bar widgets (Volume, Clock, SysMon, Media, etc.)
+    volume/                     # VolumeState + VolumePanel
+    calendar/                   # CalendarState + CalendarPanel
+    sysmon/                     # SysMonState + SysMonPanel
+    media/                      # MediaState + MediaPanel
+    bluetooth/                  # BluetoothManager + BluetoothPanel
+    network/                    # NetworkManager + NetworkPanel
+    notifications/              # NotificationManager + popup/history
+    powermenu/                  # PowerMenuState + PowerMenuPanel
+    systray/                    # TrayMenuState + TrayMenuPanel
+    osd/                        # Volume/toggle OSD overlay
+```
+
+## Checklist for New Widgets
+
+- [ ] `pragma ComponentBehavior: Bound` at top
+- [ ] All colors from `Style` — no hardcoded hex values
+- [ ] All spacing/radii/font sizes from `Style` tokens
+- [ ] Use `StyledText` and `MaterialIcon`, not raw `Text`
+- [ ] Panel follows State singleton + PanelManager pattern
+- [ ] Click-outside MouseArea on panel overlay
+- [ ] Fade + slide animation on panel card
+- [ ] `margins.top` for bar passthrough
+- [ ] Per-monitor scale factor: `sf: modelData.height / 1080` (margins only, not `scale`)
+- [ ] `NeonStrip` on panel cards
+- [ ] `CloseButton` if panel needs manual close
+- [ ] Hover states use `Behavior on color` with `animFast`
