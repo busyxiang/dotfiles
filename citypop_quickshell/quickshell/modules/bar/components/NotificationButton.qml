@@ -88,7 +88,6 @@ Item {
             if (!wasOpen) {
                 NotificationManager.historyScreen = root.screen
                 NotificationManager.historyVisible = true
-            } else {
                 NotificationManager.unreadCount = 0
             }
         }

@@ -29,9 +29,10 @@ Scope {
             }
 
             implicitWidth: 380
-            implicitHeight: popupColumn.implicitHeight + Style.barHeight + Style.spaceLg * 2
+            implicitHeight: popupColumn.implicitHeight + Style.spaceLg * 2
 
             exclusionMode: ExclusionMode.Ignore
+            margins.top: Math.round(Style.barHeight * (modelData.height / 1080))
             focusable: false
 
             ColumnLayout {
@@ -39,7 +40,7 @@ Scope {
                 anchors.top: parent.top
                 anchors.right: parent.right
                 anchors.left: parent.left
-                anchors.topMargin: Style.barHeight + Style.spaceMd
+                anchors.topMargin: Style.spaceMd
                 anchors.margins: Style.spaceMd
                 spacing: Style.spaceSm
 
