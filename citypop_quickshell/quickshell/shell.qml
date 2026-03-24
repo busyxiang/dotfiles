@@ -14,6 +14,7 @@ import "modules/volume"
 import "modules/sysmon"
 import "modules/media"
 import "modules/weather"
+import "modules/updates"
 
 Scope {
 
@@ -27,6 +28,7 @@ Scope {
     SysMonPanel {}
     MediaPanel {}
     WeatherPanel {}
+    UpdatePanel {}
     NotificationPopup {}
     NotificationHistory {}
     OSD {}

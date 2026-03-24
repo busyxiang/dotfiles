@@ -1,0 +1,2 @@
+singleton UpdateState 1.0 UpdateState.qml
+UpdatePanel 1.0 UpdatePanel.qml

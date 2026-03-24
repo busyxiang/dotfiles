@@ -34,6 +34,7 @@ Scope {
                 anchors.leftMargin: Math.round(Style.barPadding * panel.sf)
                 spacing: Math.round(Style.spaceLg * panel.sf)
 
+                Updates { sf: panel.sf; screen: panel.modelData }
                 Workspaces { sf: panel.sf; screen: panel.modelData }
                 WindowTitle { sf: panel.sf }
                 SysMon { sf: panel.sf; screen: panel.modelData }
