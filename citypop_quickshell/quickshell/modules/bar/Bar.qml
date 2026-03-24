@@ -61,6 +61,7 @@ Scope {
                 Network { sf: panel.sf; screen: panel.modelData }
                 Keyboard { sf: panel.sf }
                 NotificationButton { sf: panel.sf; screen: panel.modelData }
+                Weather { sf: panel.sf; screen: panel.modelData }
                 Clock { sf: panel.sf; screen: panel.modelData }
                 PowerMenu { sf: panel.sf; screen: panel.modelData }
             }

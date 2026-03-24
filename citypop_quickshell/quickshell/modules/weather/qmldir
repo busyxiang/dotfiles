@@ -1,0 +1,2 @@
+singleton WeatherState 1.0 WeatherState.qml
+WeatherPanel 1.0 WeatherPanel.qml

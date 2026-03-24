@@ -9,6 +9,7 @@ import "../modules/media"
 import "../modules/bluetooth"
 import "../modules/network"
 import "../modules/notifications"
+import "../modules/weather"
 
 Singleton {
     function closeAll() {
@@ -20,5 +21,6 @@ Singleton {
         BluetoothManager.panelVisible = false
         NetworkManager.panelVisible = false
         NotificationManager.historyVisible = false
+        WeatherState.visible = false
     }
 }

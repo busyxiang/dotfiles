@@ -13,6 +13,7 @@ import "modules/calendar"
 import "modules/volume"
 import "modules/sysmon"
 import "modules/media"
+import "modules/weather"
 
 Scope {
 
@@ -25,6 +26,7 @@ Scope {
     VolumePanel {}
     SysMonPanel {}
     MediaPanel {}
+    WeatherPanel {}
     NotificationPopup {}
     NotificationHistory {}
     OSD {}
