@@ -59,6 +59,11 @@ Singleton {
         }
     }
 
+    function invokeDefault(notifData) {
+        if (notifData.defaultAction && notifData.defaultAction.invoke)
+            notifData.defaultAction.invoke()
+    }
+
     function dismissNotification(index) {
         var copy = history.slice()
         var removed = copy.splice(index, 1)
@@ -149,11 +154,15 @@ Singleton {
             var notifId = Date.now()
 
             // Serialize actions to plain objects so properties survive storage
-            // Filter out "default" action (invoked by clicking the notification body)
+            // Separate "default" action (invoked by clicking notification body)
             var rawActions = notification.actions || []
             var serializedActions = []
+            var defaultAction = null
             for (var i = 0; i < rawActions.length; i++) {
-                if (rawActions[i].identifier === "default") continue
+                if (rawActions[i].identifier === "default") {
+                    defaultAction = rawActions[i]
+                    continue
+                }
                 serializedActions.push({
                     text: rawActions[i].text || rawActions[i].identifier || "",
                     actionObj: rawActions[i]
@@ -175,6 +184,7 @@ Singleton {
                 image: notification.image || "",
                 appIcon: notification.appIcon || "",
                 notifObj: notification,
+                defaultAction: defaultAction,
                 actions: serializedActions
             }
 

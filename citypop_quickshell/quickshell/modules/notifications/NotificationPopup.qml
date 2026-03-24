@@ -107,8 +107,7 @@ Scope {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                if (notifCard.modelData.actions.length > 0)
-                                    NotificationManager.invokeAction(notifCard.modelData, 0)
+                                NotificationManager.invokeDefault(notifCard.modelData)
                                 notifCard.dismiss()
                             }
                         }

@@ -311,19 +311,17 @@ Scope {
                                                 return -1
                                             }
 
-                                            // Click to invoke default action
+                                            // Click to invoke default action and dismiss
                                             MouseArea {
                                                 id: histClickArea
                                                 anchors.fill: parent
                                                 hoverEnabled: true
-                                                cursorShape: histItem.modelData.actions.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                                cursorShape: Qt.PointingHandCursor
                                                 onClicked: {
-                                                    if (histItem.modelData.actions.length > 0) {
-                                                        var idx = histItem.findHistoryIndex()
-                                                        NotificationManager.invokeAction(histItem.modelData, 0)
-                                                        if (idx >= 0)
-                                                            NotificationManager.dismissNotification(idx)
-                                                    }
+                                                    NotificationManager.invokeDefault(histItem.modelData)
+                                                    var idx = histItem.findHistoryIndex()
+                                                    if (idx >= 0)
+                                                        NotificationManager.dismissNotification(idx)
                                                 }
                                             }
 
