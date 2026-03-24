@@ -53,11 +53,13 @@ Scope {
 
                         property bool bodyExpanded: false
                         property bool _appeared: !!popupPanel._knownIds[modelData.id]
+                        property bool _userDismissed: false
                         readonly property bool _exiting: NotificationManager.exitingIds.indexOf(modelData.id) >= 0
                         readonly property bool _dismissed: NotificationManager.dismissedIds.indexOf(modelData.id) >= 0
 
                         function dismiss() {
                             if (_exiting) return
+                            _userDismissed = true
                             NotificationManager.startDismiss(modelData.id)
                             _removeTimer.start()
                         }
@@ -97,18 +99,17 @@ Scope {
                         Timer {
                             id: _removeTimer
                             interval: 400
-                            onTriggered: NotificationManager.finishDismiss(notifCard.modelData.id, notifCard.modelData.hasTimeout)
+                            onTriggered: NotificationManager.finishDismiss(notifCard.modelData.id, notifCard._userDismissed)
                         }
 
-                        // Click card to invoke default action
+                        // Click card to dismiss (invoke default action if available)
                         MouseArea {
                             anchors.fill: parent
-                            cursorShape: notifCard.modelData.actions.length > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                if (notifCard.modelData.actions.length > 0) {
+                                if (notifCard.modelData.actions.length > 0)
                                     NotificationManager.invokeAction(notifCard.modelData, 0)
-                                    notifCard.dismiss()
-                                }
+                                notifCard.dismiss()
                             }
                         }
 
@@ -261,7 +262,11 @@ Scope {
                             readonly property int elapsed: Date.now() - notifCard.modelData.time.getTime()
                             interval: Math.max(100, totalTimeout - elapsed)
                             running: notifCard._appeared && !notifCard._exiting
-                            onTriggered: notifCard.dismiss()
+                            onTriggered: {
+                                if (notifCard._exiting) return
+                                NotificationManager.startDismiss(notifCard.modelData.id)
+                                notifCard._removeTimer.start()
+                            }
                         }
                     }
                 }
