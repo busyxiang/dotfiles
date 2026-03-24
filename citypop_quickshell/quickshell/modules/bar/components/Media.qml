@@ -46,10 +46,14 @@ Item {
         MaterialIcon {
             text: "skip_previous"
             font.pixelSize: Math.round(16 * root.sf)
-            color: Style.textSecondary
+            fill: 1
+            color: prevHover.containsMouse ? Style.textPrimary : Style.textSecondary
+            Behavior on color { ColorAnimation { duration: Style.animFast } }
 
             MouseArea {
+                id: prevHover
                 anchors.fill: parent
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.player?.previous()
             }
@@ -153,10 +157,14 @@ Item {
         MaterialIcon {
             text: "skip_next"
             font.pixelSize: Math.round(16 * root.sf)
-            color: Style.textSecondary
+            fill: 1
+            color: nextHover.containsMouse ? Style.textPrimary : Style.textSecondary
+            Behavior on color { ColorAnimation { duration: Style.animFast } }
 
             MouseArea {
+                id: nextHover
                 anchors.fill: parent
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.player?.next()
             }

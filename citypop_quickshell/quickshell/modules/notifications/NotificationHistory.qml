@@ -217,7 +217,8 @@ Scope {
                                         MaterialIcon {
                                             text: groupDelegate.collapsed ? "expand_more" : "expand_less"
                                             font.pixelSize: 16
-                                            color: Style.textDimmed
+                                            color: groupHeaderArea.containsMouse ? Style.textSecondary : Style.textDimmed
+                                            Behavior on color { ColorAnimation { duration: Style.animFast } }
                                         }
 
                                         StyledText {

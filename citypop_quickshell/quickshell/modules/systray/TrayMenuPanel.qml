@@ -48,7 +48,7 @@ Scope {
                 y: Math.round(Style.spaceMd * panel.sf)
                 width: 220
                 implicitHeight: menuCol.implicitHeight + Style.spaceMd * 2
-                color: Qt.rgba(0.11, 0.04, 0.18, 0.95)
+                color: Style.bgSecondary
                 radius: Style.radiusMd
                 border.width: 1
                 border.color: Style.bgTertiary

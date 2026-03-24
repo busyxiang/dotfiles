@@ -254,6 +254,136 @@ color: hoverArea.containsMouse ? Style.bgTertiary : "transparent"
 Behavior on color { ColorAnimation { duration: Style.animFast } }
 ```
 
+## Additional Patterns
+
+### API fetching with Process + curl
+For external data (weather, etc.), use `Process` with curl and `SplitParser` to parse JSON responses.
+```qml
+Process {
+    id: fetchProc
+    property string _buf: ""
+    stdout: SplitParser {
+        splitMarker: ""  // capture full output
+        onRead: data => { fetchProc._buf = data }
+    }
+    onExited: (exitCode, exitStatus) => {
+        if (exitCode === 0 && fetchProc._buf.length > 0) {
+            try {
+                var json = JSON.parse(fetchProc._buf)
+                // ... process data
+            } catch (e) { /* handle error */ }
+        }
+        fetchProc._buf = ""
+    }
+}
+
+// Trigger with timer
+Timer {
+    interval: 30 * 60 * 1000
+    running: true; repeat: true; triggeredOnStart: true
+    onTriggered: {
+        fetchProc.command = ["curl", "-sf", url]
+        fetchProc.running = true
+    }
+}
+```
+
+### Tooltip pattern (bar widget hover)
+For bar widget tooltips, use state properties on the singleton + a separate `Variants`/`PanelWindow` in the panel file.
+
+**State singleton:**
+```qml
+property bool tooltipVisible: false
+property var tooltipScreen: null
+property real tooltipX: 0
+```
+
+**Bar widget MouseArea:**
+```qml
+MouseArea {
+    anchors.fill: parent
+    hoverEnabled: true
+    onContainsMouseChanged: {
+        if (containsMouse && !MyState.visible) {
+            var globalPos = root.mapToItem(null, root.width / 2, 0)
+            MyState.tooltipX = globalPos.x
+            MyState.tooltipScreen = root.screen
+            MyState.tooltipVisible = true
+        } else {
+            MyState.tooltipVisible = false
+        }
+    }
+    onClicked: {
+        MyState.tooltipVisible = false
+        // ... open panel
+    }
+}
+```
+
+**Tooltip PanelWindow** (in panel file, second `Variants` block):
+```qml
+Variants {
+    model: Quickshell.screens
+    PanelWindow {
+        required property var modelData
+        screen: modelData
+        visible: tipContent.opacity > 0 && MyState.tooltipScreen === modelData
+        color: "transparent"; focusable: false
+        anchors { top: true; left: true; right: true }
+        implicitHeight: Style.barHeight + Style.spaceMd + 60
+        exclusionMode: ExclusionMode.Ignore
+
+        Item {
+            id: tipContent
+            x: MyState.tooltipX - width / 2
+            y: Style.barHeight + Style.spaceSm
+            // ... arrow pointer + card with NeonStrip
+        }
+    }
+}
+```
+
+### Stat card grid (2x2 or NxN detail cards)
+Use `GridLayout` with `Layout.fillWidth: true` and `Layout.fillHeight: true` on each card for uniform sizing.
+```qml
+GridLayout {
+    Layout.fillWidth: true
+    columns: 2
+    columnSpacing: Style.spaceSm
+    rowSpacing: Style.spaceSm
+
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        implicitHeight: content.implicitHeight + Style.spaceLg * 2
+        radius: Style.radiusMd
+        color: Style.bgTertiary
+        // ... centered ColumnLayout content
+    }
+    // ... more cards
+}
+```
+
+### Crossfade animation (content swap)
+For swapping displayed data (e.g. switching locations), use a quick fade-out/fade-in on a shared opacity property.
+```qml
+property real contentOpacity: 1.0
+
+Connections {
+    target: SomeState
+    function onActiveItemChanged() { fadeAnim.start() }
+}
+
+SequentialAnimation {
+    id: fadeAnim
+    NumberAnimation { target: container; property: "contentOpacity"; to: 0; duration: 100; easing.type: Easing.InCubic }
+    NumberAnimation { target: container; property: "contentOpacity"; to: 1; duration: 200; easing.type: Easing.OutCubic }
+}
+
+// Apply to content sections:
+// opacity: container.contentOpacity
+```
+
 ## QML Gotchas (learned from experience)
 
 These are critical — violating them causes bugs that are hard to diagnose:
@@ -274,6 +404,12 @@ These are critical — violating them causes bugs that are hard to diagnose:
 
 8. **Auto-dismiss Timer restarts on Repeater rebuild** — Calculate remaining time from creation timestamp, not a fixed interval.
 
+9. **Every interactive color change needs `Behavior on color`** — Icons and backgrounds that change on hover must have `Behavior on color { ColorAnimation { duration: Style.animFast } }`. Without it, the transition is jarring.
+
+10. **Always set `fill` on MaterialIcon** — Use `fill: 1` for solid icons, `fill: 0` for outlined. Omitting it leads to inconsistent rendering.
+
+11. **Always set `hoverEnabled: true` on hover MouseAreas** — Without this, `containsMouse` won't update on mouse movement. Only omit for click-only areas.
+
 ## File Structure
 
 ```
@@ -292,7 +428,7 @@ quickshell/
   modules/
     bar/
       Bar.qml                   # Main bar layout
-      components/               # Bar widgets (Volume, Clock, SysMon, Media, etc.)
+      components/               # Bar widgets (Volume, Clock, SysMon, Media, Weather, etc.)
     volume/                     # VolumeState + VolumePanel
     calendar/                   # CalendarState + CalendarPanel
     sysmon/                     # SysMonState + SysMonPanel
@@ -302,6 +438,7 @@ quickshell/
     notifications/              # NotificationManager + popup/history
     powermenu/                  # PowerMenuState + PowerMenuPanel
     systray/                    # TrayMenuState + TrayMenuPanel
+    weather/                    # WeatherState + WeatherPanel (Open-Meteo API)
     osd/                        # Volume/toggle OSD overlay
 ```
 
@@ -311,6 +448,7 @@ quickshell/
 - [ ] All colors from `Style` — no hardcoded hex values
 - [ ] All spacing/radii/font sizes from `Style` tokens
 - [ ] Use `StyledText` and `MaterialIcon`, not raw `Text`
+- [ ] `MaterialIcon` always has `fill` property set (0 or 1)
 - [ ] Panel follows State singleton + PanelManager pattern
 - [ ] Click-outside MouseArea on panel overlay
 - [ ] Fade + slide animation on panel card
@@ -319,3 +457,5 @@ quickshell/
 - [ ] `NeonStrip` on panel cards
 - [ ] `CloseButton` if panel needs manual close
 - [ ] Hover states use `Behavior on color` with `animFast`
+- [ ] All hover MouseAreas have `hoverEnabled: true`
+- [ ] Clickable elements have `cursorShape: Qt.PointingHandCursor`

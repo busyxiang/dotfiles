@@ -163,10 +163,13 @@ Scope {
                                     MaterialIcon {
                                         text: "close"
                                         font.pixelSize: 16
-                                        color: Style.textDimmed
+                                        color: popupCloseHover.containsMouse ? Style.textPrimary : Style.textDimmed
+                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
 
                                         MouseArea {
+                                            id: popupCloseHover
                                             anchors.fill: parent
+                                            hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: notifCard.dismiss()
                                         }

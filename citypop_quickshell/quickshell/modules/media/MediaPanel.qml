@@ -213,7 +213,7 @@ Scope {
                             id: vinylClip
                             anchors.fill: parent
                             radius: Infinity
-                            color: "#1a1a1a"
+                            color: Style.bgPrimary
 
                             // Rotating content
                             Item {
@@ -284,7 +284,7 @@ Scope {
                                     width: 12
                                     height: 12
                                     radius: 6
-                                    color: "#1a1a1a"
+                                    color: Style.bgPrimary
                                 }
                             }
                         }
@@ -445,7 +445,9 @@ Scope {
                                 anchors.centerIn: parent
                                 text: "skip_previous"
                                 font.pixelSize: 24
+                                fill: 1
                                 color: prevCtrlHover.containsMouse ? Style.textPrimary : Style.textSecondary
+                                Behavior on color { ColorAnimation { duration: Style.animFast } }
                             }
 
                             MouseArea {
@@ -502,7 +504,9 @@ Scope {
                                 anchors.centerIn: parent
                                 text: "skip_next"
                                 font.pixelSize: 24
+                                fill: 1
                                 color: nextCtrlHover.containsMouse ? Style.textPrimary : Style.textSecondary
+                                Behavior on color { ColorAnimation { duration: Style.animFast } }
                             }
 
                             MouseArea {
