@@ -611,14 +611,15 @@ Scope {
                 right: true
             }
 
-            implicitHeight: Style.barHeight + Style.spaceMd + 60
+            implicitHeight: 60
+            margins.top: Style.barHeight
 
             exclusionMode: ExclusionMode.Ignore
 
             Item {
                 id: tipContent
                 x: WeatherState.tooltipX - width / 2
-                y: Style.barHeight + Style.spaceSm
+                y: Style.spaceSm
                 width: Math.max(160, tipRow.implicitWidth + Style.spaceXl * 2)
                 height: tipRow.implicitHeight + Style.spaceLg * 2
 

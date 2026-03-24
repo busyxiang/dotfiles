@@ -602,14 +602,15 @@ Scope {
                 right: true
             }
 
-            implicitHeight: Style.barHeight + Style.spaceMd + 80
+            implicitHeight: 80
+            margins.top: Style.barHeight
 
             exclusionMode: ExclusionMode.Ignore
 
             Item {
                 id: tooltipContent
                 x: NetworkManager.tooltipX - width / 2
-                y: Style.barHeight + Style.spaceSm
+                y: Style.spaceSm
                 width: Math.max(180, tooltipColumn.implicitWidth + Style.spaceXl * 2)
                 height: tooltipColumn.implicitHeight + Style.spaceLg * 2
 
