@@ -388,6 +388,9 @@ Scope {
                         }
                     }
 
+                    // Track hovered PID so hover persists across Repeater rebuilds
+                    property int hoveredPid: -1
+
                     // Process list
                     Repeater {
                         model: SysMonState.topProcesses
@@ -397,10 +400,12 @@ Scope {
                             required property var modelData
                             required property int index
 
+                            readonly property bool isHovered: procHover.containsMouse || cardContent.hoveredPid === modelData.pid
+
                             Layout.fillWidth: true
                             implicitHeight: procContent.implicitHeight + Style.spaceSm * 2
                             radius: Style.radiusSm
-                            color: procHover.containsMouse ? Style.pinkHover
+                            color: isHovered ? Style.pinkHover
                                  : index % 2 === 1 ? Qt.rgba(Style.bgTertiary.r, Style.bgTertiary.g, Style.bgTertiary.b, 0.3)
                                  : "transparent"
 
@@ -410,6 +415,12 @@ Scope {
                                 id: procHover
                                 anchors.fill: parent
                                 hoverEnabled: true
+                                onContainsMouseChanged: {
+                                    if (containsMouse)
+                                        cardContent.hoveredPid = procRow.modelData.pid
+                                    else if (cardContent.hoveredPid === procRow.modelData.pid)
+                                        cardContent.hoveredPid = -1
+                                }
                             }
 
                             RowLayout {
@@ -424,7 +435,7 @@ Scope {
                                     Layout.fillWidth: true
                                     text: procRow.modelData.name
                                     font.pixelSize: Style.fontSizeSm
-                                    color: procHover.containsMouse ? Style.textPrimary : Style.textSecondary
+                                    color: procRow.isHovered ? Style.textPrimary : Style.textSecondary
                                     elide: Text.ElideRight
 
                                     Behavior on color { ColorAnimation { duration: Style.animFast } }
@@ -446,6 +457,34 @@ Scope {
                                     font.pixelSize: Style.fontSizeSm
                                     color: Style.textSecondary
                                     horizontalAlignment: Text.AlignRight
+                                    visible: !killBtn.visible
+                                }
+
+                                // Kill button (appears on hover)
+                                Rectangle {
+                                    id: killBtn
+                                    visible: procRow.isHovered && procRow.modelData.pid > 0
+                                    Layout.preferredWidth: 22
+                                    Layout.preferredHeight: 22
+                                    radius: Style.radiusFull
+                                    color: killHover.containsMouse ? Style.urgentBg : "transparent"
+                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                    MaterialIcon {
+                                        anchors.centerIn: parent
+                                        text: "close"
+                                        font.pixelSize: 14
+                                        color: killHover.containsMouse ? Style.colorUrgent : Style.textDimmed
+                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                    }
+
+                                    MouseArea {
+                                        id: killHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: SysMonState.killProcess(procRow.modelData.pid)
+                                    }
                                 }
                             }
                         }

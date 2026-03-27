@@ -94,6 +94,8 @@ Scope {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             refreshSpin.start()
+                            WeatherState._retryCount = 0
+                            WeatherState.retrying = false
                             WeatherState.fetchAll()
                         }
                     }
@@ -238,8 +240,22 @@ Scope {
                         spacing: Style.spaceMd
                         opacity: cardContent.contentOpacity
 
+                        MaterialIcon {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: WeatherState.fetchError ? "cloud_off" : "cloud"
+                            font.pixelSize: 36
+                            color: WeatherState.fetchError ? Style.accentAmber : Style.textDimmed
+                            fill: 1
+                            visible: WeatherState.fetchError || !WeatherState.retrying
+                        }
+
                         StyledText {
-                            text: WeatherState.fetchError ? "Failed to fetch weather data" : "Fetching weather data…"
+                            Layout.alignment: Qt.AlignHCenter
+                            text: {
+                                if (WeatherState.fetchError) return "Failed to fetch weather data"
+                                if (WeatherState.retrying) return "Retrying in " + Math.ceil(WeatherState._retryDelays[WeatherState._retryCount - 1] / 60000) + "m… (attempt " + WeatherState._retryCount + "/" + WeatherState._maxRetries + ")"
+                                return "Fetching weather data…"
+                            }
                             color: WeatherState.fetchError ? Style.accentAmber : Style.textDimmed
                             font.pixelSize: Style.fontSizeMd
                         }
@@ -247,17 +263,18 @@ Scope {
                         // Retry button
                         Rectangle {
                             visible: WeatherState.fetchError
-                            implicitWidth: retryRow.implicitWidth + Style.spaceXl * 2
+                            Layout.alignment: Qt.AlignHCenter
+                            implicitWidth: weatherRetryRow.implicitWidth + Style.spaceXl * 2
                             implicitHeight: 28
                             radius: Style.radiusFull
-                            color: retryHover.containsMouse ? Style.bgTertiary : "transparent"
+                            color: weatherRetryHover.containsMouse ? Style.bgTertiary : "transparent"
                             border.width: 1
                             border.color: Style.accentPink
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
 
                             RowLayout {
-                                id: retryRow
+                                id: weatherRetryRow
                                 anchors.centerIn: parent
                                 spacing: Style.spaceSm
 
@@ -265,6 +282,7 @@ Scope {
                                     text: "refresh"
                                     font.pixelSize: 14
                                     color: Style.accentPink
+                                    fill: 0
                                 }
                                 StyledText {
                                     text: "Retry"
@@ -274,11 +292,14 @@ Scope {
                             }
 
                             MouseArea {
-                                id: retryHover
+                                id: weatherRetryHover
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: WeatherState.fetchAll()
+                                onClicked: {
+                                    WeatherState._retryCount = 0
+                                    WeatherState.fetchAll()
+                                }
                             }
                         }
                     }

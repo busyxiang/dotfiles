@@ -23,12 +23,12 @@ Item {
     implicitWidth: archIcon.implicitWidth
     implicitHeight: archIcon.implicitHeight
 
-    // Loading pulse when checking
+    // Loading pulse when checking or retrying
     SequentialAnimation {
-        running: UpdateState.checking
+        running: UpdateState.checking || UpdateState.retrying
         loops: Animation.Infinite
-        NumberAnimation { target: archIcon; property: "opacity"; from: 1.0; to: 0.3; duration: 600; easing.type: Easing.InOutSine }
-        NumberAnimation { target: archIcon; property: "opacity"; from: 0.3; to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+        NumberAnimation { target: archIcon; property: "opacity"; from: 1.0; to: 0.3; duration: UpdateState.retrying ? 1200 : 600; easing.type: Easing.InOutSine }
+        NumberAnimation { target: archIcon; property: "opacity"; from: 0.3; to: 1.0; duration: UpdateState.retrying ? 1200 : 600; easing.type: Easing.InOutSine }
         onRunningChanged: { if (!running) archIcon.opacity = 1.0 }
     }
 
@@ -42,7 +42,7 @@ Item {
 
     // Superscript badge (top-right, overlapping)
     Rectangle {
-        visible: root.hasUpdates
+        visible: root.hasUpdates && !UpdateState.checkError
         x: archIcon.x + archIcon.width - width / 2
         y: archIcon.y - height / 3
         implicitWidth: Math.max(Math.round(14 * root.sf), badgeText.implicitWidth + Math.round(6 * root.sf))
@@ -54,6 +54,25 @@ Item {
             id: badgeText
             anchors.centerIn: parent
             text: UpdateState.totalCount
+            font.pixelSize: Math.round(8 * root.sf)
+            font.bold: true
+            color: Style.bgPrimary
+        }
+    }
+
+    // Error badge (top-right, overlapping)
+    Rectangle {
+        visible: UpdateState.checkError
+        x: archIcon.x + archIcon.width - width / 2
+        y: archIcon.y - height / 3
+        implicitWidth: Math.round(14 * root.sf)
+        implicitHeight: Math.round(14 * root.sf)
+        radius: Style.radiusFull
+        color: Style.accentAmber
+
+        StyledText {
+            anchors.centerIn: parent
+            text: "!"
             font.pixelSize: Math.round(8 * root.sf)
             font.bold: true
             color: Style.bgPrimary

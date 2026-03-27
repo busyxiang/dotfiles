@@ -17,6 +17,10 @@ Singleton {
 
     property bool checking: false
     property bool checkError: false
+    property int _retryCount: 0
+    readonly property int _maxRetries: 3
+    readonly property var _retryDelays: [60000, 120000, 300000]  // 1min, 2min, 5min
+    property bool retrying: false
 
     // --- Fetch logic ---
     Timer {
@@ -24,7 +28,20 @@ Singleton {
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: root.checkUpdates()
+        onTriggered: {
+            root._retryCount = 0
+            root.retrying = false
+            root.checkUpdates()
+        }
+    }
+
+    Timer {
+        id: retryTimer
+        repeat: false
+        onTriggered: {
+            root.retrying = false
+            root.checkUpdates()
+        }
     }
 
     function checkUpdates(): void {
@@ -33,6 +50,18 @@ Singleton {
         _pacmanLines = []
         _aurLines = []
         pacmanProc.running = true
+    }
+
+    function _scheduleRetry(): void {
+        if (_retryCount < _maxRetries) {
+            retrying = true
+            retryTimer.interval = _retryDelays[_retryCount]
+            _retryCount++
+            retryTimer.start()
+        } else {
+            retrying = false
+            checkError = true
+        }
     }
 
     property var _pacmanLines: []
@@ -87,8 +116,8 @@ Singleton {
                 root.pacmanUpdates = root._sortCriticalFirst(root._pacmanLines)
                 aurProc.running = true
             } else {
-                root.checkError = true
                 root.checking = false
+                root._scheduleRetry()
             }
         }
     }
@@ -106,8 +135,10 @@ Singleton {
             // yay -Qua returns 1 when no updates
             if (exitCode === 0 || exitCode === 1) {
                 root.aurUpdates = root._sortCriticalFirst(root._aurLines)
+                root._retryCount = 0
+                root.retrying = false
             } else {
-                root.checkError = true
+                root._scheduleRetry()
             }
             root.checking = false
         }

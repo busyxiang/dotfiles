@@ -72,13 +72,30 @@ Singleton {
     property int _fetchIndex: 0
     property var _pendingData: []
     property bool fetchError: false
+    property int _retryCount: 0
+    readonly property int _maxRetries: 3
+    readonly property var _retryDelays: [60000, 120000, 300000]  // 1min, 2min, 5min
+    property bool retrying: false
 
     Timer {
         interval: 30 * 60 * 1000  // 30 minutes
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: root.fetchAll()
+        onTriggered: {
+            root._retryCount = 0
+            root.retrying = false
+            root.fetchAll()
+        }
+    }
+
+    Timer {
+        id: retryTimer
+        repeat: false
+        onTriggered: {
+            root.retrying = false
+            root.fetchAll()
+        }
     }
 
     function fetchAll(): void {
@@ -88,14 +105,27 @@ Singleton {
         _startFetch()
     }
 
+    function _scheduleRetry(): void {
+        if (_retryCount < _maxRetries) {
+            retrying = true
+            retryTimer.interval = _retryDelays[_retryCount]
+            _retryCount++
+            retryTimer.start()
+        } else {
+            retrying = false
+            fetchError = true
+        }
+    }
+
     function _startFetch(): void {
         if (_fetchIndex >= locations.length) {
-            // Check if all entries are null (all failed)
             var allFailed = _pendingData.every(function(d) { return d === null })
             if (allFailed && _pendingData.length > 0) {
-                fetchError = true
+                _scheduleRetry()
             } else {
                 locationData = _pendingData
+                _retryCount = 0
+                retrying = false
             }
             return
         }

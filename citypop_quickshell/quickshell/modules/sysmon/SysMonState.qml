@@ -99,18 +99,28 @@ Singleton {
     }
 
     Process {
+        id: killProc
+    }
+
+    function killProcess(pid: int): void {
+        killProc.command = ["kill", "-15", String(pid)]
+        killProc.running = true
+    }
+
+    Process {
         id: psProc
         property var _lines: []
-        command: ["bash", "-c", "ps -eo comm,%cpu,%mem --sort=-%cpu | head -6"]
+        command: ["bash", "-c", "ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head -6"]
         stdout: SplitParser {
             onRead: data => {
                 // Skip the header line
-                if (data.indexOf("COMMAND") !== -1 || data.indexOf("%CPU") !== -1)
+                if (data.indexOf("PID") !== -1 || data.indexOf("%CPU") !== -1)
                     return
                 var parts = data.trim().split(/\s+/)
-                if (parts.length >= 3) {
+                if (parts.length >= 4) {
                     psProc._lines.push({
-                        name: parts.slice(0, parts.length - 2).join(" "),
+                        pid: parseInt(parts[0]),
+                        name: parts.slice(1, parts.length - 2).join(" "),
                         cpu: parts[parts.length - 2],
                         mem: parts[parts.length - 1]
                     })

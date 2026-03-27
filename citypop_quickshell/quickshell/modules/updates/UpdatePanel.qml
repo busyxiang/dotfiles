@@ -97,6 +97,8 @@ Scope {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             refreshSpin.start()
+                            UpdateState._retryCount = 0
+                            UpdateState.retrying = false
                             UpdateState.checkUpdates()
                         }
                     }
@@ -133,6 +135,7 @@ Scope {
                             text: {
                                 if (UpdateState.checking) return "Checking for updates…"
                                 if (UpdateState.checkError) return "Failed to check updates"
+                                if (UpdateState.retrying) return "Retrying…"
                                 if (UpdateState.totalCount === 0) return "System is up to date"
                                 return UpdateState.totalCount + " update" + (UpdateState.totalCount > 1 ? "s" : "") + " available"
                             }
@@ -140,6 +143,7 @@ Scope {
                             font.bold: true
                             color: {
                                 if (UpdateState.checkError) return Style.accentAmber
+                                if (UpdateState.retrying) return Style.textDimmed
                                 if (UpdateState.totalCount > 0) return Style.textPrimary
                                 return Style.colorGood
                             }
@@ -460,26 +464,43 @@ Scope {
                             // --- Error state ---
                             ColumnLayout {
                                 Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignHCenter
                                 spacing: Style.spaceMd
-                                visible: UpdateState.checkError
+                                visible: UpdateState.checkError || UpdateState.retrying
+
+                                MaterialIcon {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: "error_outline"
+                                    font.pixelSize: 36
+                                    color: Style.accentAmber
+                                    fill: 0
+                                    visible: UpdateState.checkError
+                                }
 
                                 StyledText {
-                                    text: "Failed to check for updates"
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: {
+                                        if (UpdateState.checkError) return "Failed to check for updates"
+                                        if (UpdateState.retrying) return "Retrying in " + Math.ceil(UpdateState._retryDelays[UpdateState._retryCount - 1] / 60000) + "m… (attempt " + UpdateState._retryCount + "/" + UpdateState._maxRetries + ")"
+                                        return ""
+                                    }
                                     font.pixelSize: Style.fontSizeMd
-                                    color: Style.accentAmber
+                                    color: UpdateState.checkError ? Style.accentAmber : Style.textDimmed
                                 }
 
                                 Rectangle {
-                                    implicitWidth: retryRow.implicitWidth + Style.spaceXl * 2
+                                    visible: UpdateState.checkError
+                                    Layout.alignment: Qt.AlignHCenter
+                                    implicitWidth: updateRetryRow.implicitWidth + Style.spaceXl * 2
                                     implicitHeight: 28
                                     radius: Style.radiusFull
-                                    color: retryHover.containsMouse ? Style.bgTertiary : "transparent"
+                                    color: updateRetryHover.containsMouse ? Style.bgTertiary : "transparent"
                                     border.width: 1
                                     border.color: Style.accentPink
                                     Behavior on color { ColorAnimation { duration: Style.animFast } }
 
                                     RowLayout {
-                                        id: retryRow
+                                        id: updateRetryRow
                                         anchors.centerIn: parent
                                         spacing: Style.spaceSm
 
@@ -497,11 +518,14 @@ Scope {
                                     }
 
                                     MouseArea {
-                                        id: retryHover
+                                        id: updateRetryHover
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: UpdateState.checkUpdates()
+                                        onClicked: {
+                                            UpdateState._retryCount = 0
+                                            UpdateState.checkUpdates()
+                                        }
                                     }
                                 }
                             }
