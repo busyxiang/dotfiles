@@ -99,6 +99,7 @@ Rectangle {
                     if (line.length === 0) continue
 
                     let parts = line.split(/\s+/)
+                    if (parts.length < 10) continue
                     let iface = parts[0].replace(":", "")
                     if (iface === "lo") continue
 

@@ -98,7 +98,11 @@ Singleton {
         }
     }
 
+    property bool _fetching: false
+
     function fetchAll(): void {
+        if (_fetching) return
+        _fetching = true
         _pendingData = []
         _fetchIndex = 0
         fetchError = false
@@ -119,6 +123,7 @@ Singleton {
 
     function _startFetch(): void {
         if (_fetchIndex >= locations.length) {
+            _fetching = false
             var allFailed = _pendingData.every(function(d) { return d === null })
             if (allFailed && _pendingData.length > 0) {
                 _scheduleRetry()

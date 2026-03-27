@@ -31,8 +31,8 @@ Singleton {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            statsProc.running = true
-            psProc.running = true
+            if (!statsProc.running) statsProc.running = true
+            if (!psProc.running) psProc.running = true
         }
     }
 

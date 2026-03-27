@@ -45,6 +45,7 @@ Singleton {
     }
 
     function checkUpdates(): void {
+        if (checking) return
         checking = true
         checkError = false
         _pacmanLines = []
