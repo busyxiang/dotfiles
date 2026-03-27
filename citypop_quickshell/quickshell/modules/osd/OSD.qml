@@ -249,7 +249,7 @@ Scope {
                     id: pill
                     anchors.fill: parent
                     radius: Style.radiusFull
-                    color: Qt.rgba(0.17, 0.11, 0.24, 0.94)
+                    color: Qt.rgba(Style.bgSecondary.r, Style.bgSecondary.g, Style.bgSecondary.b, 0.94)
                     border.width: 1
                     border.color: root.osdType === "volume" && root.currentVolume > 1.0 && !root.muted
                         ? (root.currentVolume > 1.3 ? Style.urgentGlow : Style.amberGlow)
