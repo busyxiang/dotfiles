@@ -268,7 +268,8 @@ Scope {
                             onTriggered: {
                                 if (notifCard._exiting) return
                                 NotificationManager.startDismiss(notifCard.modelData.id)
-                                notifCard._removeTimer.start()
+                                if (notifCard._removeTimer)
+                                    notifCard._removeTimer.start()
                             }
                         }
                     }

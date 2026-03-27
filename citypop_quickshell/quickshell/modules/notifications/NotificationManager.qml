@@ -37,6 +37,31 @@ Singleton {
         }
     }
 
+    // Auto-remove hasTimeout notifications from history after they expire
+    Timer {
+        interval: 100
+        running: root.history.length > 0
+        repeat: true
+        onTriggered: {
+            var now = Date.now()
+            var removed = 0
+            var newHistory = root.history.filter(function(n) {
+                if (n.hasTimeout && !n.persistent) {
+                    var elapsed = now - n.time.getTime()
+                    if (elapsed >= n.timeout) {
+                        removed++
+                        return false
+                    }
+                }
+                return true
+            })
+            if (removed > 0) {
+                root.history = newHistory
+                root.unreadCount = Math.max(0, root.unreadCount - removed)
+            }
+        }
+    }
+
     function clearHistory() {
         // Dismiss all tracked notifications so they expire properly
         for (var i = 0; i < history.length; i++) {
