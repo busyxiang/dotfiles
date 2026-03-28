@@ -25,6 +25,7 @@ quickshell/
 ├── shell.qml                    # Entry point
 ├── Singleton/
 │   ├── Style.qml                # Theme tokens (colors, spacing, radii, fonts, animations)
+│   ├── PanelManager.qml         # Exclusive panel open/close management
 │   └── Time.qml                 # Clock data provider
 ├── common/                      # Reusable components
 │   ├── Button.qml               # Command executor button
@@ -48,6 +49,8 @@ quickshell/
     │       ├── Network.qml      # Wifi signal bars / ethernet icon
     │       ├── Keyboard.qml     # Input method indicator (fcitx5)
     │       ├── NotificationButton.qml  # Bell icon + unread badge
+    │       ├── Weather.qml      # Weather icon + temperature (Open-Meteo)
+    │       ├── Updates.qml      # Package update count badge (pacman/yay)
     │       ├── Clock.qml        # Neon clock with pulsing colons
     │       └── PowerMenu.qml    # Power icon with danger glow
     ├── bluetooth/               # BT panel (scan, connect, pair, forget)
@@ -59,13 +62,15 @@ quickshell/
     ├── powermenu/               # Power menu (lock, logout, reboot, shutdown)
     ├── sysmon/                  # System monitor panel (VU meters, process table)
     ├── systray/                 # Custom themed tray context menus
-    └── volume/                  # Volume panel (output/input VU meters, app mixer, device switching)
+    ├── updates/                 # Update checker panel (pacman + AUR, retry with backoff)
+    ├── volume/                  # Volume panel (output/input VU meters, app mixer, device switching)
+    └── weather/                 # Weather panel (Open-Meteo API, multi-location, retry with backoff)
 ```
 
 ## Bar Layout
 
 ```
-[Workspaces] [WindowTitle] [SysMon] [NetStat] ... [Media] ... [Tray] [BT] [Vol] [Net] [KB] [Notif] [Clock] [Power]
+[Updates] [Workspaces] [WindowTitle] [SysMon] [NetStat] ... [Media] ... [Tray] [BT] [Vol] [Net] [KB] [Notif] [Weather] [Clock] [Power]
 ```
 
 ## Color Palette

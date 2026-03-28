@@ -364,6 +364,69 @@ GridLayout {
 }
 ```
 
+### Error/retry with exponential backoff
+For modules that fetch external data, use this retry pattern in the State singleton:
+```qml
+property bool fetchError: false
+property bool retrying: false
+property int _retryCount: 0
+readonly property int _maxRetries: 3
+readonly property var _retryDelays: [60000, 120000, 300000]  // 1m, 2m, 5m
+property bool _fetching: false  // overlap guard
+
+function _scheduleRetry() {
+    if (_retryCount < _maxRetries) {
+        retrying = true
+        retryTimer.interval = _retryDelays[_retryCount]
+        _retryCount++
+        retryTimer.start()
+    } else {
+        retrying = false
+        fetchError = true
+    }
+}
+
+Timer {
+    id: retryTimer
+    onTriggered: { root.retrying = false; root.fetchAll() }
+}
+
+function fetchAll() {
+    if (_fetching) return  // prevent overlapping fetches
+    _fetching = true
+    fetchError = false
+    // ... start Process
+}
+```
+Bar widgets show retry state with a pulse animation (slower 1200ms during retry) and amber `!` error badge.
+
+### Process overlap and chaining
+Always guard against concurrent Process runs:
+```qml
+// Overlap guard — prevent re-entry
+function checkUpdates() {
+    if (checking) return
+    checking = true
+    proc.running = true
+}
+
+// Sequential chaining — run procB after procA
+Process {
+    id: procA
+    onExited: (code, status) => {
+        // process procA output, then:
+        procB.running = true
+    }
+}
+Process {
+    id: procB
+    onExited: (code, status) => {
+        // finalize
+        root.checking = false
+    }
+}
+```
+
 ### Crossfade animation (content swap)
 For swapping displayed data (e.g. switching locations), use a quick fade-out/fade-in on a shared opacity property.
 ```qml
@@ -410,6 +473,10 @@ These are critical — violating them causes bugs that are hard to diagnose:
 
 11. **Always set `hoverEnabled: true` on hover MouseAreas** — Without this, `containsMouse` won't update on mouse movement. Only omit for click-only areas.
 
+12. **Repeater delegate properties reset on model rebuild** — Any runtime property set on a delegate (e.g. `_userDismissed`, hover state) is lost when the model array is reassigned, because the delegate is destroyed and recreated. Never rely on delegate state surviving across model updates or timer callbacks. Instead, lift persistent state to the parent component (e.g. `hoveredPid` on the parent Item) or the singleton/manager (e.g. a tracking array).
+
+13. **Multi-screen Variants create duplicate delegates** — Each screen gets its own PanelWindow and Repeater via `Variants { model: Quickshell.screens }`. Timers and dismiss logic fire independently per screen, causing race conditions (e.g. one screen's `finishDismiss` destroys delegates on all screens). For logic that should only run once (like history cleanup), put it in the singleton with its own Timer rather than in the delegate.
+
 ## File Structure
 
 ```
@@ -438,6 +505,7 @@ quickshell/
     notifications/              # NotificationManager + popup/history
     powermenu/                  # PowerMenuState + PowerMenuPanel
     systray/                    # TrayMenuState + TrayMenuPanel
+    updates/                    # UpdateState + UpdatePanel (pacman/yay)
     weather/                    # WeatherState + WeatherPanel (Open-Meteo API)
     osd/                        # Volume/toggle OSD overlay
 ```
