@@ -146,12 +146,20 @@ Singleton {
     }
 
     // Open kitty terminal with update command
+    property bool updating: false
     Process {
         id: updateProc
         command: ["kitty", "--title", "System Update", "bash", "-c", "yay -Syu; echo ''; echo 'Press any key to close...'; read -n1"]
+        onExited: {
+            root.updating = false
+            root._retryCount = 0
+            root.retrying = false
+            root.checkUpdates()
+        }
     }
 
     function runUpdate(): void {
-        updateProc.startDetached()
+        updating = true
+        updateProc.running = true
     }
 }
