@@ -270,6 +270,8 @@ Scope {
                                 NotificationManager.startDismiss(notifCard.modelData.id)
                                 if (notifCard._removeTimer)
                                     notifCard._removeTimer.start()
+                                else
+                                    NotificationManager.finishDismiss(notifCard.modelData.id, false)
                             }
                         }
                     }

@@ -400,7 +400,7 @@ Scope {
                             required property var modelData
                             required property int index
 
-                            readonly property bool isHovered: procHover.containsMouse || cardContent.hoveredPid === modelData.pid
+                            readonly property bool isHovered: procHover.containsMouse || killHover.containsMouse || cardContent.hoveredPid === modelData.pid
 
                             Layout.fillWidth: true
                             implicitHeight: procContent.implicitHeight + Style.spaceSm * 2
@@ -483,6 +483,12 @@ Scope {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
+                                        onContainsMouseChanged: {
+                                            if (containsMouse)
+                                                cardContent.hoveredPid = procRow.modelData.pid
+                                            else if (cardContent.hoveredPid === procRow.modelData.pid)
+                                                cardContent.hoveredPid = -1
+                                        }
                                         onClicked: SysMonState.killProcess(procRow.modelData.pid)
                                     }
                                 }

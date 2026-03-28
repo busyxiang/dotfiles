@@ -37,6 +37,24 @@ Singleton {
         }
     }
 
+    // Safety: clean up stuck popups where all are exiting/dismissed but finishDismiss was never called
+    Timer {
+        interval: 1000
+        running: root.popups.length > 0
+        repeat: true
+        onTriggered: {
+            if (root.popups.length === 0) return
+            var allHandled = root.popups.every(function(p) {
+                return root.exitingIds.indexOf(p.id) >= 0 || root.dismissedIds.indexOf(p.id) >= 0
+            })
+            if (allHandled) {
+                root.popups = []
+                root.exitingIds = []
+                root.dismissedIds = []
+            }
+        }
+    }
+
     // Auto-remove hasTimeout notifications from history after they expire
     Timer {
         interval: 100
