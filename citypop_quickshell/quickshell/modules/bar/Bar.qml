@@ -61,6 +61,7 @@ Scope {
                 Volume { showIcon: true; sf: panel.sf; screen: panel.modelData }
                 Network { sf: panel.sf; screen: panel.modelData }
                 Keyboard { sf: panel.sf }
+                Clipboard { sf: panel.sf; screen: panel.modelData }
                 NotificationButton { sf: panel.sf; screen: panel.modelData }
                 Weather { sf: panel.sf; screen: panel.modelData }
                 Clock { sf: panel.sf; screen: panel.modelData }

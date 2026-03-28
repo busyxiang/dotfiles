@@ -11,6 +11,7 @@ import "../modules/network"
 import "../modules/notifications"
 import "../modules/weather"
 import "../modules/updates"
+import "../modules/clipboard"
 
 Singleton {
     function closeAll() {
@@ -24,5 +25,6 @@ Singleton {
         NotificationManager.historyVisible = false
         WeatherState.visible = false
         UpdateState.visible = false
+        ClipboardState.visible = false
     }
 }
