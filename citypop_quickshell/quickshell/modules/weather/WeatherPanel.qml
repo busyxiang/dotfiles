@@ -236,6 +236,7 @@ Scope {
 
                     // --- No data / Error state ---
                     ColumnLayout {
+                        Layout.fillWidth: true
                         visible: WeatherState.current === null
                         spacing: Style.spaceMd
                         opacity: cardContent.contentOpacity
@@ -485,15 +486,6 @@ Scope {
                         }
                     }
 
-                    // --- Neon Divider ---
-                    Rectangle {
-                        Layout.fillWidth: true
-                        height: 1
-                        color: Style.bgTertiary
-                        visible: WeatherState.current !== null
-                        opacity: cardContent.contentOpacity
-                    }
-
                     // --- 5-Day Forecast ---
                     // Hover description label
                     property string hoveredForecastDesc: ""
@@ -589,6 +581,104 @@ Scope {
                             font.pixelSize: 11
                             color: Style.textSecondary
                             visible: cardContent.hoveredForecastDesc !== ""
+                            opacity: visible ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+                        }
+                    }
+
+                    // --- Hourly Forecast ---
+                    property string hoveredHourlyDesc: ""
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Style.spaceSm
+                        visible: WeatherState.current !== null && (WeatherState.current.hourly || []).length > 0
+                        opacity: cardContent.contentOpacity
+
+                        StyledText {
+                            text: "Next Hours"
+                            font.pixelSize: 11
+                            font.bold: true
+                            color: Style.textDimmed
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Style.spaceSm
+
+                            Repeater {
+                                model: WeatherState.current ? (WeatherState.current.hourly || []) : []
+
+                                Rectangle {
+                                    id: hourCard
+                                    required property var modelData
+                                    required property int index
+
+                                    Layout.fillWidth: true
+                                    implicitHeight: hourCol.implicitHeight + Style.spaceLg * 2
+                                    radius: Style.radiusMd
+                                    color: hourHover.containsMouse ? Style.bgTertiary : "transparent"
+                                    border.width: hourHover.containsMouse ? 1 : 0
+                                    border.color: Style.pinkBorder
+
+                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                    ColumnLayout {
+                                        id: hourCol
+                                        anchors.centerIn: parent
+                                        spacing: Style.spaceSm
+
+                                        StyledText {
+                                            Layout.alignment: Qt.AlignHCenter
+                                            text: {
+                                                var h = hourCard.modelData.hour
+                                                var suffix = h >= 12 ? "PM" : "AM"
+                                                var h12 = h % 12
+                                                if (h12 === 0) h12 = 12
+                                                return h12 + suffix
+                                            }
+                                            font.pixelSize: 11
+                                            color: Style.textSecondary
+                                        }
+
+                                        MaterialIcon {
+                                            Layout.alignment: Qt.AlignHCenter
+                                            text: hourCard.modelData.icon
+                                            font.pixelSize: 18
+                                            color: Style.textSecondary
+                                            fill: 1
+                                        }
+
+                                        StyledText {
+                                            Layout.alignment: Qt.AlignHCenter
+                                            text: hourCard.modelData.temp + "°"
+                                            font.pixelSize: Style.fontSizeSm
+                                            font.bold: true
+                                            color: Style.textPrimary
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: hourHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onContainsMouseChanged: {
+                                            if (containsMouse)
+                                                cardContent.hoveredHourlyDesc = hourCard.modelData.description
+                                            else
+                                                cardContent.hoveredHourlyDesc = ""
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        StyledText {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: cardContent.hoveredHourlyDesc
+                            font.pixelSize: 11
+                            color: Style.textSecondary
+                            visible: cardContent.hoveredHourlyDesc !== ""
                             opacity: visible ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: Style.animFast } }
                         }

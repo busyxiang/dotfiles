@@ -141,9 +141,11 @@ Singleton {
             + "?latitude=" + loc.lat
             + "&longitude=" + loc.lon
             + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,is_day,wind_speed_10m,wind_direction_10m,uv_index"
+            + "&hourly=temperature_2m,weather_code,is_day"
             + "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset"
             + "&timezone=auto"
             + "&forecast_days=5"
+            + "&forecast_hours=12"
         ]
         fetchProc.running = true
     }
@@ -180,6 +182,29 @@ Singleton {
                     var sunrise = d.sunrise && d.sunrise[0] ? d.sunrise[0].substring(11) : ""
                     var sunset  = d.sunset  && d.sunset[0]  ? d.sunset[0].substring(11)  : ""
 
+                    // Hourly forecast — next 6 hours from now
+                    var hourly = []
+                    var h = json.hourly
+                    if (h && h.time && h.time.length > 0) {
+                        var nowMs = Date.now()
+                        var found = 0
+                        for (var hi = 0; hi < h.time.length && found < 6; hi++) {
+                            var hourMs = new Date(h.time[hi]).getTime()
+                            if (hourMs > nowMs) {
+                                var hInfo = root.weatherInfo(h.weather_code[hi], h.is_day[hi] === 1)
+                                hourly.push({
+                                    time: h.time[hi],
+                                    hour: new Date(h.time[hi]).getHours(),
+                                    temp: Math.round(h.temperature_2m[hi]),
+                                    weatherCode: h.weather_code[hi],
+                                    icon: hInfo.icon,
+                                    description: hInfo.desc
+                                })
+                                found++
+                            }
+                        }
+                    }
+
                     root._pendingData.push({
                         temp: Math.round(c.temperature_2m),
                         feelsLike: Math.round(c.apparent_temperature),
@@ -196,7 +221,8 @@ Singleton {
                         sunrise: sunrise,
                         sunset: sunset,
                         fetchedAt: Qt.formatTime(new Date(), "h:mm AP"),
-                        forecast: forecast
+                        forecast: forecast,
+                        hourly: hourly
                     })
                 } catch (e) {
                     // Parse failed — push empty entry to keep indices aligned
