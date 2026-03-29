@@ -22,7 +22,6 @@ Item {
     readonly property string iconName: {
         if (muted) return "volume_off"
         if (volume > 0.66) return "volume_up"
-        if (volume > 0.33) return "volume_down"
         if (volume > 0.0) return "volume_down"
         return "volume_off"
     }

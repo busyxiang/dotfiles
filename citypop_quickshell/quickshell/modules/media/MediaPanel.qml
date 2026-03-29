@@ -454,8 +454,8 @@ Scope {
                                 id: prevCtrlHover
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.player?.previous()
+                                cursorShape: (root.player?.canGoPrevious ?? false) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onClicked: { if (root.player?.canGoPrevious) root.player.previous() }
                             }
                         }
 
@@ -513,8 +513,8 @@ Scope {
                                 id: nextCtrlHover
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: root.player?.next()
+                                cursorShape: (root.player?.canGoNext ?? false) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                onClicked: { if (root.player?.canGoNext) root.player.next() }
                             }
                         }
                     }

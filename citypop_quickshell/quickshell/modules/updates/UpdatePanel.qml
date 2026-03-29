@@ -97,8 +97,7 @@ Scope {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             refreshSpin.start()
-                            UpdateState._retryCount = 0
-                            UpdateState.retrying = false
+                            UpdateState.resetRetry()
                             UpdateState.checkUpdates()
                         }
                     }
@@ -481,7 +480,7 @@ Scope {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: {
                                         if (UpdateState.checkError) return "Failed to check for updates"
-                                        if (UpdateState.retrying) return "Retrying in " + Math.ceil(UpdateState._retryDelays[UpdateState._retryCount - 1] / 60000) + "m… (attempt " + UpdateState._retryCount + "/" + UpdateState._maxRetries + ")"
+                                        if (UpdateState.retrying) return "Retrying in " + Math.ceil(UpdateState._retryDelays[Math.max(0, UpdateState._retryCount - 1)] / 60000) + "m… (attempt " + UpdateState._retryCount + "/" + UpdateState._maxRetries + ")"
                                         return ""
                                     }
                                     font.pixelSize: Style.fontSizeMd
@@ -523,7 +522,7 @@ Scope {
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            UpdateState._retryCount = 0
+                                            UpdateState.resetRetry()
                                             UpdateState.checkUpdates()
                                         }
                                     }
@@ -540,7 +539,7 @@ Scope {
                         color: Style.accentPink
                         opacity: updateBtnHover.containsMouse ? 0.85 : 1.0
                         Behavior on opacity { NumberAnimation { duration: Style.animFast } }
-                        visible: UpdateState.totalCount > 0
+                        visible: UpdateState.totalCount > 0 && !UpdateState.updating
 
                         RowLayout {
                             anchors.centerIn: parent
@@ -567,6 +566,7 @@ Scope {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
+                                if (UpdateState.updating) return
                                 UpdateState.runUpdate()
                                 UpdateState.visible = false
                             }

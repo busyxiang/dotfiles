@@ -55,6 +55,7 @@ Singleton {
     function connectToNetwork(ssid, password) {
         connectingTo = ssid
         connectError = ""
+        connectProc._succeeded = false
         if (password)
             connectProc.command = ["nmcli", "dev", "wifi", "connect", ssid, "password", password]
         else
@@ -218,21 +219,20 @@ Singleton {
     // Connect to network
     Process {
         id: connectProc
+        property bool _succeeded: false
         stderr: SplitParser {
             onRead: data => {
                 root.connectError = data
             }
         }
-        onRunningChanged: {
-            if (!running) {
-                root.connectingTo = ""
-                // Refresh status
-                root.connectionName = ""
-                root.connectionType = ""
-                statusProc.running = true
-                // Re-scan to update in-use
-                if (root.panelVisible) scan()
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode === 0) {
+                root.connectError = ""
+                connectProc._succeeded = true
             }
+            root.connectingTo = ""
+            statusProc.running = true
+            if (root.panelVisible) root.scan()
         }
     }
 

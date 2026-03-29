@@ -96,6 +96,9 @@ Singleton {
 
     Process {
         id: copyProc
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) console.warn("ClipboardState: copy failed, exit code", exitCode)
+        }
     }
 
     // --- Delete single entry ---
@@ -108,6 +111,12 @@ Singleton {
 
     Process {
         id: deleteProc
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                console.warn("ClipboardState: delete failed, exit code", exitCode)
+                root.refresh()
+            }
+        }
     }
 
     // --- Clear all history ---

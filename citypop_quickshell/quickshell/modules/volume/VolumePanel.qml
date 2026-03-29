@@ -365,7 +365,7 @@ Scope {
 
                                 function setVol(x) {
                                     if (Pipewire.defaultAudioSource?.audio)
-                                        Pipewire.defaultAudioSource.audio.volume = Math.max(0, Math.min(1.0, x / width))
+                                        Pipewire.defaultAudioSource.audio.volume = Math.max(0, Math.min(1.5, x / width * 1.5))
                                 }
                             }
                         }

@@ -100,6 +100,11 @@ Singleton {
 
     property bool _fetching: false
 
+    function resetRetry(): void {
+        _retryCount = 0
+        retrying = false
+    }
+
     function fetchAll(): void {
         if (_fetching) return
         _fetching = true
@@ -136,7 +141,7 @@ Singleton {
         }
         var loc = locations[_fetchIndex]
         fetchProc.command = [
-            "curl", "-sf",
+            "curl", "-sf", "--max-time", "15",
             "https://api.open-meteo.com/v1/forecast"
             + "?latitude=" + loc.lat
             + "&longitude=" + loc.lon

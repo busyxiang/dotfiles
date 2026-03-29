@@ -94,8 +94,7 @@ Scope {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             refreshSpin.start()
-                            WeatherState._retryCount = 0
-                            WeatherState.retrying = false
+                            WeatherState.resetRetry()
                             WeatherState.fetchAll()
                         }
                     }
@@ -254,7 +253,7 @@ Scope {
                             Layout.alignment: Qt.AlignHCenter
                             text: {
                                 if (WeatherState.fetchError) return "Failed to fetch weather data"
-                                if (WeatherState.retrying) return "Retrying in " + Math.ceil(WeatherState._retryDelays[WeatherState._retryCount - 1] / 60000) + "m… (attempt " + WeatherState._retryCount + "/" + WeatherState._maxRetries + ")"
+                                if (WeatherState.retrying) return "Retrying in " + Math.ceil(WeatherState._retryDelays[Math.max(0, WeatherState._retryCount - 1)] / 60000) + "m… (attempt " + WeatherState._retryCount + "/" + WeatherState._maxRetries + ")"
                                 return "Fetching weather data…"
                             }
                             color: WeatherState.fetchError ? Style.accentAmber : Style.textDimmed
@@ -298,7 +297,7 @@ Scope {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    WeatherState._retryCount = 0
+                                    WeatherState.resetRetry()
                                     WeatherState.fetchAll()
                                 }
                             }

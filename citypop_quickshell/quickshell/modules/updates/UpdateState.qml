@@ -44,6 +44,11 @@ Singleton {
         }
     }
 
+    function resetRetry(): void {
+        _retryCount = 0
+        retrying = false
+    }
+
     function checkUpdates(): void {
         if (checking) return
         checking = true

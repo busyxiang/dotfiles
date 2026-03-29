@@ -65,7 +65,7 @@ Item {
                 StyledText {
                     text: SysMonState.cpuTemp + "\u00B0"
                     font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
-                    color: root.thresholdColor(SysMonState.cpuPercent, 70, 90)
+                    color: root.thresholdColor(SysMonState.cpuTemp, 60, 80)
 
                     Behavior on color { ColorAnimation { duration: Style.animFast } }
                 }
@@ -112,7 +112,7 @@ Item {
                 StyledText {
                     text: SysMonState.gpuTemp + "\u00B0"
                     font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
-                    color: root.thresholdColor(SysMonState.gpuPercent, 70, 90)
+                    color: root.thresholdColor(SysMonState.gpuTemp, 60, 80)
 
                     Behavior on color { ColorAnimation { duration: Style.animFast } }
                 }

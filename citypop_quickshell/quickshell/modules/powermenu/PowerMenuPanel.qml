@@ -32,12 +32,10 @@ Scope {
 
             // Countdown state
             property string pendingCmd: ""
-            property string pendingLabel: ""
             property int countdown: 0
 
             function startCountdown(cmd, label) {
                 pendingCmd = cmd
-                pendingLabel = label
                 countdown = 5
                 countdownTimer.start()
             }
@@ -45,7 +43,6 @@ Scope {
             function cancelCountdown() {
                 countdownTimer.stop()
                 pendingCmd = ""
-                pendingLabel = ""
                 countdown = 0
             }
 
@@ -55,7 +52,7 @@ Scope {
                 repeat: true
                 onTriggered: {
                     panel.countdown--
-                    if (panel.countdown <= 0) {
+                    if (panel.countdown <= 0 && panel.pendingCmd !== "") {
                         countdownTimer.stop()
                         proc.command = ["sh", "-c", panel.pendingCmd]
                         proc.startDetached()

@@ -41,7 +41,9 @@ Item {
             Rectangle {
                 required property int index
 
-                width: (row.width - (vu.segments - 1) * row.spacing) / vu.segments
+                width: vu.segments > 1
+                    ? (row.width - (vu.segments - 1) * row.spacing) / vu.segments
+                    : row.width
                 height: vu.segmentHeight
                 radius: vu.segmentRadius
 
