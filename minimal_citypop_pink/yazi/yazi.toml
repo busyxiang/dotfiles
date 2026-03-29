@@ -1,9 +1,22 @@
 [open]
 rules = [
-    { mime = "video/*", use = "video" }
+    { mime = "application/zip", use = "archive" },
+    { mime = "application/*zip*", use = "archive" },
+    { mime = "application/x-tar", use = "archive" },
+    { mime = "application/x-bzip*", use = "archive" },
+    { mime = "application/x-7z-compressed", use = "archive" },
+    { mime = "application/x-rar", use = "archive" },
+    { mime = "application/x-xz", use = "archive" },
+    { mime = "application/gzip", use = "archive" },
+    { mime = "video/*", use = "video" },
 ]
 
 [opener]
+archive = [
+    { run = '7z l "$1"', desc = "List contents (7z)", block = true },
+    { run = '7z x "$1"', desc = "Extract here (7z)", block = true },
+    { run = '7z x "$1" -o"${1%.*}"', desc = "Extract to subfolder (7z)", block = true },
+]
 video = [
     { run = 'vlc "$@"', desc = "open in VLC", orphan = true, for = "unix" },
     { run = 'mpv "$@"', desc = "open in MPV", orphan = true, for = "unix" },
