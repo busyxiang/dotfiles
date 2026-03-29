@@ -313,6 +313,10 @@ Scope {
                         width: Math.round(460 * lockSurface.sf)
                         height: outerCol.implicitHeight
 
+                        Component.onCompleted: {
+                            if (lockSurface.isPrimary) passwordInput.forceActiveFocus()
+                        }
+
                         opacity: root._unlocking ? 0 : 1
                         Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.InCubic } }
 
@@ -464,14 +468,17 @@ Scope {
                                         Layout.preferredHeight: Math.round(48 * lockSurface.sf)
                                         Layout.bottomMargin: Math.round(12 * lockSurface.sf)
 
+                                        property real _shakeOffset: 0
+                                        transform: Translate { x: inputWrapper._shakeOffset }
+
                                         SequentialAnimation {
                                             id: shakeAnim
-                                            NumberAnimation { target: inputWrapper; property: "x"; to: -12; duration: 50; easing.type: Easing.InOutQuad }
-                                            NumberAnimation { target: inputWrapper; property: "x"; to: 12; duration: 50; easing.type: Easing.InOutQuad }
-                                            NumberAnimation { target: inputWrapper; property: "x"; to: -8; duration: 50; easing.type: Easing.InOutQuad }
-                                            NumberAnimation { target: inputWrapper; property: "x"; to: 8; duration: 50; easing.type: Easing.InOutQuad }
-                                            NumberAnimation { target: inputWrapper; property: "x"; to: -4; duration: 50; easing.type: Easing.InOutQuad }
-                                            NumberAnimation { target: inputWrapper; property: "x"; to: 0; duration: 50; easing.type: Easing.InOutQuad }
+                                            NumberAnimation { target: inputWrapper; property: "_shakeOffset"; to: -12; duration: 50; easing.type: Easing.InOutQuad }
+                                            NumberAnimation { target: inputWrapper; property: "_shakeOffset"; to: 12; duration: 50; easing.type: Easing.InOutQuad }
+                                            NumberAnimation { target: inputWrapper; property: "_shakeOffset"; to: -8; duration: 50; easing.type: Easing.InOutQuad }
+                                            NumberAnimation { target: inputWrapper; property: "_shakeOffset"; to: 8; duration: 50; easing.type: Easing.InOutQuad }
+                                            NumberAnimation { target: inputWrapper; property: "_shakeOffset"; to: -4; duration: 50; easing.type: Easing.InOutQuad }
+                                            NumberAnimation { target: inputWrapper; property: "_shakeOffset"; to: 0; duration: 50; easing.type: Easing.InOutQuad }
                                         }
 
                                         Connections {
