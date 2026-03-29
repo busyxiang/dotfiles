@@ -26,7 +26,8 @@ All colors come from `Singleton/Style.qml`. Never hardcode colors.
 ### Backgrounds (dark-to-light)
 | Token | Hex | Use |
 |-------|-----|-----|
-| `Style.bgPrimary` | #1a0a2e | Base/bar background |
+| `Style.bgPrimary` | #1a0a2e | Base background |
+| `Style.bgBar` | #1a0a2e | Bar background (same as bgPrimary, separate token) |
 | `Style.bgSecondary` | #2b1b3d | Card/panel backgrounds |
 | `Style.bgTertiary` | #3d2b4f | Hover states, off segments, dividers |
 
@@ -39,6 +40,8 @@ All colors come from `Singleton/Style.qml`. Never hardcode colors.
 | `Style.accentPurple` | #da70d6 | Secondary accent, variety |
 | `Style.colorUrgent` | #ff4466 | Critical — urgent notifications, overdrive volume |
 | `Style.colorGood` | #66bb6a | Success — connected, healthy |
+| `Style.colorActive` | #ff69b4 | Active state (matches accentPink) |
+| `Style.colorInactive` | #6b5b7b | Inactive state (matches textDimmed) |
 
 ### Derived alpha tints (hover/border/glow)
 - Pink: `pinkHover`, `pinkBorder`, `pinkGradientStart`, `pinkGradientEnd`
@@ -475,7 +478,11 @@ These are critical — violating them causes bugs that are hard to diagnose:
 
 12. **Repeater delegate properties reset on model rebuild** — Any runtime property set on a delegate (e.g. `_userDismissed`, hover state) is lost when the model array is reassigned, because the delegate is destroyed and recreated. Never rely on delegate state surviving across model updates or timer callbacks. Instead, lift persistent state to the parent component (e.g. `hoveredPid` on the parent Item) or the singleton/manager (e.g. a tracking array).
 
-13. **Multi-screen Variants create duplicate delegates** — Each screen gets its own PanelWindow and Repeater via `Variants { model: Quickshell.screens }`. Timers and dismiss logic fire independently per screen, causing race conditions (e.g. one screen's `finishDismiss` destroys delegates on all screens). For logic that should only run once (like history cleanup), put it in the singleton with its own Timer rather than in the delegate.
+13. **Animating `x`/`y` on layout-managed items breaks the layout** — Directly animating `x` or `y` on an item inside a ColumnLayout/RowLayout overwrites the layout binding. After animation ends at 0, the item snaps to the left/top edge instead of its centered position. Use `transform: Translate { x: _shakeOffset }` with a property + animation instead — transforms apply on top of the layout position.
+
+14. **HTTPS Image sources don't load inside WlSessionLockSurface** — URLs that work in normal QML components fail silently in session lock surfaces. Download externally with curl to a local file if needed, or use icon fallbacks.
+
+15. **Multi-screen Variants create duplicate delegates** — Each screen gets its own PanelWindow and Repeater via `Variants { model: Quickshell.screens }`. Timers and dismiss logic fire independently per screen, causing race conditions (e.g. one screen's `finishDismiss` destroys delegates on all screens). For logic that should only run once (like history cleanup), put it in the singleton with its own Timer rather than in the delegate.
 
 ## File Structure
 
@@ -485,6 +492,7 @@ quickshell/
   Singleton/
     Style.qml                   # All design tokens
     PanelManager.qml            # Exclusive panel management
+    Time.qml                    # Clock data provider
   common/
     StyledText.qml              # Themed text
     MaterialIcon.qml            # Material icons
@@ -495,9 +503,11 @@ quickshell/
   modules/
     bar/
       Bar.qml                   # Main bar layout
-      components/               # Bar widgets (Volume, Clock, SysMon, Media, Weather, etc.)
+      components/               # Bar widgets (Volume, Clock, SysMon, Media, Clipboard, Weather, etc.)
     volume/                     # VolumeState + VolumePanel
     calendar/                   # CalendarState + CalendarPanel
+    clipboard/                  # ClipboardState + ClipboardPanel (wl-clipboard)
+    lock/                       # LockState + LockScreen (WlSessionLock + PAM)
     sysmon/                     # SysMonState + SysMonPanel
     media/                      # MediaState + MediaPanel
     bluetooth/                  # BluetoothManager + BluetoothPanel

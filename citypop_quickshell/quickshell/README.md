@@ -16,7 +16,8 @@ A desktop shell for [Quickshell](https://quickshell.outfoxxed.me/) on Hyprland w
 - [NetworkManager](https://networkmanager.dev/) / `nmcli` (networking)
 - [bluetoothctl](https://wiki.archlinux.org/title/Bluetooth) (bluetooth)
 - [fcitx5](https://fcitx-im.org/) (input method, optional)
-- `wl-copy` (clipboard, for calendar date copy)
+- `wl-clipboard` (`wl-copy`/`wl-paste` for clipboard)
+- PAM config at `/etc/pam.d/quickshell` (for session lock authentication)
 
 ## Structure
 
@@ -51,10 +52,13 @@ quickshell/
     │       ├── NotificationButton.qml  # Bell icon + unread badge
     │       ├── Weather.qml      # Weather icon + temperature (Open-Meteo)
     │       ├── Updates.qml      # Package update count badge (pacman/yay)
+    │       ├── Clipboard.qml     # Clipboard history icon + badge
     │       ├── Clock.qml        # Neon clock with pulsing colons
     │       └── PowerMenu.qml    # Power icon with danger glow
     ├── bluetooth/               # BT panel (scan, connect, pair, forget)
     ├── calendar/                # Calendar dropdown with month navigation
+    ├── clipboard/               # Clipboard history panel (wl-clipboard)
+    ├── lock/                    # Native session lock (WlSessionLock + PAM auth)
     ├── media/                   # Media panel (album art, seek bar, player switcher)
     ├── network/                 # Wifi panel (scan, connect, password input)
     ├── notifications/           # Notification daemon, popups, history panel
@@ -70,7 +74,7 @@ quickshell/
 ## Bar Layout
 
 ```
-[Updates] [Workspaces] [WindowTitle] [SysMon] [NetStat] ... [Media] ... [Tray] [BT] [Vol] [Net] [KB] [Notif] [Weather] [Clock] [Power]
+[Updates] [Workspaces] [WindowTitle] [SysMon] [NetStat] ... [Media] ... [Tray] [BT] [Vol] [Net] [KB] [Clipboard] [Notif] [Weather] [Clock] [Power]
 ```
 
 ## Color Palette
@@ -110,7 +114,6 @@ VUMeter {
 These features are handled by external programs rather than Quickshell:
 
 - **App Launcher** — [hyprlauncher](https://github.com/hyprutils/hyprlauncher)
-- **Session Lock** — [hyprlock](https://github.com/hyprwm/hyprlock)
 - **Wallpaper** — [hyprpaper](https://github.com/hyprwm/hyprpaper)
 
 ## References
