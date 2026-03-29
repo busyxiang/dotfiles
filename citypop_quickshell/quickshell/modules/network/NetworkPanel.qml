@@ -328,9 +328,7 @@ Scope {
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
 
                             readonly property bool isConnected: netItem.modelData.inUse
-                            readonly property bool isKnown: NetworkManager.knownConnections.some(
-                                n => n === netItem.modelData.ssid
-                            )
+                            readonly property bool isKnown: netItem.modelData.ssid in NetworkManager.knownSsidSet
                             readonly property bool isConnecting: NetworkManager.connectingTo === netItem.modelData.ssid
                             readonly property bool isSecured: netItem.modelData.security !== "" && netItem.modelData.security !== "--"
                             readonly property bool showPassword: panel.passwordSsid === netItem.modelData.ssid

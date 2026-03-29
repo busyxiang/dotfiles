@@ -22,6 +22,12 @@ Singleton {
 
     property list<var> networks: []
     property list<var> knownConnections: []
+    readonly property var knownSsidSet: {
+        var s = {}
+        for (var i = 0; i < knownConnections.length; i++)
+            s[knownConnections[i]] = true
+        return s
+    }
     property bool scanning: false
     property string connectingTo: ""
     property string connectError: ""

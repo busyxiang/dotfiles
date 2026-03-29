@@ -408,7 +408,7 @@ Scope {
                                                 sourceSize.width: 96
                                                 sourceSize.height: 96
                                                 asynchronous: true
-                                                cache: false
+                                                cache: true
                                             }
 
                                             // Fallback icon while loading

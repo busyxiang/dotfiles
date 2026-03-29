@@ -41,14 +41,18 @@ Rectangle {
 
     // Re-fetch whenever the active toplevel changes
     readonly property var toplevel: Hyprland.activeToplevel
-    onToplevelChanged: proc.running = true
+    onToplevelChanged: { _iconRetries = 0; proc.running = true }
 
-    // Retry icon lookup if class is set but icon didn't resolve
+    // Retry icon lookup if class is set but icon didn't resolve (max 8 attempts)
+    property int _iconRetries: 0
     Timer {
         interval: 250
-        running: root.appClass !== "" && root.iconSource === ""
+        running: root.appClass !== "" && root.iconSource === "" && root._iconRetries < 8
         repeat: true
-        onTriggered: root.updateFromClass(root.appClass)
+        onTriggered: {
+            root._iconRetries++
+            root.updateFromClass(root.appClass)
+        }
     }
 
     Process {
