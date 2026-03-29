@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Io
 import "../../Singleton"
 import "../../common"
+import "../lock"
 
 Scope {
     Variants {
@@ -106,7 +107,7 @@ Scope {
 
                     Repeater {
                         model: [
-                            { icon: "lock", label: "Lock", cmd: "hyprlock", accent: false },
+                            { icon: "lock", label: "Lock", cmd: "__lock__", accent: false },
                             { icon: "logout", label: "Logout", cmd: "hyprctl dispatch exit", accent: false },
                             { icon: "restart_alt", label: "Reboot", cmd: "systemctl reboot", accent: true },
                             { icon: "power_settings_new", label: "Shutdown", cmd: "systemctl poweroff", accent: true }
@@ -184,6 +185,10 @@ Scope {
                                         panel.cancelCountdown()
                                     } else if (menuItem.modelData.accent) {
                                         panel.startCountdown(menuItem.modelData.cmd, menuItem.modelData.label)
+                                    } else if (menuItem.modelData.cmd === "__lock__") {
+                                        PowerMenuState.visible = false
+                                        LockState.screen = panel.modelData
+                                        LockState.lock()
                                     } else {
                                         proc.command = ["sh", "-c", menuItem.modelData.cmd]
                                         proc.startDetached()
