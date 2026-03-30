@@ -57,7 +57,7 @@ Singleton {
                         id: id,
                         text: isImage ? "" : content,
                         isImage: isImage,
-                        imagePath: isImage ? "file:///tmp/cliphist_preview_" + id + ".png" : ""
+                        imagePath: ""
                     })
                     if (isImage) imgIds.push(id)
                 }
@@ -82,8 +82,14 @@ Singleton {
     Process {
         id: imgDecodeProc
         onExited: {
-            // Force QML to re-evaluate image sources by reassigning entries
-            root.entries = root.entries.slice()
+            // Now that files exist on disk, set imagePath on image entries
+            var updated = root.entries.slice()
+            for (var i = 0; i < updated.length; i++) {
+                if (updated[i].isImage && updated[i].imagePath === "") {
+                    updated[i].imagePath = "file:///tmp/cliphist_preview_" + updated[i].id + ".png"
+                }
+            }
+            root.entries = updated
             root.loading = false
         }
     }

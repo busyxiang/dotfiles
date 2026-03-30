@@ -31,6 +31,20 @@ Item {
         return name.substring(0, 2).toUpperCase()
     }
 
+    // Pink hover pill
+    Rectangle {
+        anchors.centerIn: parent
+        width: row.implicitWidth + Math.round(Style.spaceMd * 2 * root.sf)
+        height: row.implicitHeight + Math.round(Style.spaceSm * 2 * root.sf)
+        radius: Style.radiusFull
+        color: Style.accentPink
+        opacity: kbHover.containsMouse ? 0.15 : 0
+        scale: kbHover.containsMouse ? 1.0 : 0.95
+
+        Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+        Behavior on scale { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
+    }
+
     RowLayout {
         id: row
         anchors.fill: parent
@@ -47,7 +61,8 @@ Item {
             id: labelText
             text: root.displayLabel
             font.pixelSize: Math.round(Style.fontSizeSm * root.sf)
-            color: Style.textSecondary
+            color: kbHover.containsMouse ? Style.textPrimary : Style.textSecondary
+            Behavior on color { ColorAnimation { duration: Style.animFast } }
         }
     }
 
@@ -67,7 +82,9 @@ Item {
     }
 
     MouseArea {
+        id: kbHover
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: toggleProc.running = true
     }

@@ -454,22 +454,31 @@ Scope {
                                         Layout.fillWidth: true
                                         implicitHeight: 30
                                         radius: Style.radiusFull
-                                        color: isToday ? Style.accentPink
-                                             : dayHover.containsMouse && modelData.current ? Style.bgTertiary
+                                        color: !isToday && dayHover.containsMouse && modelData.current ? Style.bgTertiary
                                              : "transparent"
 
                                         Behavior on color { ColorAnimation { duration: Style.animFast } }
 
-                                        // Neon glow behind today's cell
+                                        // Today highlight circle (fixed size, centered)
                                         Rectangle {
-                                            anchors.fill: parent
-                                            anchors.margins: -3
+                                            anchors.centerIn: parent
+                                            width: 30
+                                            height: 30
                                             radius: Style.radiusFull
-                                            color: "transparent"
-                                            border.width: 2
-                                            border.color: Style.accentPink
-                                            opacity: 0.4
+                                            color: Style.accentPink
                                             visible: dayCell.isToday
+
+                                            // Neon glow ring
+                                            Rectangle {
+                                                anchors.centerIn: parent
+                                                width: parent.width + 6
+                                                height: parent.height + 6
+                                                radius: Style.radiusFull
+                                                color: "transparent"
+                                                border.width: 2
+                                                border.color: Style.accentPink
+                                                opacity: 0.4
+                                            }
                                         }
 
                                         StyledText {
