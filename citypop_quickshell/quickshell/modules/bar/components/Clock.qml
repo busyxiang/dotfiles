@@ -14,8 +14,12 @@ Item {
     // Split time into parts for pulsing colons
     // timeSeconds format: "hh:mm:ss AP"
     readonly property string rawTime: Time.timeSeconds
-    readonly property string hourMin: rawTime.substring(0, 5)
-    readonly property string seconds: rawTime.substring(6, 8)
+    readonly property string h1: rawTime.charAt(0)
+    readonly property string h2: rawTime.charAt(1)
+    readonly property string m1: rawTime.charAt(3)
+    readonly property string m2: rawTime.charAt(4)
+    readonly property string s1: rawTime.charAt(6)
+    readonly property string s2: rawTime.charAt(7)
     readonly property string ampm: rawTime.substring(9)
 
     implicitWidth: row.implicitWidth
@@ -38,6 +42,11 @@ Item {
         }
     }
 
+    readonly property real digitW: Math.round(14 * root.sf)
+    readonly property real digitH: Math.round(22 * root.sf)
+    readonly property real fontSize: Math.round(Style.fontSizeMd * root.sf)
+    readonly property int flipDur: 180
+
     RowLayout {
         id: row
         anchors.fill: parent
@@ -52,45 +61,55 @@ Item {
         }
 
         // Hours
-        StyledText {
-            text: root.rawTime.substring(0, 2)
-            font.bold: true
-            font.pixelSize: Math.round(Style.fontSizeMd * root.sf)
-            color: Style.accentPink
+        FlipDigit {
+            value: root.h1; width: root.digitW; height: root.digitH
+            textSize: root.fontSize; animDuration: root.flipDur
+        }
+        FlipDigit {
+            value: root.h2; width: root.digitW; height: root.digitH
+            textSize: root.fontSize; animDuration: root.flipDur
+            Layout.rightMargin: Math.round(2 * root.sf)
         }
 
         // Colon 1 (pulsing)
         StyledText {
             text: ":"
             font.bold: true
-            font.pixelSize: Math.round(Style.fontSizeMd * root.sf)
+            font.pixelSize: root.fontSize
             color: Style.accentPink
             opacity: root.colonOpacity
         }
 
         // Minutes
-        StyledText {
-            text: root.rawTime.substring(3, 5)
-            font.bold: true
-            font.pixelSize: Math.round(Style.fontSizeMd * root.sf)
-            color: Style.accentPink
+        FlipDigit {
+            value: root.m1; width: root.digitW; height: root.digitH
+            textSize: root.fontSize; animDuration: root.flipDur
+            Layout.leftMargin: Math.round(2 * root.sf)
+        }
+        FlipDigit {
+            value: root.m2; width: root.digitW; height: root.digitH
+            textSize: root.fontSize; animDuration: root.flipDur
+            Layout.rightMargin: Math.round(2 * root.sf)
         }
 
         // Colon 2 (pulsing)
         StyledText {
             text: ":"
             font.bold: true
-            font.pixelSize: Math.round(Style.fontSizeMd * root.sf)
+            font.pixelSize: root.fontSize
             color: Style.accentPink
             opacity: root.colonOpacity
         }
 
         // Seconds
-        StyledText {
-            text: root.seconds
-            font.bold: true
-            font.pixelSize: Math.round(Style.fontSizeMd * root.sf)
-            color: Style.accentPink
+        FlipDigit {
+            value: root.s1; width: root.digitW; height: root.digitH
+            textSize: root.fontSize; animDuration: root.flipDur
+            Layout.leftMargin: Math.round(2 * root.sf)
+        }
+        FlipDigit {
+            value: root.s2; width: root.digitW; height: root.digitH
+            textSize: root.fontSize; animDuration: root.flipDur
         }
 
         // AM/PM

@@ -271,6 +271,72 @@ Scope {
                         }
                     }
 
+                    // ── Rain particle overlay ──
+                    Canvas {
+                        id: rainCanvas
+                        anchors.fill: parent
+                        opacity: root._unlocking ? 0 : 0.35
+                        Behavior on opacity { NumberAnimation { duration: 350 } }
+
+                        property var drops: []
+                        property int dropCount: 80
+                        property bool _initialized: false
+
+                        function initDrops() {
+                            if (_initialized || width <= 0 || height <= 0) return
+                            _initialized = true
+                            var d = []
+                            for (var i = 0; i < dropCount; i++) {
+                                d.push({
+                                    x: Math.random() * width,
+                                    y: Math.random() * height,
+                                    len: 8 + Math.random() * 20,
+                                    speed: 2 + Math.random() * 4,
+                                    opacity: 0.1 + Math.random() * 0.4
+                                })
+                            }
+                            drops = d
+                        }
+
+                        onWidthChanged: initDrops()
+                        onHeightChanged: initDrops()
+
+                        Timer {
+                            running: LockState.locked && !root._unlocking && rainCanvas._initialized
+                            interval: 33  // ~30fps
+                            repeat: true
+                            onTriggered: {
+                                var d = rainCanvas.drops
+                                var w = rainCanvas.width
+                                var h = rainCanvas.height
+                                for (var i = 0; i < d.length; i++) {
+                                    d[i].y += d[i].speed
+                                    d[i].x += d[i].speed * 0.15  // slight wind angle
+                                    if (d[i].y > h + d[i].len) {
+                                        d[i].y = -d[i].len
+                                        d[i].x = Math.random() * w
+                                    }
+                                    if (d[i].x > w) d[i].x = 0
+                                }
+                                rainCanvas.requestPaint()
+                            }
+                        }
+
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.clearRect(0, 0, width, height)
+                            var d = drops
+                            for (var i = 0; i < d.length; i++) {
+                                ctx.strokeStyle = "rgba(255, 105, 180, " + d[i].opacity + ")"
+                                ctx.lineWidth = 1
+                                ctx.beginPath()
+                                ctx.moveTo(d[i].x, d[i].y)
+                                ctx.lineTo(d[i].x + d[i].len * 0.15, d[i].y + d[i].len)
+                                ctx.stroke()
+                            }
+                        }
+                    }
+
                     // ── Ambient pink glow behind card (primary only) ──
                     Rectangle {
                         anchors.centerIn: parent
