@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell.Hyprland
 import "../../../Singleton"
 import "../../../common"
+import "../../workspace"
 
 Item {
     id: root
@@ -95,8 +96,20 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent
+                    hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: ws.modelData.activate()
+                    onContainsMouseChanged: {
+                        if (containsMouse && !ws.isActive) {
+                            var globalPos = ws.mapToItem(null, ws.width / 2, 0)
+                            WorkspacePreview.tooltipX = globalPos.x
+                            WorkspacePreview.tooltipScreen = root.screen
+                            WorkspacePreview.hoveredWsId = ws.modelData.id
+                            WorkspacePreview.show()
+                        } else {
+                            WorkspacePreview.hide()
+                        }
+                    }
                 }
             }
         }

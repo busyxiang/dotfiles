@@ -17,6 +17,7 @@ import "modules/weather"
 import "modules/updates"
 import "modules/clipboard"
 import "modules/lock"
+import "modules/workspace"
 
 Scope {
 
@@ -35,5 +36,6 @@ Scope {
     NotificationPopup {}
     NotificationHistory {}
     OSD {}
+    WorkspacePreviewPanel {}
     LockScreen {}
 }
