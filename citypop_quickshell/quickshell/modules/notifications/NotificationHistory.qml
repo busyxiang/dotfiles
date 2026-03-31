@@ -215,10 +215,12 @@ Scope {
                                         spacing: Style.spaceMd
 
                                         MaterialIcon {
-                                            text: groupDelegate.collapsed ? "expand_more" : "expand_less"
+                                            text: "expand_less"
                                             font.pixelSize: 16
                                             color: groupHeaderArea.containsMouse ? Style.textSecondary : Style.textDimmed
+                                            rotation: groupDelegate.collapsed ? -180 : 0
                                             Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                            Behavior on rotation { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
                                         }
 
                                         StyledText {
@@ -276,11 +278,20 @@ Scope {
                                 }
 
                                 // Nested notification items (collapsible)
-                                ColumnLayout {
+                                Item {
                                     Layout.fillWidth: true
-                                    Layout.leftMargin: Style.spaceMd
+                                    implicitHeight: groupDelegate.collapsed ? 0 : nestedCol.implicitHeight
+                                    clip: true
+                                    opacity: groupDelegate.collapsed ? 0 : 1
+                                    Behavior on implicitHeight { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                                    Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+
+                                ColumnLayout {
+                                    id: nestedCol
+                                    width: parent.width - Style.spaceMd
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: Style.spaceMd
                                     spacing: Style.spaceSm
-                                    visible: !groupDelegate.collapsed
 
                                     Repeater {
                                         model: groupDelegate.modelData.notifications
@@ -325,19 +336,32 @@ Scope {
                                                 }
                                             }
 
-                                            // Close button (top-right corner)
-                                            MaterialIcon {
+                                            // Close button (top-right, visible on hover)
+                                            Rectangle {
                                                 anchors.top: parent.top
                                                 anchors.right: parent.right
                                                 anchors.topMargin: Style.spaceSm
                                                 anchors.rightMargin: Style.spaceSm
-                                                text: "close"
-                                                font.pixelSize: 14
-                                                color: Style.textDimmed
+                                                width: 20; height: 20
+                                                radius: width / 2
+                                                color: dismissItemArea.containsMouse ? Style.urgentHover : Style.bgTertiary
+                                                opacity: histClickArea.containsMouse || dismissItemArea.containsMouse ? 1 : 0
                                                 z: 1
+                                                Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+                                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                                                MaterialIcon {
+                                                    anchors.centerIn: parent
+                                                    text: "close"
+                                                    font.pixelSize: 12
+                                                    color: dismissItemArea.containsMouse ? Style.colorUrgent : Style.textSecondary
+                                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                                }
 
                                                 MouseArea {
+                                                    id: dismissItemArea
                                                     anchors.fill: parent
+                                                    hoverEnabled: true
                                                     cursorShape: Qt.PointingHandCursor
                                                     onClicked: {
                                                         var idx = histItem.findHistoryIndex()
@@ -480,6 +504,7 @@ Scope {
                                             }
                                         }
                                     }
+                                }
                                 }
                             }
                         }
