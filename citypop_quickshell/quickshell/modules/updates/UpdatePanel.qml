@@ -278,6 +278,8 @@ Scope {
                                                     text: pacPkg.modelData.oldVer
                                                     font.pixelSize: 11
                                                     color: Style.textSecondary
+                                                    Layout.maximumWidth: 80
+                                                    elide: Text.ElideMiddle
                                                 }
 
                                                 MaterialIcon {
@@ -291,6 +293,8 @@ Scope {
                                                     text: pacPkg.modelData.newVer
                                                     font.pixelSize: 11
                                                     color: Style.accentPink
+                                                    Layout.maximumWidth: 80
+                                                    elide: Text.ElideMiddle
                                                 }
                                             }
 
@@ -411,6 +415,8 @@ Scope {
                                                     text: aurPkg.modelData.oldVer
                                                     font.pixelSize: 11
                                                     color: Style.textSecondary
+                                                    Layout.maximumWidth: 80
+                                                    elide: Text.ElideMiddle
                                                 }
 
                                                 MaterialIcon {
@@ -424,6 +430,8 @@ Scope {
                                                     text: aurPkg.modelData.newVer
                                                     font.pixelSize: 11
                                                     color: Style.accentPurple
+                                                    Layout.maximumWidth: 80
+                                                    elide: Text.ElideMiddle
                                                 }
                                             }
 
