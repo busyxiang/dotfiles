@@ -34,6 +34,19 @@ Item {
     implicitWidth: row.implicitWidth
     implicitHeight: row.implicitHeight
 
+    // Pink hover pill
+    Rectangle {
+        anchors.centerIn: parent
+        width: row.implicitWidth + Math.round(Style.spaceMd * 2 * root.sf)
+        height: Math.round(24 * root.sf)
+        radius: Style.radiusFull
+        color: Style.accentPink
+        opacity: weatherHover.containsMouse ? 0.15 : 0
+        scale: weatherHover.containsMouse ? 1.0 : 0.8
+        Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+        Behavior on scale { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
+    }
+
     // Loading pulse (initial load + retry)
     SequentialAnimation {
         running: root.loading || root.retrying
@@ -59,11 +72,15 @@ Item {
             text: WeatherState.fetchError ? "!" : (WeatherState.current ? WeatherState.current.temp + "°" : "—")
             font.pixelSize: Math.round(Style.fontSizeMd * root.sf)
             font.bold: true
-            color: WeatherState.fetchError ? Style.accentAmber : Style.textPrimary
+            color: WeatherState.fetchError ? Style.accentAmber
+                 : weatherHover.containsMouse ? Style.accentPink
+                 : Style.textPrimary
+            Behavior on color { ColorAnimation { duration: Style.animFast } }
         }
     }
 
     MouseArea {
+        id: weatherHover
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor

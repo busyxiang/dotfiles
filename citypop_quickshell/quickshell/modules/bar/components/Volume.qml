@@ -37,6 +37,19 @@ Item {
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
 
+    // Pink hover pill
+    Rectangle {
+        anchors.centerIn: parent
+        width: layout.implicitWidth + Math.round(Style.spaceMd * 2 * root.sf)
+        height: Math.round(24 * root.sf)
+        radius: Style.radiusFull
+        color: Style.accentPink
+        opacity: volHover.containsMouse ? 0.15 : 0
+        scale: volHover.containsMouse ? 1.0 : 0.8
+        Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+        Behavior on scale { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
+    }
+
     PwObjectTracker {
         objects: [Pipewire.defaultAudioSink]
     }
@@ -64,6 +77,7 @@ Item {
             color: root.muted ? Style.textDimmed
                  : Math.round(root.volume * 100) > 130 ? Style.colorUrgent
                  : Math.round(root.volume * 100) > 100 ? Style.accentAmber
+                 : volHover.containsMouse ? Style.textPrimary
                  : Style.textSecondary
 
             Behavior on color { ColorAnimation { duration: Style.animFast } }
@@ -71,7 +85,9 @@ Item {
     }
 
     MouseArea {
+        id: volHover
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton
         onClicked: {

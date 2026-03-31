@@ -14,6 +14,19 @@ Item {
     implicitWidth: contentRow.implicitWidth
     implicitHeight: contentRow.implicitHeight
 
+    // Pink hover circle
+    Rectangle {
+        anchors.centerIn: parent
+        width: Math.round(24 * root.sf)
+        height: Math.round(24 * root.sf)
+        radius: width / 2
+        color: Style.accentPink
+        opacity: hoverArea.containsMouse ? 0.15 : 0
+        scale: hoverArea.containsMouse ? 1.0 : 0.8
+        Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+        Behavior on scale { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
+    }
+
     RowLayout {
         id: contentRow
         spacing: Math.round(Style.spaceSm * root.sf)
@@ -24,6 +37,7 @@ Item {
             text: NetworkManager.iconName
             font.pixelSize: Math.round(18 * root.sf)
             color: NetworkManager.panelVisible ? Style.accentMagenta
+                 : hoverArea.containsMouse ? Style.textPrimary
                  : NetworkManager.connected ? Style.accentPink
                  : Style.textDimmed
             fill: 0

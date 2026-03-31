@@ -23,6 +23,19 @@ Item {
     implicitWidth: archIcon.implicitWidth
     implicitHeight: archIcon.implicitHeight
 
+    // Pink hover circle
+    Rectangle {
+        anchors.centerIn: parent
+        width: Math.round(24 * root.sf)
+        height: Math.round(24 * root.sf)
+        radius: width / 2
+        color: Style.accentPink
+        opacity: updateHover.containsMouse ? 0.15 : 0
+        scale: updateHover.containsMouse ? 1.0 : 0.8
+        Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+        Behavior on scale { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
+    }
+
     // Loading pulse when checking or retrying
     SequentialAnimation {
         running: UpdateState.checking || UpdateState.retrying
@@ -37,7 +50,8 @@ Item {
         anchors.centerIn: parent
         text: "\uf303"
         font.pixelSize: Math.round(18 * root.sf)
-        color: Style.accentPink
+        color: updateHover.containsMouse ? Style.textPrimary : Style.accentPink
+        Behavior on color { ColorAnimation { duration: Style.animFast } }
     }
 
     // Superscript badge (top-right, overlapping)
@@ -80,7 +94,9 @@ Item {
     }
 
     MouseArea {
+        id: updateHover
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
             var wasOpen = UpdateState.visible

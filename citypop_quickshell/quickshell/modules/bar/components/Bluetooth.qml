@@ -15,11 +15,25 @@ Item {
     implicitWidth: icon.implicitWidth
     implicitHeight: icon.implicitHeight
 
+    // Pink hover circle
+    Rectangle {
+        anchors.centerIn: parent
+        width: Math.round(24 * root.sf)
+        height: Math.round(24 * root.sf)
+        radius: width / 2
+        color: Style.accentPink
+        opacity: btHover.containsMouse ? 0.15 : 0
+        scale: btHover.containsMouse ? 1.0 : 0.8
+        Behavior on opacity { NumberAnimation { duration: Style.animFast } }
+        Behavior on scale { NumberAnimation { duration: Style.animFast; easing.type: Easing.OutCubic } }
+    }
+
     MaterialIcon {
         id: icon
         text: BluetoothManager.powered ? "bluetooth" : "bluetooth_disabled"
         font.pixelSize: Math.round(18 * root.sf)
         color: BluetoothManager.panelVisible ? Style.accentMagenta
+             : btHover.containsMouse ? Style.textPrimary
              : BluetoothManager.hasConnected ? Style.accentPink
              : BluetoothManager.powered ? Style.textSecondary
              : Style.textDimmed
