@@ -7,8 +7,17 @@ Singleton {
     property bool locked: false
     property var screen: null
 
+    function _ensureScreen(): void {
+        if (screen) return
+        var screens = Quickshell.screens
+        for (var i = 0; i < screens.length; i++) {
+            if (screens[i].name === "DP-2") { screen = screens[i]; return }
+        }
+        screen = screens[0]
+    }
+
     function lock(): void {
-        if (!screen) screen = Quickshell.screens[0]
+        _ensureScreen()
         locked = true
     }
 
@@ -23,7 +32,7 @@ Singleton {
     IpcHandler {
         target: "lock"
         function lock(): void {
-            if (!LockState.screen) LockState.screen = Quickshell.screens[0]
+            LockState._ensureScreen()
             focusProc.running = true
         }
     }
