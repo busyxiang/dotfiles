@@ -66,6 +66,21 @@ Scope {
         }
     }
 
+    // ── Wallpaper auto-detect from hyprpaper config ──
+    property string _wallpaperPath: ""
+
+    Process {
+        id: wallpaperProc
+        command: ["sh", "-c", "sed -n 's/.*path *= *\\(.*\\)/\\1/p' ~/.config/hypr/hyprpaper.conf | tail -1 | sed 's|^~|'\"$HOME\"'|'"]
+        running: true
+        stdout: SplitParser {
+            onRead: data => {
+                var p = data.trim()
+                if (p.length > 0) root._wallpaperPath = "file://" + p
+            }
+        }
+    }
+
     // Re-evaluated every minute via _hours dependency
     readonly property string _greeting: {
         void root._hours  // force re-eval when clock updates
@@ -237,7 +252,7 @@ Scope {
                     // ── Wallpaper background ──
                     Image {
                         anchors.fill: parent
-                        source: "file:///home/ray/Pictures/citypop_wallpaper.jpg"
+                        source: root._wallpaperPath
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                     }
