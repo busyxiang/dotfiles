@@ -89,433 +89,394 @@ Scope {
     Variants {
         model: Quickshell.screens
 
-        PanelWindow {
+        DropdownPanel {
             id: panel
             required property var modelData
             screen: modelData
-            readonly property real sf: modelData.height / 1080
-            property bool _open: MediaState.visible && MediaState.screen === modelData
-            visible: MediaState.visible || card.opacity > 0
-            color: "transparent"
 
-            anchors {
-                top: true
-                bottom: true
-                left: true
-                right: true
-            }
+            stateOpen: MediaState.visible
+            stateScreen: MediaState.screen
+            onDismissed: MediaState.visible = false
 
-            exclusionMode: ExclusionMode.Ignore
-            margins.top: Math.round(Style.barHeight * panel.sf)
+            cardWidth: 320
+            anchorMode: "top-center"
+            showNeonStrip: false
+            cardBorderColor: root.isPlaying ? Style.pinkBorder : Style.bgTertiary
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: MediaState.visible = false
-            }
-
-            // ── Neon glow (behind card) ──
+            // ── Neon glow (behind card, inside DropdownPanel but outside card content) ──
             Rectangle {
-                id: glowRect
-                anchors.fill: card
+                parent: panel.card
+                anchors.fill: parent
                 anchors.margins: -3
                 radius: Style.radiusLg + 3
                 color: Style.accentPink
-                opacity: panel._open && root.isPlaying ? 0.3 : 0
-                transform: Translate {
-                    y: panel._open ? 0 : -8
-                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
-                }
+                opacity: panel.isOpen && root.isPlaying ? 0.3 : 0
+                z: -1
 
                 Behavior on opacity { NumberAnimation { duration: Style.animNormal } }
             }
 
-            // --- Dropdown Card ---
-            Rectangle {
-                id: card
-                anchors.top: parent.top
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.topMargin: Math.round(Style.spaceMd * panel.sf)
-                width: 320
-                height: cardContent.implicitHeight + Style.spaceXl * 2
-                color: Style.bgSecondary
-                radius: Style.radiusLg
-                border.width: 1
-                border.color: root.isPlaying ? Style.pinkBorder : Style.bgTertiary
+            ColumnLayout {
+                id: cardContent
+                anchors.fill: parent
+                spacing: Style.spaceLg
 
-                Behavior on border.color { ColorAnimation { duration: Style.animNormal } }
+                // ── Player switcher (only with multiple players) ──
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: playerRow.implicitHeight + Style.spaceSm * 2
+                    radius: Style.radiusFull
+                    color: playerHover.containsMouse ? Style.bgTertiary : "transparent"
+                    visible: root.hasMultiplePlayers
 
-                opacity: panel._open ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
-                transform: Translate {
-                    y: panel._open ? 0 : -8
-                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
+                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                    RowLayout {
+                        id: playerRow
+                        anchors.centerIn: parent
+                        spacing: Style.spaceSm
+
+                        MaterialIcon {
+                            text: "music_note"
+                            font.pixelSize: 14
+                            color: Style.textDimmed
+                        }
+
+                        StyledText {
+                            text: root.playerName
+                            font.pixelSize: Style.fontSizeSm
+                            color: Style.textDimmed
+                        }
+
+                        MaterialIcon {
+                            text: "swap_horiz"
+                            font.pixelSize: 14
+                            color: Style.textDimmed
+                        }
+                    }
+
+                    MouseArea {
+                        id: playerHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.cyclePlayer()
+                    }
                 }
 
-                MouseArea { anchors.fill: parent }
+                // ── Vinyl Record Album Art ──
+                Item {
+                    Layout.preferredWidth: 160
+                    Layout.preferredHeight: 160
+                    Layout.alignment: Qt.AlignHCenter
 
-                ColumnLayout {
-                    id: cardContent
-                    anchors.fill: parent
-                    anchors.margins: Style.spaceXl
-                    spacing: Style.spaceLg
+                    // Vinyl disc — ClippingRectangle for proper circular clip
+                    ClippingRectangle {
+                        id: vinylClip
+                        anchors.fill: parent
+                        radius: Infinity
+                        color: Style.bgPrimary
 
-                    // ── Player switcher (only with multiple players) ──
+                        // Rotating content
+                        Item {
+                            id: vinylDisc
+                            anchors.fill: parent
+
+                            RotationAnimation on rotation {
+                                running: root.isPlaying && MediaState.visible
+                                from: 0
+                                to: 360
+                                duration: 5000
+                                loops: Animation.Infinite
+                            }
+
+                            // Groove rings
+                            Repeater {
+                                model: 3
+
+                                Rectangle {
+                                    required property int index
+                                    anchors.centerIn: parent
+                                    width: parent.width - index * 8 - 4
+                                    height: parent.height - index * 8 - 4
+                                    radius: width / 2
+                                    color: "transparent"
+                                    border.width: 1
+                                    border.color: Qt.rgba(1, 1, 1, 0.06)
+                                }
+                            }
+
+                            // Spin notch
+                            Rectangle {
+                                width: 4
+                                height: 4
+                                radius: 2
+                                color: Style.accentPink
+                                opacity: 0.6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.top: parent.top
+                                anchors.topMargin: 4
+                            }
+
+                            // Album art (fills disc)
+                            Image {
+                                id: albumArtImg
+                                anchors.centerIn: parent
+                                width: parent.width - 12
+                                height: parent.height - 12
+                                source: root.artUrl
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                asynchronous: true
+                                visible: status === Image.Ready
+                            }
+
+                            // Fallback icon
+                            MaterialIcon {
+                                anchors.centerIn: parent
+                                text: "album"
+                                font.pixelSize: 56
+                                color: Style.textDimmed
+                                visible: albumArtImg.status !== Image.Ready
+                            }
+
+                            // Center hole
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 12
+                                height: 12
+                                radius: 6
+                                color: Style.bgPrimary
+                            }
+                        }
+                    }
+
+                    // Outer ring accent
                     Rectangle {
+                        anchors.fill: parent
+                        radius: width / 2
+                        color: "transparent"
+                        border.width: 1.5
+                        border.color: root.isPlaying ? Style.accentPink : Style.bgTertiary
+                        opacity: root.isPlaying ? 0.5 : 0.3
+
+                        Behavior on border.color { ColorAnimation { duration: Style.animNormal } }
+                        Behavior on opacity { NumberAnimation { duration: Style.animNormal } }
+                    }
+                }
+
+                // ── Track Info ──
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.spaceXs
+
+                    StyledText {
+                        text: root.title || "No track playing"
+                        font.pixelSize: Style.fontSizeXl
+                        font.bold: true
+                        color: Style.textPrimary
                         Layout.fillWidth: true
-                        implicitHeight: playerRow.implicitHeight + Style.spaceSm * 2
-                        radius: Style.radiusFull
-                        color: playerHover.containsMouse ? Style.bgTertiary : "transparent"
-                        visible: root.hasMultiplePlayers
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                    }
 
-                        Behavior on color { ColorAnimation { duration: Style.animFast } }
+                    StyledText {
+                        text: root.artist
+                        font.pixelSize: Style.fontSizeMd
+                        color: Style.textSecondary
+                        Layout.fillWidth: true
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        visible: root.artist !== ""
+                    }
 
-                        RowLayout {
-                            id: playerRow
-                            anchors.centerIn: parent
-                            spacing: Style.spaceSm
+                    StyledText {
+                        text: root.album
+                        font.pixelSize: Style.fontSizeSm
+                        color: Style.textDimmed
+                        Layout.fillWidth: true
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
+                        visible: root.album !== ""
+                    }
+                }
 
-                            MaterialIcon {
-                                text: "music_note"
-                                font.pixelSize: 14
-                                color: Style.textDimmed
-                            }
+                // ── VU Meter Seek Bar ──
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Style.spaceXs
 
-                            StyledText {
-                                text: root.playerName
-                                font.pixelSize: Style.fontSizeSm
-                                color: Style.textDimmed
-                            }
+                    Item {
+                        id: seekItem
+                        Layout.fillWidth: true
+                        implicitHeight: 20
 
-                            MaterialIcon {
-                                text: "swap_horiz"
-                                font.pixelSize: 14
-                                color: Style.textDimmed
-                            }
+                        property real pos: root.trackedPosition
+                        property real len: root.player?.length ?? 0
+                        property real fraction: len > 0 ? Math.min(1.0, Math.max(0, pos / len)) : 0
+
+                        VUMeter {
+                            id: vuMeter
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            segments: 20
+                            segmentHeight: seekArea.containsMouse || seekArea.isDragging ? 10 : 8
+                            value: seekItem.fraction
+                            warnAt: 1.0; critAt: 1.0
+                            animDuration: 60
+                        }
+
+                        // Seek handle
+                        Rectangle {
+                            x: Math.max(0, Math.min(seekItem.width - width, seekItem.width * seekItem.fraction - width / 2))
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: seekArea.containsMouse || seekArea.isDragging ? 14 : 0
+                            height: width
+                            radius: width / 2
+                            color: Style.accentPink
+                            visible: width > 0
+                            z: 1
+
+                            Behavior on width { NumberAnimation { duration: Style.animFast } }
                         }
 
                         MouseArea {
-                            id: playerHover
+                            id: seekArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: (root.player?.canSeek ?? false) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            property bool isDragging: false
+
+                            onPressed: mouse => {
+                                if (!(root.player?.canSeek ?? false)) return
+                                isDragging = true
+                                seekTo(mouse.x)
+                            }
+                            onReleased: isDragging = false
+                            onPositionChanged: mouse => {
+                                if (isDragging) seekTo(mouse.x)
+                            }
+                            onClicked: mouse => seekTo(mouse.x)
+
+                            function seekTo(x) {
+                                if (!(root.player?.canSeek ?? false)) return
+                                var len = root.player?.length ?? 0
+                                if (len <= 0) return
+                                var frac = Math.max(0, Math.min(1, x / seekItem.width))
+                                root.player.position = frac * len
+                            }
+                        }
+                    }
+
+                    // Time labels
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        StyledText {
+                            text: root.formatTime(root.trackedPosition)
+                            font.pixelSize: 11
+                            color: Style.textDimmed
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        StyledText {
+                            text: root.formatTime(root.player?.length ?? 0)
+                            font.pixelSize: 11
+                            color: Style.textDimmed
+                        }
+                    }
+                }
+
+                // ── Playback Controls ──
+                RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: Style.spaceXl
+
+                    // Previous
+                    Rectangle {
+                        implicitWidth: 36
+                        implicitHeight: 36
+                        radius: Style.radiusFull
+                        color: prevCtrlHover.containsMouse ? Style.bgTertiary : "transparent"
+
+                        Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "skip_previous"
+                            font.pixelSize: 24
+                            fill: 1
+                            color: prevCtrlHover.containsMouse ? Style.textPrimary : Style.textSecondary
+                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+                        }
+
+                        MouseArea {
+                            id: prevCtrlHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: (root.player?.canGoPrevious ?? false) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: { if (root.player?.canGoPrevious) root.player.previous() }
+                        }
+                    }
+
+                    // Play/Pause
+                    Rectangle {
+                        implicitWidth: 48
+                        implicitHeight: 48
+                        radius: Style.radiusFull
+                        color: Style.accentPink
+
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: root.isPlaying ? "pause" : "play_arrow"
+                            font.pixelSize: 32
+                            color: Style.bgPrimary
+                            fill: 1
+                        }
+
+                        MouseArea {
+                            id: playPauseHover
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: root.cyclePlayer()
+                            onClicked: {
+                                if (root.isPlaying)
+                                    root.player?.pause()
+                                else
+                                    root.player?.play()
+                            }
                         }
+
+                        scale: playPauseHover.containsMouse ? 1.05 : 1.0
+                        Behavior on scale { NumberAnimation { duration: Style.animFast } }
                     }
 
-                    // ── Vinyl Record Album Art ──
-                    Item {
-                        Layout.preferredWidth: 160
-                        Layout.preferredHeight: 160
-                        Layout.alignment: Qt.AlignHCenter
+                    // Next
+                    Rectangle {
+                        implicitWidth: 36
+                        implicitHeight: 36
+                        radius: Style.radiusFull
+                        color: nextCtrlHover.containsMouse ? Style.bgTertiary : "transparent"
 
-                        // Vinyl disc — ClippingRectangle for proper circular clip
-                        ClippingRectangle {
-                            id: vinylClip
-                            anchors.fill: parent
-                            radius: Infinity
-                            color: Style.bgPrimary
+                        Behavior on color { ColorAnimation { duration: Style.animFast } }
 
-                            // Rotating content
-                            Item {
-                                id: vinylDisc
-                                anchors.fill: parent
-
-                                RotationAnimation on rotation {
-                                    running: root.isPlaying && MediaState.visible
-                                    from: 0
-                                    to: 360
-                                    duration: 5000
-                                    loops: Animation.Infinite
-                                }
-
-                                // Groove rings
-                                Repeater {
-                                    model: 3
-
-                                    Rectangle {
-                                        required property int index
-                                        anchors.centerIn: parent
-                                        width: parent.width - index * 8 - 4
-                                        height: parent.height - index * 8 - 4
-                                        radius: width / 2
-                                        color: "transparent"
-                                        border.width: 1
-                                        border.color: Qt.rgba(1, 1, 1, 0.06)
-                                    }
-                                }
-
-                                // Spin notch
-                                Rectangle {
-                                    width: 4
-                                    height: 4
-                                    radius: 2
-                                    color: Style.accentPink
-                                    opacity: 0.6
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    anchors.top: parent.top
-                                    anchors.topMargin: 4
-                                }
-
-                                // Album art (fills disc)
-                                Image {
-                                    id: albumArtImg
-                                    anchors.centerIn: parent
-                                    width: parent.width - 12
-                                    height: parent.height - 12
-                                    source: root.artUrl
-                                    fillMode: Image.PreserveAspectCrop
-                                    smooth: true
-                                    asynchronous: true
-                                    visible: status === Image.Ready
-                                }
-
-                                // Fallback icon
-                                MaterialIcon {
-                                    anchors.centerIn: parent
-                                    text: "album"
-                                    font.pixelSize: 56
-                                    color: Style.textDimmed
-                                    visible: albumArtImg.status !== Image.Ready
-                                }
-
-                                // Center hole
-                                Rectangle {
-                                    anchors.centerIn: parent
-                                    width: 12
-                                    height: 12
-                                    radius: 6
-                                    color: Style.bgPrimary
-                                }
-                            }
-                        }
-
-                        // Outer ring accent
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: width / 2
-                            color: "transparent"
-                            border.width: 1.5
-                            border.color: root.isPlaying ? Style.accentPink : Style.bgTertiary
-                            opacity: root.isPlaying ? 0.5 : 0.3
-
-                            Behavior on border.color { ColorAnimation { duration: Style.animNormal } }
-                            Behavior on opacity { NumberAnimation { duration: Style.animNormal } }
-                        }
-                    }
-
-                    // ── Track Info ──
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: Style.spaceXs
-
-                        StyledText {
-                            text: root.title || "No track playing"
-                            font.pixelSize: Style.fontSizeXl
-                            font.bold: true
-                            color: Style.textPrimary
-                            Layout.fillWidth: true
-                            horizontalAlignment: Text.AlignHCenter
-                            elide: Text.ElideRight
-                        }
-
-                        StyledText {
-                            text: root.artist
-                            font.pixelSize: Style.fontSizeMd
-                            color: Style.textSecondary
-                            Layout.fillWidth: true
-                            horizontalAlignment: Text.AlignHCenter
-                            elide: Text.ElideRight
-                            visible: root.artist !== ""
-                        }
-
-                        StyledText {
-                            text: root.album
-                            font.pixelSize: Style.fontSizeSm
-                            color: Style.textDimmed
-                            Layout.fillWidth: true
-                            horizontalAlignment: Text.AlignHCenter
-                            elide: Text.ElideRight
-                            visible: root.album !== ""
-                        }
-                    }
-
-                    // ── VU Meter Seek Bar ──
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: Style.spaceXs
-
-                        Item {
-                            id: seekItem
-                            Layout.fillWidth: true
-                            implicitHeight: 20
-
-                            property real pos: root.trackedPosition
-                            property real len: root.player?.length ?? 0
-                            property real fraction: len > 0 ? Math.min(1.0, Math.max(0, pos / len)) : 0
-
-                            VUMeter {
-                                id: vuMeter
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                segments: 20
-                                segmentHeight: seekArea.containsMouse || seekArea.isDragging ? 10 : 8
-                                value: seekItem.fraction
-                                warnAt: 1.0; critAt: 1.0
-                                animDuration: 60
-                            }
-
-                            // Seek handle
-                            Rectangle {
-                                x: Math.max(0, Math.min(seekItem.width - width, seekItem.width * seekItem.fraction - width / 2))
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: seekArea.containsMouse || seekArea.isDragging ? 14 : 0
-                                height: width
-                                radius: width / 2
-                                color: Style.accentPink
-                                visible: width > 0
-                                z: 1
-
-                                Behavior on width { NumberAnimation { duration: Style.animFast } }
-                            }
-
-                            MouseArea {
-                                id: seekArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: (root.player?.canSeek ?? false) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                property bool isDragging: false
-
-                                onPressed: mouse => {
-                                    if (!(root.player?.canSeek ?? false)) return
-                                    isDragging = true
-                                    seekTo(mouse.x)
-                                }
-                                onReleased: isDragging = false
-                                onPositionChanged: mouse => {
-                                    if (isDragging) seekTo(mouse.x)
-                                }
-                                onClicked: mouse => seekTo(mouse.x)
-
-                                function seekTo(x) {
-                                    if (!(root.player?.canSeek ?? false)) return
-                                    var len = root.player?.length ?? 0
-                                    if (len <= 0) return
-                                    var frac = Math.max(0, Math.min(1, x / seekItem.width))
-                                    root.player.position = frac * len
-                                }
-                            }
-                        }
-
-                        // Time labels
-                        RowLayout {
-                            Layout.fillWidth: true
-
-                            StyledText {
-                                text: root.formatTime(root.trackedPosition)
-                                font.pixelSize: 11
-                                color: Style.textDimmed
-                            }
-
-                            Item { Layout.fillWidth: true }
-
-                            StyledText {
-                                text: root.formatTime(root.player?.length ?? 0)
-                                font.pixelSize: 11
-                                color: Style.textDimmed
-                            }
-                        }
-                    }
-
-                    // ── Playback Controls ──
-                    RowLayout {
-                        Layout.alignment: Qt.AlignHCenter
-                        spacing: Style.spaceXl
-
-                        // Previous
-                        Rectangle {
-                            implicitWidth: 36
-                            implicitHeight: 36
-                            radius: Style.radiusFull
-                            color: prevCtrlHover.containsMouse ? Style.bgTertiary : "transparent"
-
+                        MaterialIcon {
+                            anchors.centerIn: parent
+                            text: "skip_next"
+                            font.pixelSize: 24
+                            fill: 1
+                            color: nextCtrlHover.containsMouse ? Style.textPrimary : Style.textSecondary
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: "skip_previous"
-                                font.pixelSize: 24
-                                fill: 1
-                                color: prevCtrlHover.containsMouse ? Style.textPrimary : Style.textSecondary
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-                            }
-
-                            MouseArea {
-                                id: prevCtrlHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: (root.player?.canGoPrevious ?? false) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                onClicked: { if (root.player?.canGoPrevious) root.player.previous() }
-                            }
                         }
 
-                        // Play/Pause
-                        Rectangle {
-                            implicitWidth: 48
-                            implicitHeight: 48
-                            radius: Style.radiusFull
-                            color: Style.accentPink
-
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: root.isPlaying ? "pause" : "play_arrow"
-                                font.pixelSize: 32
-                                color: Style.bgPrimary
-                                fill: 1
-                            }
-
-                            MouseArea {
-                                id: playPauseHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (root.isPlaying)
-                                        root.player?.pause()
-                                    else
-                                        root.player?.play()
-                                }
-                            }
-
-                            scale: playPauseHover.containsMouse ? 1.05 : 1.0
-                            Behavior on scale { NumberAnimation { duration: Style.animFast } }
-                        }
-
-                        // Next
-                        Rectangle {
-                            implicitWidth: 36
-                            implicitHeight: 36
-                            radius: Style.radiusFull
-                            color: nextCtrlHover.containsMouse ? Style.bgTertiary : "transparent"
-
-                            Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                            MaterialIcon {
-                                anchors.centerIn: parent
-                                text: "skip_next"
-                                font.pixelSize: 24
-                                fill: 1
-                                color: nextCtrlHover.containsMouse ? Style.textPrimary : Style.textSecondary
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-                            }
-
-                            MouseArea {
-                                id: nextCtrlHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: (root.player?.canGoNext ?? false) ? Qt.PointingHandCursor : Qt.ArrowCursor
-                                onClicked: { if (root.player?.canGoNext) root.player.next() }
-                            }
+                        MouseArea {
+                            id: nextCtrlHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: (root.player?.canGoNext ?? false) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: { if (root.player?.canGoNext) root.player.next() }
                         }
                     }
                 }

@@ -51,6 +51,7 @@ Item {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
+            ClipboardState.panelX = root.mapToItem(null, root.width / 2, 0).x
             var wasOpen = ClipboardState.visible
             PanelManager.closeAll()
             if (!wasOpen) {

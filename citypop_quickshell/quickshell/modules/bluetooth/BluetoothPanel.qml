@@ -10,343 +10,390 @@ Scope {
     Variants {
         model: Quickshell.screens
 
-        PanelWindow {
+        DropdownPanel {
             id: panel
             required property var modelData
             screen: modelData
-            readonly property real sf: modelData.height / 1080
-            property bool _open: BluetoothManager.panelVisible && BluetoothManager.panelScreen === modelData
-            visible: BluetoothManager.panelVisible || card.opacity > 0
-            color: "transparent"
 
-            anchors {
-                top: true
-                bottom: true
-                left: true
-                right: true
-            }
+            stateOpen: BluetoothManager.panelVisible
+            stateScreen: BluetoothManager.panelScreen
+            onDismissed: BluetoothManager.panelVisible = false
 
-            exclusionMode: ExclusionMode.Ignore
-            margins.top: Math.round(Style.barHeight * panel.sf)
+            cardWidth: 360
+            cardHeight: Math.min(cardContentCol.implicitHeight + cardPadding * 2, 520)
+            anchorMode: "widget"
+            widgetCenterX: BluetoothManager.panelX
 
-            MouseArea {
+            ColumnLayout {
+                id: cardContentCol
                 anchors.fill: parent
-                onClicked: BluetoothManager.panelVisible = false
-            }
+                spacing: Style.spaceMd
 
-            // --- Dropdown Card ---
-            Rectangle {
-                id: card
-                anchors.top: parent.top
-                anchors.right: parent.right
-                anchors.topMargin: Math.round(Style.spaceMd * panel.sf)
-                anchors.rightMargin: Math.round((Style.spaceMd + 250) * panel.sf)
-                width: 360
-                height: Math.min(cardContent.implicitHeight + Style.spaceXl * 2, 520)
-                color: Style.bgSecondary
-                radius: Style.radiusLg
-                border.width: 1
-                border.color: Style.bgTertiary
-
-                opacity: panel._open ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
-                transform: Translate {
-                    y: panel._open ? 0 : -8
-                    Behavior on y { NumberAnimation { duration: Style.animNormal; easing.type: Easing.OutCubic } }
-                }
-
-                NeonStrip {}
-
-                MouseArea { anchors.fill: parent }
-
-                ColumnLayout {
-                    id: cardContent
-                    anchors.fill: parent
-                    anchors.margins: Style.spaceXl
+                // ── Header ──
+                RowLayout {
                     spacing: Style.spaceMd
 
-                    // ── Header ──
-                    RowLayout {
-                        spacing: Style.spaceMd
+                    MaterialIcon {
+                        text: BluetoothManager.powered ? "bluetooth" : "bluetooth_disabled"
+                        font.pixelSize: 20
+                        color: Style.accentPink
+                        fill: 1
+                    }
+
+                    StyledText {
+                        text: "Bluetooth"
+                        font.pixelSize: Style.fontSizeXl
+                        font.bold: true
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    // Power toggle
+                    Rectangle {
+                        implicitWidth: 44
+                        implicitHeight: 24
+                        radius: Style.radiusFull
+                        color: BluetoothManager.powered ? Style.accentPink : Style.bgTertiary
+
+                        Behavior on color { ColorAnimation { duration: Style.animNormal } }
+
+                        Rectangle {
+                            width: 18
+                            height: 18
+                            radius: Style.radiusFull
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: BluetoothManager.powered ? parent.width - width - 3 : 3
+                            color: Style.textPrimary
+
+                            Behavior on x { NumberAnimation { duration: Style.animNormal } }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: BluetoothManager.togglePower()
+                        }
+                    }
+
+                    // Scan button
+                    Rectangle {
+                        implicitWidth: 28
+                        implicitHeight: 28
+                        radius: Style.radiusFull
+                        color: scanHover.containsMouse ? Style.bgTertiary : "transparent"
+
+                        Behavior on color { ColorAnimation { duration: Style.animFast } }
 
                         MaterialIcon {
-                            text: BluetoothManager.powered ? "bluetooth" : "bluetooth_disabled"
-                            font.pixelSize: 20
-                            color: Style.accentPink
-                            fill: 1
-                        }
-
-                        StyledText {
-                            text: "Bluetooth"
-                            font.pixelSize: Style.fontSizeXl
-                            font.bold: true
-                        }
-
-                        Item { Layout.fillWidth: true }
-
-                        // Power toggle
-                        Rectangle {
-                            implicitWidth: 44
-                            implicitHeight: 24
-                            radius: Style.radiusFull
-                            color: BluetoothManager.powered ? Style.accentPink : Style.bgTertiary
-
-                            Behavior on color { ColorAnimation { duration: Style.animNormal } }
-
-                            Rectangle {
-                                width: 18
-                                height: 18
-                                radius: Style.radiusFull
-                                anchors.verticalCenter: parent.verticalCenter
-                                x: BluetoothManager.powered ? parent.width - width - 3 : 3
-                                color: Style.textPrimary
-
-                                Behavior on x { NumberAnimation { duration: Style.animNormal } }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: BluetoothManager.togglePower()
-                            }
-                        }
-
-                        // Scan button
-                        Rectangle {
-                            implicitWidth: 28
-                            implicitHeight: 28
-                            radius: Style.radiusFull
-                            color: scanHover.containsMouse ? Style.bgTertiary : "transparent"
+                            id: scanIcon
+                            anchors.centerIn: parent
+                            text: "refresh"
+                            font.pixelSize: 16
+                            color: scanHover.containsMouse ? Style.textPrimary : Style.textDimmed
 
                             Behavior on color { ColorAnimation { duration: Style.animFast } }
 
-                            MaterialIcon {
-                                id: scanIcon
-                                anchors.centerIn: parent
-                                text: "refresh"
-                                font.pixelSize: 16
-                                color: scanHover.containsMouse ? Style.textPrimary : Style.textDimmed
-
-                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                                RotationAnimation on rotation {
-                                    running: BluetoothManager.scanning
-                                    from: 0; to: 360
-                                    duration: 800
-                                    loops: Animation.Infinite
-                                }
-                            }
-
-                            MouseArea {
-                                id: scanHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: BluetoothManager.scan()
+                            RotationAnimation on rotation {
+                                running: BluetoothManager.scanning
+                                from: 0; to: 360
+                                duration: 800
+                                loops: Animation.Infinite
                             }
                         }
 
-                        CloseButton { onClicked: BluetoothManager.panelVisible = false }
+                        MouseArea {
+                            id: scanHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: BluetoothManager.scan()
+                        }
                     }
 
-                    // Neon header divider
+                    CloseButton { onClicked: BluetoothManager.panelVisible = false }
+                }
+
+                // Neon header divider
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 2
+                    color: Style.accentPink
+                    opacity: 0.6
+                }
+
+                // ── Connected Devices ──
+                Repeater {
+                    model: BluetoothManager.connectedDevices
+
                     Rectangle {
+                        id: connectedItem
+                        required property var modelData
+                        required property int index
+
                         Layout.fillWidth: true
-                        height: 2
-                        color: Style.accentPink
-                        opacity: 0.6
-                    }
+                        implicitHeight: connectedCol.implicitHeight + Style.spaceLg * 2
+                        radius: Style.radiusMd
 
-                    // ── Connected Devices ──
-                    Repeater {
-                        model: BluetoothManager.connectedDevices
-
-                        Rectangle {
-                            id: connectedItem
-                            required property var modelData
-                            required property int index
-
-                            Layout.fillWidth: true
-                            implicitHeight: connectedCol.implicitHeight + Style.spaceLg * 2
-                            radius: Style.radiusMd
-
-                            gradient: Gradient {
-                                GradientStop { position: 0.0; color: Style.pinkGradientStart }
-                                GradientStop { position: 1.0; color: Style.pinkGradientEnd }
-                            }
-                            border.width: 1
-                            border.color: Style.pinkBorder
-
-                            ColumnLayout {
-                                id: connectedCol
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.margins: Style.spaceLg
-                                spacing: Style.spaceSm
-
-                                RowLayout {
-                                    spacing: Style.spaceMd
-
-                                    MaterialIcon {
-                                        text: connectedItem.modelData.icon
-                                        font.pixelSize: 20
-                                        color: Style.accentPink
-                                        fill: 1
-                                    }
-
-                                    ColumnLayout {
-                                        spacing: 1
-                                        Layout.fillWidth: true
-
-                                        StyledText {
-                                            text: connectedItem.modelData.name
-                                            font.bold: true
-                                            font.pixelSize: Style.fontSizeMd
-                                        }
-
-                                        StyledText {
-                                            text: "Connected"
-                                            color: Style.accentPink
-                                            font.pixelSize: Style.fontSizeSm
-                                        }
-                                    }
-
-                                    // Battery indicator
-                                    RowLayout {
-                                        spacing: Style.spaceXs
-                                        visible: connectedItem.modelData.battery >= 0
-
-                                        MaterialIcon {
-                                            text: {
-                                                var b = connectedItem.modelData.battery
-                                                if (b > 80) return "battery_full"
-                                                if (b > 50) return "battery_5_bar"
-                                                if (b > 20) return "battery_3_bar"
-                                                return "battery_1_bar"
-                                            }
-                                            font.pixelSize: 16
-                                            color: connectedItem.modelData.battery > 20 ? Style.textSecondary : Style.colorUrgent
-                                        }
-
-                                        StyledText {
-                                            text: connectedItem.modelData.battery + "%"
-                                            font.pixelSize: Style.fontSizeSm
-                                            color: connectedItem.modelData.battery > 20 ? Style.textSecondary : Style.colorUrgent
-                                        }
-                                    }
-
-                                    // Disconnect pill
-                                    Rectangle {
-                                        implicitWidth: dcRow.implicitWidth + Style.spaceLg * 2
-                                        implicitHeight: 28
-                                        radius: Style.radiusFull
-                                        color: dcHover.containsMouse ? Style.urgentHover : "transparent"
-                                        border.width: 1
-                                        border.color: dcHover.containsMouse ? Style.colorUrgent : Style.textDimmed
-
-                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                        Behavior on border.color { ColorAnimation { duration: Style.animFast } }
-
-                                        RowLayout {
-                                            id: dcRow
-                                            anchors.centerIn: parent
-                                            spacing: Style.spaceSm
-
-                                            MaterialIcon {
-                                                text: "link_off"
-                                                font.pixelSize: 14
-                                                color: dcHover.containsMouse ? Style.colorUrgent : Style.textDimmed
-
-                                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                            }
-
-                                            StyledText {
-                                                text: "Disconnect"
-                                                color: dcHover.containsMouse ? Style.colorUrgent : Style.textDimmed
-                                                font.pixelSize: Style.fontSizeSm
-
-                                                Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                            }
-                                        }
-
-                                        MouseArea {
-                                            id: dcHover
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: BluetoothManager.disconnectDevice(connectedItem.modelData.mac)
-                                        }
-                                    }
-                                }
-                            }
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: Style.pinkGradientStart }
+                            GradientStop { position: 1.0; color: Style.pinkGradientEnd }
                         }
-                    }
-
-                    // ── Section label ──
-                    RowLayout {
-                        spacing: Style.spaceSm
-
-                        StyledText {
-                            text: "Paired Devices"
-                            color: Style.textDimmed
-                            font.pixelSize: Style.fontSizeSm
-                        }
-
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: 1
-                            color: Style.accentPink
-                            opacity: 0.3
-                        }
-                    }
-
-                    // ── Error ──
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: errorRow.implicitHeight + Style.spaceMd * 2
-                        radius: Style.radiusSm
-                        color: Style.urgentBg
                         border.width: 1
-                        border.color: Style.urgentBorder
-                        visible: BluetoothManager.connectError !== ""
+                        border.color: Style.pinkBorder
 
-                        RowLayout {
-                            id: errorRow
+                        ColumnLayout {
+                            id: connectedCol
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.margins: Style.spaceMd
+                            anchors.margins: Style.spaceLg
                             spacing: Style.spaceSm
 
-                            MaterialIcon {
-                                text: "error"
-                                font.pixelSize: 16
-                                color: Style.colorUrgent
-                            }
+                            RowLayout {
+                                spacing: Style.spaceMd
 
-                            StyledText {
-                                text: BluetoothManager.connectError
-                                color: Style.colorUrgent
-                                font.pixelSize: Style.fontSizeSm
-                                Layout.fillWidth: true
-                                wrapMode: Text.WordWrap
+                                MaterialIcon {
+                                    text: connectedItem.modelData.icon
+                                    font.pixelSize: 20
+                                    color: Style.accentPink
+                                    fill: 1
+                                }
+
+                                ColumnLayout {
+                                    spacing: 1
+                                    Layout.fillWidth: true
+
+                                    StyledText {
+                                        text: connectedItem.modelData.name
+                                        font.bold: true
+                                        font.pixelSize: Style.fontSizeMd
+                                    }
+
+                                    StyledText {
+                                        text: "Connected"
+                                        color: Style.accentPink
+                                        font.pixelSize: Style.fontSizeSm
+                                    }
+                                }
+
+                                // Battery indicator
+                                RowLayout {
+                                    spacing: Style.spaceXs
+                                    visible: connectedItem.modelData.battery >= 0
+
+                                    MaterialIcon {
+                                        text: {
+                                            var b = connectedItem.modelData.battery
+                                            if (b > 80) return "battery_full"
+                                            if (b > 50) return "battery_5_bar"
+                                            if (b > 20) return "battery_3_bar"
+                                            return "battery_1_bar"
+                                        }
+                                        font.pixelSize: 16
+                                        color: connectedItem.modelData.battery > 20 ? Style.textSecondary : Style.colorUrgent
+                                    }
+
+                                    StyledText {
+                                        text: connectedItem.modelData.battery + "%"
+                                        font.pixelSize: Style.fontSizeSm
+                                        color: connectedItem.modelData.battery > 20 ? Style.textSecondary : Style.colorUrgent
+                                    }
+                                }
+
+                                // Disconnect pill
+                                Rectangle {
+                                    implicitWidth: dcRow.implicitWidth + Style.spaceLg * 2
+                                    implicitHeight: 28
+                                    radius: Style.radiusFull
+                                    color: dcHover.containsMouse ? Style.urgentHover : "transparent"
+                                    border.width: 1
+                                    border.color: dcHover.containsMouse ? Style.colorUrgent : Style.textDimmed
+
+                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                    Behavior on border.color { ColorAnimation { duration: Style.animFast } }
+
+                                    RowLayout {
+                                        id: dcRow
+                                        anchors.centerIn: parent
+                                        spacing: Style.spaceSm
+
+                                        MaterialIcon {
+                                            text: "link_off"
+                                            font.pixelSize: 14
+                                            color: dcHover.containsMouse ? Style.colorUrgent : Style.textDimmed
+
+                                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                        }
+
+                                        StyledText {
+                                            text: "Disconnect"
+                                            color: dcHover.containsMouse ? Style.colorUrgent : Style.textDimmed
+                                            font.pixelSize: Style.fontSizeSm
+
+                                            Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: dcHover
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: BluetoothManager.disconnectDevice(connectedItem.modelData.mac)
+                                    }
+                                }
                             }
                         }
                     }
+                }
 
-                    // ── Pairing PIN display ──
+                // ── Section label ──
+                RowLayout {
+                    spacing: Style.spaceSm
+
+                    StyledText {
+                        text: "Paired Devices"
+                        color: Style.textDimmed
+                        font.pixelSize: Style.fontSizeSm
+                    }
+
                     Rectangle {
                         Layout.fillWidth: true
-                        implicitHeight: pinRow.implicitHeight + Style.spaceMd * 2
+                        height: 1
+                        color: Style.accentPink
+                        opacity: 0.3
+                    }
+                }
+
+                // ── Error ──
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: errorRow.implicitHeight + Style.spaceMd * 2
+                    radius: Style.radiusSm
+                    color: Style.urgentBg
+                    border.width: 1
+                    border.color: Style.urgentBorder
+                    visible: BluetoothManager.connectError !== ""
+
+                    RowLayout {
+                        id: errorRow
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.margins: Style.spaceMd
+                        spacing: Style.spaceSm
+
+                        MaterialIcon {
+                            text: "error"
+                            font.pixelSize: 16
+                            color: Style.colorUrgent
+                        }
+
+                        StyledText {
+                            text: BluetoothManager.connectError
+                            color: Style.colorUrgent
+                            font.pixelSize: Style.fontSizeSm
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+                }
+
+                // ── Pairing PIN display ──
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: pinRow.implicitHeight + Style.spaceMd * 2
+                    radius: Style.radiusSm
+                    color: Style.amberBg
+                    border.width: 1
+                    border.color: Style.amberBorder
+                    visible: BluetoothManager.pairingPin !== ""
+
+                    RowLayout {
+                        id: pinRow
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.margins: Style.spaceMd
+                        spacing: Style.spaceMd
+
+                        MaterialIcon {
+                            text: "pin"
+                            font.pixelSize: 16
+                            color: Style.accentAmber
+                        }
+
+                        ColumnLayout {
+                            spacing: Style.spaceXs
+                            Layout.fillWidth: true
+
+                            StyledText {
+                                text: "Pairing PIN"
+                                color: Style.accentAmber
+                                font.pixelSize: Style.fontSizeSm
+                            }
+
+                            StyledText {
+                                text: BluetoothManager.pairingPin
+                                color: Style.textPrimary
+                                font.pixelSize: Style.fontSizeXl
+                                font.bold: true
+                                font.letterSpacing: 4
+                            }
+                        }
+                    }
+                }
+
+                // ── Scanning indicator ──
+                RowLayout {
+                    visible: BluetoothManager.scanning
+                    spacing: Style.spaceSm
+
+                    MaterialIcon {
+                        text: "bluetooth_searching"
+                        font.pixelSize: 16
+                        color: Style.accentAmber
+
+                        SequentialAnimation on opacity {
+                            running: BluetoothManager.scanning
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 1.0; to: 0.3; duration: 600 }
+                            NumberAnimation { from: 0.3; to: 1.0; duration: 600 }
+                        }
+                    }
+
+                    StyledText {
+                        text: "Scanning for devices..."
+                        color: Style.accentAmber
+                        font.pixelSize: Style.fontSizeSm
+                    }
+                }
+
+                // ── Device List ──
+                ListView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.preferredHeight: Math.min(contentHeight, 320)
+                    clip: true
+                    spacing: Style.spaceXs
+                    model: BluetoothManager.devices.filter(d => !d.connected)
+
+                    delegate: Rectangle {
+                        id: devItem
+                        required property var modelData
+                        required property int index
+
+                        width: ListView.view.width
+                        implicitHeight: devRow.implicitHeight + Style.spaceMd * 2
                         radius: Style.radiusSm
-                        color: Style.amberBg
-                        border.width: 1
-                        border.color: Style.amberBorder
-                        visible: BluetoothManager.pairingPin !== ""
+                        color: devHover.containsMouse ? Style.pinkHover : "transparent"
+
+                        Behavior on color { ColorAnimation { duration: Style.animFast } }
+
+                        readonly property bool isConnecting: BluetoothManager.connectingTo === devItem.modelData.mac
 
                         RowLayout {
-                            id: pinRow
+                            id: devRow
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
@@ -354,196 +401,112 @@ Scope {
                             spacing: Style.spaceMd
 
                             MaterialIcon {
-                                text: "pin"
+                                text: devItem.modelData.icon
+                                font.pixelSize: 18
+                                color: Style.textSecondary
+                                fill: 1
+                            }
+
+                            StyledText {
+                                text: devItem.modelData.name
+                                font.pixelSize: Style.fontSizeMd
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+
+                            // Connecting indicator
+                            MaterialIcon {
+                                text: "sync"
                                 font.pixelSize: 16
                                 color: Style.accentAmber
-                            }
+                                visible: devItem.isConnecting
 
-                            ColumnLayout {
-                                spacing: Style.spaceXs
-                                Layout.fillWidth: true
-
-                                StyledText {
-                                    text: "Pairing PIN"
-                                    color: Style.accentAmber
-                                    font.pixelSize: Style.fontSizeSm
-                                }
-
-                                StyledText {
-                                    text: BluetoothManager.pairingPin
-                                    color: Style.textPrimary
-                                    font.pixelSize: Style.fontSizeXl
-                                    font.bold: true
-                                    font.letterSpacing: 4
+                                RotationAnimation on rotation {
+                                    running: devItem.isConnecting
+                                    from: 0; to: 360
+                                    duration: 800
+                                    loops: Animation.Infinite
                                 }
                             }
-                        }
-                    }
 
-                    // ── Scanning indicator ──
-                    RowLayout {
-                        visible: BluetoothManager.scanning
-                        spacing: Style.spaceSm
+                            // Forget / unpair button (visible on hover for paired, non-connecting devices)
+                            Rectangle {
+                                implicitWidth: 28
+                                implicitHeight: 28
+                                radius: Style.radiusFull
+                                visible: devHover.containsMouse && devItem.modelData.paired && !devItem.isConnecting
+                                color: forgetHover.containsMouse ? Style.urgentHover : "transparent"
 
-                        MaterialIcon {
-                            text: "bluetooth_searching"
-                            font.pixelSize: 16
-                            color: Style.accentAmber
-
-                            SequentialAnimation on opacity {
-                                running: BluetoothManager.scanning
-                                loops: Animation.Infinite
-                                NumberAnimation { from: 1.0; to: 0.3; duration: 600 }
-                                NumberAnimation { from: 0.3; to: 1.0; duration: 600 }
-                            }
-                        }
-
-                        StyledText {
-                            text: "Scanning for devices..."
-                            color: Style.accentAmber
-                            font.pixelSize: Style.fontSizeSm
-                        }
-                    }
-
-                    // ── Device List ──
-                    ListView {
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.preferredHeight: Math.min(contentHeight, 320)
-                        clip: true
-                        spacing: Style.spaceXs
-                        model: BluetoothManager.devices.filter(d => !d.connected)
-
-                        delegate: Rectangle {
-                            id: devItem
-                            required property var modelData
-                            required property int index
-
-                            width: ListView.view.width
-                            implicitHeight: devRow.implicitHeight + Style.spaceMd * 2
-                            radius: Style.radiusSm
-                            color: devHover.containsMouse ? Style.pinkHover : "transparent"
-
-                            Behavior on color { ColorAnimation { duration: Style.animFast } }
-
-                            readonly property bool isConnecting: BluetoothManager.connectingTo === devItem.modelData.mac
-
-                            RowLayout {
-                                id: devRow
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                anchors.margins: Style.spaceMd
-                                spacing: Style.spaceMd
+                                Behavior on color { ColorAnimation { duration: Style.animFast } }
 
                                 MaterialIcon {
-                                    text: devItem.modelData.icon
-                                    font.pixelSize: 18
-                                    color: Style.textSecondary
-                                    fill: 1
-                                }
-
-                                StyledText {
-                                    text: devItem.modelData.name
-                                    font.pixelSize: Style.fontSizeMd
-                                    Layout.fillWidth: true
-                                    elide: Text.ElideRight
-                                }
-
-                                // Connecting indicator
-                                MaterialIcon {
-                                    text: "sync"
+                                    anchors.centerIn: parent
+                                    text: "delete"
                                     font.pixelSize: 16
-                                    color: Style.accentAmber
-                                    visible: devItem.isConnecting
-
-                                    RotationAnimation on rotation {
-                                        running: devItem.isConnecting
-                                        from: 0; to: 360
-                                        duration: 800
-                                        loops: Animation.Infinite
-                                    }
-                                }
-
-                                // Forget / unpair button (visible on hover for paired, non-connecting devices)
-                                Rectangle {
-                                    implicitWidth: 28
-                                    implicitHeight: 28
-                                    radius: Style.radiusFull
-                                    visible: devHover.containsMouse && devItem.modelData.paired && !devItem.isConnecting
-                                    color: forgetHover.containsMouse ? Style.urgentHover : "transparent"
+                                    color: forgetHover.containsMouse ? Style.colorUrgent : Style.textDimmed
 
                                     Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                }
+
+                                MouseArea {
+                                    id: forgetHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: BluetoothManager.removeDevice(devItem.modelData.mac)
+                                }
+                            }
+
+                            // Connect pill
+                            Rectangle {
+                                implicitWidth: connRow.implicitWidth + Style.spaceLg * 2
+                                implicitHeight: 28
+                                radius: Style.radiusFull
+                                visible: !devItem.isConnecting
+                                color: connHover.containsMouse ? Style.pinkHover : "transparent"
+                                border.width: 1
+                                border.color: connHover.containsMouse ? Style.accentPink : Style.textDimmed
+
+                                Behavior on color { ColorAnimation { duration: Style.animFast } }
+                                Behavior on border.color { ColorAnimation { duration: Style.animFast } }
+
+                                RowLayout {
+                                    id: connRow
+                                    anchors.centerIn: parent
+                                    spacing: Style.spaceSm
 
                                     MaterialIcon {
-                                        anchors.centerIn: parent
-                                        text: "delete"
-                                        font.pixelSize: 16
-                                        color: forgetHover.containsMouse ? Style.colorUrgent : Style.textDimmed
+                                        text: "bluetooth"
+                                        font.pixelSize: 14
+                                        color: connHover.containsMouse ? Style.accentPink : Style.textDimmed
 
                                         Behavior on color { ColorAnimation { duration: Style.animFast } }
                                     }
 
-                                    MouseArea {
-                                        id: forgetHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: BluetoothManager.removeDevice(devItem.modelData.mac)
+                                    StyledText {
+                                        text: "Connect"
+                                        color: connHover.containsMouse ? Style.accentPink : Style.textDimmed
+                                        font.pixelSize: Style.fontSizeSm
+
+                                        Behavior on color { ColorAnimation { duration: Style.animFast } }
                                     }
                                 }
 
-                                // Connect pill
-                                Rectangle {
-                                    implicitWidth: connRow.implicitWidth + Style.spaceLg * 2
-                                    implicitHeight: 28
-                                    radius: Style.radiusFull
-                                    visible: !devItem.isConnecting
-                                    color: connHover.containsMouse ? Style.pinkHover : "transparent"
-                                    border.width: 1
-                                    border.color: connHover.containsMouse ? Style.accentPink : Style.textDimmed
-
-                                    Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                    Behavior on border.color { ColorAnimation { duration: Style.animFast } }
-
-                                    RowLayout {
-                                        id: connRow
-                                        anchors.centerIn: parent
-                                        spacing: Style.spaceSm
-
-                                        MaterialIcon {
-                                            text: "bluetooth"
-                                            font.pixelSize: 14
-                                            color: connHover.containsMouse ? Style.accentPink : Style.textDimmed
-
-                                            Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                        }
-
-                                        StyledText {
-                                            text: "Connect"
-                                            color: connHover.containsMouse ? Style.accentPink : Style.textDimmed
-                                            font.pixelSize: Style.fontSizeSm
-
-                                            Behavior on color { ColorAnimation { duration: Style.animFast } }
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: connHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: BluetoothManager.connectDevice(devItem.modelData.mac)
-                                    }
+                                MouseArea {
+                                    id: connHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: BluetoothManager.connectDevice(devItem.modelData.mac)
                                 }
                             }
+                        }
 
-                            MouseArea {
-                                id: devHover
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                z: -1
-                            }
+                        MouseArea {
+                            id: devHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            z: -1
                         }
                     }
                 }

@@ -83,6 +83,7 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
+            NotificationManager.panelX = root.mapToItem(null, root.width / 2, 0).x
             var wasOpen = NotificationManager.historyVisible
             PanelManager.closeAll()
             if (!wasOpen) {

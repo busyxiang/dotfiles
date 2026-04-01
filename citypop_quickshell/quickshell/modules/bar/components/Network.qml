@@ -94,6 +94,7 @@ Item {
 
         onClicked: {
             NetworkManager.tooltipVisible = false
+            NetworkManager.panelX = root.mapToItem(null, root.width / 2, 0).x
             var wasOpen = NetworkManager.panelVisible
             PanelManager.closeAll()
             if (!wasOpen) {

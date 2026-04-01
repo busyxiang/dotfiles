@@ -9,6 +9,7 @@ Singleton {
 
     property bool visible: false
     property var screen: null
+    property real panelX: 0
 
     // Tooltip state
     property bool tooltipVisible: false

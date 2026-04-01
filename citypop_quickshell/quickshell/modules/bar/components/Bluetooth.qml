@@ -71,6 +71,7 @@ Item {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
+            BluetoothManager.panelX = root.mapToItem(null, root.width / 2, 0).x
             var wasOpen = BluetoothManager.panelVisible
             PanelManager.closeAll()
             if (!wasOpen) {

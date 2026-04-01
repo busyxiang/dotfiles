@@ -52,6 +52,7 @@ Item {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
+            PowerMenuState.panelX = root.mapToItem(null, root.width / 2, 0).x
             var wasOpen = PowerMenuState.visible
             PanelManager.closeAll()
             if (!wasOpen) {

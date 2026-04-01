@@ -91,6 +91,7 @@ Item {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton
         onClicked: {
+            VolumeState.panelX = root.mapToItem(null, root.width / 2, 0).x
             var wasOpen = VolumeState.visible
             PanelManager.closeAll()
             if (!wasOpen) {

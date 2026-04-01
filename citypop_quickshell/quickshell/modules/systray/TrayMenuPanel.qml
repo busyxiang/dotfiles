@@ -38,6 +38,7 @@ Scope {
             // Click outside to close
             MouseArea {
                 anchors.fill: parent
+                enabled: panel._open
                 onClicked: TrayMenuState.close()
             }
 

@@ -13,6 +13,7 @@ Singleton {
     property int unreadCount: 0
     property bool historyVisible: false
     property var historyScreen: null
+    property real panelX: 0
     property bool dndEnabled: false
     property var exitingIds: []
     property var dismissedIds: []

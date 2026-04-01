@@ -98,6 +98,7 @@ Item {
 
         onClicked: {
             WeatherState.tooltipVisible = false
+            WeatherState.panelX = root.mapToItem(null, root.width / 2, 0).x
             var wasOpen = WeatherState.visible
             PanelManager.closeAll()
             if (!wasOpen) {

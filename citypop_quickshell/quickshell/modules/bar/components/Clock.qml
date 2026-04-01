@@ -145,6 +145,7 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: {
+            CalendarState.panelX = root.mapToItem(null, root.width / 2, 0).x
             var wasOpen = CalendarState.visible
             PanelManager.closeAll()
             if (!wasOpen) {
