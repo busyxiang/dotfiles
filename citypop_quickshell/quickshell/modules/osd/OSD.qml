@@ -140,6 +140,7 @@ Scope {
             visible: osdContent.opacity > 0
             color: "transparent"
             focusable: false
+            mask: Region {}
 
             implicitWidth: 260
             implicitHeight: 72
