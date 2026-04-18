@@ -135,6 +135,7 @@ Singleton {
                 _scheduleRetry()
             } else {
                 locationData = _pendingData
+                fetchError = false
                 _retryCount = 0
                 retrying = false
             }

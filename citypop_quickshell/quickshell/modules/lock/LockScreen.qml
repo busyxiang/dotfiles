@@ -619,6 +619,7 @@ Scope {
                                                     selectedTextColor: Style.bgPrimary
                                                     clip: true
                                                     focus: true
+                                                    readOnly: root._authActive
 
                                                     Keys.onReturnPressed: root.submitPassword(passwordInput.text)
                                                     Keys.onEscapePressed: passwordInput.text = ""
@@ -688,7 +689,7 @@ Scope {
                                         Layout.topMargin: root._attempts > 0 ? Math.round(4 * lockSurface.sf) : 0
                                         Layout.preferredHeight: root._attempts > 0 ? implicitHeight : 0
                                         text: "Attempts: " + root._attempts + "  |  Failed: " + root._failures
-                                        visible: root._attempts > 0
+                                        visible: root._attempts > 0 && !root._authActive && !root._unlocking
                                         font.pixelSize: Math.round(12 * lockSurface.sf)
                                         color: Style.textDimmed
                                     }

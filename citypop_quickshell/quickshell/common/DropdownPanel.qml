@@ -43,7 +43,7 @@ PanelWindow {
     default property alias cardContent: _contentArea.data
 
     // ── PanelWindow setup ──
-    visible: root.stateOpen || _activeCard.opacity > 0
+    visible: root.isOpen || _activeCard.opacity > 0
     color: "transparent"
 
     anchors {
@@ -144,12 +144,13 @@ PanelWindow {
     NeonStrip { parent: root._activeCard; visible: root.showNeonStrip }
 
     // ── Block click-through on active card ──
-    MouseArea { parent: root._activeCard; anchors.fill: parent }
+    MouseArea { parent: root._activeCard; anchors.fill: parent; z: 0 }
 
     // ── Content container on active card ──
     Item {
         id: _contentArea
         parent: root._activeCard
+        z: 1
         anchors.fill: parent
         anchors.margins: root.cardPadding
         implicitHeight: children.length > 0 ? children[0].implicitHeight : 0
