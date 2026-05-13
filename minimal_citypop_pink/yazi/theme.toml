@@ -143,20 +143,20 @@ rules = [
   { mime = "text/*", fg = "#E6E6FA" },
 
   # Code
-  { name = "*.rs", fg = "#FFB4E6" },
-  { name = "*.py", fg = "#82C8FF" },
-  { name = "*.js", fg = "#87FFE6" },
-  { name = "*.ts", fg = "#82C8FF" },
-  { name = "*.go", fg = "#87FFE6" },
-  { name = "*.sh", fg = "#C3A0FF" },
+  { url = "*.rs", fg = "#FFB4E6" },
+  { url = "*.py", fg = "#82C8FF" },
+  { url = "*.js", fg = "#87FFE6" },
+  { url = "*.ts", fg = "#82C8FF" },
+  { url = "*.go", fg = "#87FFE6" },
+  { url = "*.sh", fg = "#C3A0FF" },
 
   # Special files
-  { name = "*", is = "exec", fg = "#87FFE6", bold = true },
-  { name = "*", is = "orphan", fg = "#FF6B9D" },
-  { name = "*", is = "link", fg = "#FF91C8", italic = true },
+  { url = "*", is = "exec", fg = "#87FFE6", bold = true },
+  { url = "*", is = "orphan", fg = "#FF6B9D" },
+  { url = "*", is = "link", fg = "#FF91C8", italic = true },
 
   # Directories
-  { name = "*/", fg = "#82C8FF", bold = true },
+  { url = "*/", fg = "#82C8FF", bold = true },
 ]
 
 # Icon Configuration
