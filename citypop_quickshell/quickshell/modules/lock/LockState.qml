@@ -24,7 +24,7 @@ Singleton {
     // Focus primary monitor then lock, so password input gets keyboard focus
     Process {
         id: focusProc
-        command: ["hyprctl", "dispatch", "focusmonitor", LockState.screen?.name ?? ""]
+        command: ["hyprctl", "dispatch", "hl.dsp.focus({ monitor = \"" + (LockState.screen?.name ?? "") + "\" })"]
         onExited: LockState.locked = true
     }
 
