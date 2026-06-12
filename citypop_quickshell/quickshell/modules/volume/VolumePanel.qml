@@ -385,7 +385,7 @@ Scope {
                             id: appItem
                             required property PwNode modelData
 
-                            readonly property bool isAppStream: modelData.isStream && modelData.audio !== null
+                            readonly property bool isAppStream: modelData.isStream && modelData.isSink && modelData.audio !== null
                             readonly property string appName: modelData.description || modelData.nickname || modelData.name || "Unknown"
                             readonly property real appVol: modelData.audio?.volume ?? 0
                             readonly property bool appMuted: modelData.audio?.muted ?? false
